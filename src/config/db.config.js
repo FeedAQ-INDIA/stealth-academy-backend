@@ -2,7 +2,7 @@ module.exports = {
     HOST: "localhost",
     USER: "root",
     PASSWORD: "password",
-    DB: "feedaq-xm-node-new",
+    DB: "feedaq-academy-node",
     dialect: "mysql",
     pool: {
         max: 5,

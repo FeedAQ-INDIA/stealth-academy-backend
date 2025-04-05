@@ -4,32 +4,32 @@ module.exports = (sequelize, Sequelize) => {
         type: Sequelize.INTEGER,
         primaryKey: true,
         autoIncrement: true,
-        field: "u_id",
+        field: "user_id",
       },
       firstName: {
         type: Sequelize.STRING(500),
-        field: "u_first_name",
+        field: "user_first_name",
       },
       lastName: {
         type: Sequelize.STRING(500),
-        field: "u_last_name",
+        field: "user_last_name",
       },
       nameInitial: {
         type: Sequelize.STRING(500),
-        field: "u_name_initial",
+        field: "user_name_initial",
       },
       email: {
         type: Sequelize.STRING(500),
-        field: "u_email", 
+        field: "user_email", 
         unique: true,
       },
       number: {
         type: Sequelize.STRING(500),
-        field: "u_number",
+        field: "user_number",
       },
       profilePic: {
         type: Sequelize.STRING(500),
-        field: "u_profile_pic",
+        field: "user_profile_pic",
       },
       derivedUserName: {
         type: Sequelize.VIRTUAL,
@@ -43,8 +43,8 @@ module.exports = (sequelize, Sequelize) => {
       created_date: {
         type: Sequelize.VIRTUAL,
         get() {
-          if (!this.u_created_at) return null;
-          const date = new Date(this.u_created_at);
+          if (!this.user_created_at) return null;
+          const date = new Date(this.user_created_at);
           const day = String(date.getDate()).padStart(2, "0");
           const month = date.toLocaleString("en-US", { month: "short" });
           const year = date.getFullYear();
@@ -54,16 +54,16 @@ module.exports = (sequelize, Sequelize) => {
       created_time: {
         type: Sequelize.VIRTUAL,
         get() {
-          if (!this.u_created_at) return null;
-          return this.u_created_at.toTimeString().split(" ")[0]; // Format: HH:MM:SS
+          if (!this.user_created_at) return null;
+          return this.user_created_at.toTimeString().split(" ")[0]; // Format: HH:MM:SS
         },
       },
 
       updated_date: {
         type: Sequelize.VIRTUAL,
         get() {
-          if (!this.u_updated_at) return null;
-          const date = new Date(this.u_updated_at);
+          if (!this.user_updated_at) return null;
+          const date = new Date(this.user_updated_at);
           const day = String(date.getDate()).padStart(2, "0");
           const month = date.toLocaleString("en-US", { month: "short" });
           const year = date.getFullYear();
@@ -73,14 +73,14 @@ module.exports = (sequelize, Sequelize) => {
       updated_time: {
         type: Sequelize.VIRTUAL,
         get() {
-          if (!this.u_updated_at) return null;
-          return this.u_updated_at.toTimeString().split(" ")[0]; // Format: HH:MM:SS
+          if (!this.user_updated_at) return null;
+          return this.user_updated_at.toTimeString().split(" ")[0]; // Format: HH:MM:SS
         },
       },
     } , {
       timestamps: true,
-      createdAt: "u_created_at",
-      updatedAt: "u_updated_at",
+      createdAt: "user_created_at",
+      updatedAt: "user_updated_at",
     });
     return User;
   };

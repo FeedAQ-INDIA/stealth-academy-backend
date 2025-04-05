@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/feedaq-xm-node.iml" filepath="$PROJECT_DIR$/.idea/feedaq-xm-node.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/feedaq-academy-backend.iml" filepath="$PROJECT_DIR$/.idea/feedaq-academy-backend.iml" />
     </modules>
   </component>
 </project>

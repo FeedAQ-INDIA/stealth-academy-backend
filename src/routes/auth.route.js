@@ -7,9 +7,8 @@ const authService = require("../service/Auth.service");
 const logger = require("../config/winston.config.js");
 
 const accessTokenSecret = process.env.ACCESS_TOKEN_SECRET;
-const tempTokenSecret = process.env.TEMP_ACCESS_TOKEN_SECRET;
-const refreshTokenSecret = process.env.REFRESH_TOKEN_SECRET;
-const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+ const refreshTokenSecret = process.env.REFRESH_TOKEN_SECRET;
+const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5174";
 
 router.get(
   "/auth/google",
@@ -28,6 +27,7 @@ router.get(
   async (req, res) => {
     try {
       const user = req.user;
+      console.log(user)
       const email = user.emails?.[0]?.value;
       const userDataFromDB = await authService.findUser(email);
 
@@ -52,24 +52,13 @@ router.get(
 
 
 
-      const redirectUrl = authService.shouldUserRedirectToHomeScreen(
-        userDataFromDB
-      )
-        ?  `${frontendUrl}/organization`
-        : `${frontendUrl}/setupaccount`;
+      const redirectUrl = `${frontendUrl}/dashboard`
 
-      let accessToken;
-      if(authService.shouldUserRedirectToHomeScreen( userDataFromDB )){
-         accessToken = jwt.sign(claims, accessTokenSecret, {
+      let accessToken  = jwt.sign(claims, accessTokenSecret, {
           expiresIn: '1m',
         });
-        claims = {...claims, isTemp : false}
-      }else{
-         accessToken = jwt.sign(claims, tempTokenSecret, {
-          expiresIn: '1m',
-        });
-        claims = {...claims, isTemp : true}
-      }
+      claims = {...claims }
+
 
       const refreshToken = jwt.sign(claims, refreshTokenSecret, {
         expiresIn: "15m",
@@ -96,56 +85,6 @@ router.get(
   }
 );
 
-router.post("/auth/refresh-token", (req, res) => {
-  const refreshToken = req.cookies?.refreshToken;
-
-  if (!refreshToken) {
-    return res.status(403).json({ error: "Refresh token is missing" });
-  }
-
-  jwt.verify(refreshToken, refreshTokenSecret, (err, decoded) => {
-    if (err) {
-      return res
-        .status(403)
-        .json({ error: "Invalid or expired refresh token" });
-    }
-
-    const newAccessToken = jwt.sign(
-      {
-        userId: decoded.userId,
-        userEmail: decoded.userEmail,
-        activeOrg: decoded?.activeOrg,
-        isTemp: decoded?.isTemp,
-       },
-        decoded?.isTemp? tempTokenSecret :  accessTokenSecret,
-      { expiresIn: "1m" }
-    );
-
-    res.cookie("accessToken", newAccessToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-    });
-
-
-    res.json({ accessToken: newAccessToken, isTemp : decoded?.isTemp });
-  });
-});
-
-router.get("/auth/logout", (req, res) => {
-  res.clearCookie("accessToken", {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "strict",
-  });
-  res.clearCookie("refreshToken", {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "strict",
-  });
-  res.redirect(`${frontendUrl}/signin`);
-});
-
 router.get(
   "/auth/microsoft",
   passport.authenticate("microsoft", {
@@ -169,25 +108,32 @@ router.get(
       let userId;
       if (!userDataFromDB) {
         const newUser = await authService.createUser(
-          user.name.givenName || user.displayName,
-          user.name.familyName || user.displayName,
-          email,
-          null
+            user.name.givenName || user.displayName,
+            user.name.familyName || user.displayName,
+            email,
+            null
         );
         userId = newUser.userId;
       } else {
         userId = userDataFromDB.userId;
       }
 
-      const claims = {
+      let claims = {
         userId,
         userEmail: email,
-        orgAssociated: userDataFromDB?.organizations,
       };
 
-      const accessToken = jwt.sign(claims, accessTokenSecret, {
-        expiresIn: "15m",
+
+
+
+      const redirectUrl = `${frontendUrl}/dashboard`
+
+      let accessToken  = jwt.sign(claims, accessTokenSecret, {
+        expiresIn: '1m',
       });
+      claims = {...claims }
+
+
       const refreshToken = jwt.sign(claims, refreshTokenSecret, {
         expiresIn: "15m",
       });
@@ -203,13 +149,8 @@ router.get(
         sameSite: "strict",
         maxAge: 7 * 24 * 60 * 60 * 1000,
       });
+      res.cookie("userId")
 
-      const redirectUrl = authService.shouldUserRedirectToHomeScreen(
-        userDataFromDB
-      )
-        ? `${frontendUrl}/organization?accessToken=${accessToken}`
-        : `${frontendUrl}/setupaccount?accessToken=${accessToken}`;
-      console.log("Redirect URL :: ", redirectUrl);
       res.redirect(redirectUrl);
     } catch (err) {
       console.error("Authentication Error:", err);
@@ -217,5 +158,57 @@ router.get(
     }
   }
 );
+
+
+
+router.post("/auth/refresh-token", (req, res) => {
+  const refreshToken = req.cookies?.refreshToken;
+
+  if (!refreshToken) {
+    return res.status(403).json({ error: "Refresh token is missing" });
+  }
+
+  jwt.verify(refreshToken, refreshTokenSecret, (err, decoded) => {
+    if (err) {
+      return res
+          .status(403)
+          .json({ error: "Invalid or expired refresh token" });
+    }
+
+    const newAccessToken = jwt.sign(
+        {
+          userId: decoded.userId,
+          userEmail: decoded.userEmail,
+        },
+        accessTokenSecret,
+        { expiresIn: "1m" }
+    );
+
+    res.cookie("accessToken", newAccessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+    });
+
+
+    res.json({ accessToken: newAccessToken,   });
+  });
+});
+
+router.get("/auth/logout", (req, res) => {
+  res.clearCookie("accessToken", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+  });
+  res.clearCookie("refreshToken", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+  });
+  res.redirect(`${frontendUrl}/signin`);
+});
+
+
 
 module.exports = router;

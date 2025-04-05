@@ -18,7 +18,7 @@ const logger = require('./src/config/winston.config.js')
 const swaggerOptions = {
     definition: {
         openapi: "3.1.0", info: {
-            title: "FeedAQ XM Node",
+            title: "FeedAQ Academy",
             version: "0.1.0",
             description: "This is made with Express and documented with Swagger",
             license: {
@@ -37,7 +37,7 @@ const specs = swaggerJsdoc(swaggerOptions);
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(specs, {explorer: true}));
 
 app.use(cors({
-    origin: "http://localhost:5173", // Update this to your frontend URL
+    origin: "http://localhost:5174", // Update this to your frontend URL
     credentials: true, // Allow credentials (cookies, authorization headers)
 }));
 app.use(cookieParser());
@@ -57,7 +57,7 @@ app.use(bodyParser.json());
 
 app.use(function (req, res, next) {
     // console.log("Req type : " + req.method + ' : ' + req)
-    res.setHeader("Access-Control-Allow-Origin", "http://localhost:5173");
+    res.setHeader("Access-Control-Allow-Origin", "http://localhost:5174");
     res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PUT, PATCH, DELETE");
     res.setHeader("Access-Control-Allow-Headers", "X-Requested-With,content-type");
     res.setHeader("Access-Control-Allow-Credentials", true);
