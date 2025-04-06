@@ -11,5 +11,10 @@ router.get("/ping", function (req, res) {
 router.post("/createEditUserStatusGroup", authMiddleware, genericController.createEditUserStatusGroup);
 router.post("/getUser", authMiddleware, genericController.getUser);
 
+router.post("/searchCourse", authMiddleware, genericController.getUser);
+router.post("/enroll", authMiddleware, genericController.getUser);
+router.post("/disroll", authMiddleware, genericController.getUser);
+router.post("/updateUser", authMiddleware, genericController.getUser);
+
 
 module.exports = router;

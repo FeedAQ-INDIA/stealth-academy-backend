@@ -18,6 +18,16 @@ module.exports = (sequelize, Sequelize) => {
                 },
                 allowNull: false,
             },
+            notesContentType: {
+                type: Sequelize.STRING(100),
+                field: "notes_content_type",
+                allowNull: false,
+            },
+            notesContentId: {
+                type: Sequelize.STRING(100),
+                field: "notes_content_id",
+                allowNull: false,
+            },
             notesText: {
                 type: Sequelize.STRING(3000),
                 field: "notes_text",
@@ -29,7 +39,7 @@ module.exports = (sequelize, Sequelize) => {
                     if (!this.notes_created_at) return null;
                     const date = new Date(this.notes_created_at);
                     const day = String(date.getDate()).padStart(2, "0");
-                    const month = date.toLocaleString("en-US", { month: "short" });
+                    const month = date.toLocaleString("en-US", {month: "short"});
                     const year = date.getFullYear();
                     return `${day}-${month}-${year}`; // Format: dd-MMM-YYYY
                 },
@@ -48,7 +58,7 @@ module.exports = (sequelize, Sequelize) => {
                     if (!this.notes_updated_at) return null;
                     const date = new Date(this.notes_updated_at);
                     const day = String(date.getDate()).padStart(2, "0");
-                    const month = date.toLocaleString("en-US", { month: "short" });
+                    const month = date.toLocaleString("en-US", {month: "short"});
                     const year = date.getFullYear();
                     return `${day}-${month}-${year}`; // Format: dd-MMM-YYYY
                 },
