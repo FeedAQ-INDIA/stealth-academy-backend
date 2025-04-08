@@ -7,15 +7,11 @@ module.exports = (sequelize, Sequelize) => {
             field: "course_video_id",
         },
         courseVideoTitle: {
-            type: Sequelize.INTEGER,
-            primaryKey: true,
-            autoIncrement: true,
+            type: Sequelize.STRING(500),
             field: "course_video_title",
         },
         courseVideoDescription: {
-            type: Sequelize.INTEGER,
-            primaryKey: true,
-            autoIncrement: true,
+            type: Sequelize.STRING(500),
             field: "course_video_description",
         },
 

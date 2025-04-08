@@ -1,12 +1,12 @@
 const {Op, fn, col} = require("sequelize");
 const db = require("../entity/index.js");
- const lodash = require("lodash");
- const logger = require("../config/winston.config.js");
+const lodash = require("lodash");
+const logger = require("../config/winston.config.js");
 const jwt = require("jsonwebtoken");
 const crypto = require('crypto');
 
 
-const getUser = async (userId, orgId, workspaceId) => {
+const getUser = async (userId) => {
     const userData = await db.User.findByPk(userId);
 
     if (!userData) throw new Error("User not found"); // Handle case where user is not found
@@ -14,8 +14,170 @@ const getUser = async (userId, orgId, workspaceId) => {
     return userData.toJSON();
 };
 
-module.exports = {
 
-    getUser
+const enrollUserCourse = async (userId, courseId) => {
+    const enrollUserCourseData = await db.UserEnrollment.findAll({
+        where: {
+            courseId: courseId, userId: userId
+        }
+    });
+    let enrollmentObj;
+    if (!enrollUserCourseData || enrollUserCourseData?.length == 0) {
+        enrollmentObj = await db.UserEnrollment.create({
+            userId: userId,
+            courseId: courseId
+        })
+    }
+
+
+    return enrollmentObj.toJSON();
+};
+
+const disrollUserCourse = async (userId, courseId) => {
+    const enrollUserCourseData = await db.UserEnrollment.findAll({
+        where: {
+            courseId: courseId, userId: userId
+        }
+    });
+    let disrollmentObj;
+    if (enrollUserCourseData) {
+        disrollmentObj = await enrollUserCourseData.destroy({where: {courseId: courseId, userId: userId}})
+    }
+
+
+    return disrollmentObj.toJSON();
+};
+
+
+const searchRecord = async (req, res) => {
+    try {
+        const {limit, offset, getThisData} = req.body;
+
+        // Prepare query options
+        const queryOptions = {
+            limit: limit || 10,
+            offset: offset || 0,
+            include: parseIncludes(getThisData)?.include,
+            where: buildWhereClause(getThisData.where || {}),
+            order: getThisData.order || [], ...(!lodash.isEmpty(getThisData.attributes) && {
+                attributes: getThisData.attributes,
+            }),
+        };
+
+        if (!lodash.isEmpty(getThisData.attributes)) {
+            let a = [];
+            getThisData.attributes.forEach((attr) => {
+                // Check if attr is an array indicating a function
+                if (Array.isArray(attr) && attr.length === 2 && attr[0] === "DISTINCT") {
+                    a.push([fn("DISTINCT", col(attr[1])), attr[1]]); // Handle the DISTINCT case
+                }
+            });
+            console.log(a.length);
+            if (a && !lodash.isEmpty(a)) {
+                queryOptions.attributes = a;
+                console.log("if", JSON.stringify(queryOptions));
+            } else {
+                console.log("elsse");
+            }
+        }
+
+        console.log(JSON.stringify(queryOptions));
+
+        // Fetch the data from the database
+        const {count, rows} = await lodash
+            .get(db, getThisData.datasource)
+            .findAndCountAll({...queryOptions, distinct: true});
+        console.log(rows);
+        return {
+            results: rows, totalCount: count, limit, offset,
+        };
+    } catch (error) {
+        console.error("Error fetching data:", error);
+        return null;
+    }
+};
+
+const buildWhereClause = (conditions) => {
+    const where = {};
+
+    for (const [key, value] of Object.entries(conditions)) {
+        // Handle $and and $or at the top level
+        if (key === "$and" || key === "$or") {
+            where[Op[key.slice(1)]] = value.map((subCondition) => buildWhereClause(subCondition));
+        }
+        // Handle regular conditions
+        else if (value && typeof value === "object" && !Array.isArray(value)) {
+            // Define operator mapping
+            const operatorMapping = {
+                $eq: Op.eq,
+                $ne: Op.ne,
+                $gt: Op.gt,
+                $lt: Op.lt,
+                $gte: Op.gte,
+                $lte: Op.lte,
+                $between: Op.between,
+                $like: Op.like,
+                $notLike: Op.notLike,
+                $in: Op.in,
+                $notIn: Op.notIn,
+                $is: Op.is,
+            };
+
+            // Apply operator mapping for individual field conditions
+            where[key] = Object.entries(value).reduce((acc, [op, val]) => {
+                if (operatorMapping[op] !== undefined) {
+                    acc[operatorMapping[op]] = val;
+                }
+                return acc;
+            }, {});
+        } else {
+            // Handle null and simple values for non-object types
+            where[key] = value !== null ? value : {[Op.is]: null};
+        }
+    }
+
+    return where;
+};
+
+const parseIncludes = (data) => {
+    console.log(data);
+    const {datasource, as, where, order, include, required, attributes} = data;
+    console.log("key :: ", lodash.get(db, datasource), "::  req", required);
+
+    let parsedInclude = {
+        model: lodash.get(db, datasource),
+        as: as,
+        where: buildWhereClause(where || {}),
+        order: order || [],
+        required: required || false, ...(!lodash.isEmpty(attributes) && {attributes: attributes}),
+    };
+
+    if (!lodash.isEmpty(attributes)) {
+        let a = [];
+        attributes.forEach((attr) => {
+            // Check if attr is an array indicating a function
+            if (Array.isArray(attr) && attr.length === 2 && attr[0] === "DISTINCT") {
+                a.push([fn("DISTINCT", col(attr[1])), attr[1]]); // Handle the DISTINCT case
+            }
+        });
+        console.log(a.length);
+        if (a && !lodash.isEmpty(a)) {
+            parsedInclude.attributes = a;
+        }
+    }
+
+    if (include && include.length) {
+        parsedInclude.include = include.map((subInclude) => parseIncludes(subInclude));
+    }
+
+    return parsedInclude;
+};
+
+
+module.exports = {
+    getUser,
+    searchRecord,
+    enrollUserCourse,
+    disrollUserCourse
 };
 

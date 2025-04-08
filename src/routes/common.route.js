@@ -8,12 +8,11 @@ router.get("/ping", function (req, res) {
     res.status(200).send({message: "Ping Successful"});
 });
 
-router.post("/createEditUserStatusGroup", authMiddleware, genericController.createEditUserStatusGroup);
-router.post("/getUser", authMiddleware, genericController.getUser);
+ router.post("/getUser", authMiddleware, genericController.getUser);
 
-router.post("/searchCourse", authMiddleware, genericController.getUser);
-router.post("/enroll", authMiddleware, genericController.getUser);
-router.post("/disroll", authMiddleware, genericController.getUser);
+router.post("/searchCourse", authMiddleware, genericController.searchRecord);
+router.post("/enroll", authMiddleware, genericController.enrollUserCourse);
+router.post("/disroll", authMiddleware, genericController.disrollUserCourse);
 router.post("/updateUser", authMiddleware, genericController.getUser);
 
 

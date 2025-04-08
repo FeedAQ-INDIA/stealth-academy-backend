@@ -18,6 +18,14 @@ module.exports = (sequelize, Sequelize) => {
             type: Sequelize.STRING(500),
             field: "course_topic_level",
         },
+        courseId: {
+            type: Sequelize.INTEGER,
+            references: {
+                model: "course",
+                key: "course_id",
+            },
+            field: "course_topic_course_id",
+        },
         created_date: {
             type: Sequelize.VIRTUAL,
             get() {

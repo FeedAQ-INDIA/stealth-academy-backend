@@ -18,6 +18,22 @@ module.exports = (sequelize, Sequelize) => {
                 },
                 allowNull: false,
             },
+            courseTopicId: {
+                type: Sequelize.INTEGER,
+                references: {
+                    model: "course_topic",
+                    key: "course_topic_id",
+                },
+                field: "notes_topic_id",
+            },
+            courseId: {
+                type: Sequelize.INTEGER,
+                references: {
+                    model: "course",
+                    key: "course_id",
+                },
+                field: "notes_course_id",
+            },
             notesContentType: {
                 type: Sequelize.STRING(100),
                 field: "notes_content_type",

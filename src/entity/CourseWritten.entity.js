@@ -8,20 +8,14 @@ module.exports = (sequelize, Sequelize) => {
         },
         courseWrittenTitle: {
             type: Sequelize.STRING(500),
-            primaryKey: true,
-            autoIncrement: true,
             field: "course_written_title",
         },
         courseWrittenDescription: {
             type: Sequelize.STRING(500),
-            primaryKey: true,
-            autoIncrement: true,
             field: "course_written_description",
         },
         courseWrittenHtmlContent: {
             type: Sequelize.STRING(500),
-            primaryKey: true,
-            autoIncrement: true,
             field: "course_written_htmlcontent",
         },
         courseWrittenSource: {
