@@ -32,7 +32,10 @@ db.Counselling = require("./Counselling.entity.js")(sequelize, Sequelize);
 db.Course.hasMany(db.CourseTopic, {foreignKey: 'courseId', as: 'courseTopic'})
 
 
-db.CourseTopic.belongsTo(db.Course, {foreignKey: 'courseId', as: 'course'})
+db.CourseTopic.belongsTo(db.Course, {foreignKey: 'courseTopicId', as: 'course'})
+db.CourseTopic.hasMany(db.CourseVideo, {foreignKey: 'courseTopicId', as: 'courseVideo'})
+db.CourseTopic.hasMany(db.CourseWritten, {foreignKey: 'courseTopicId', as: 'courseWritten'})
+db.CourseTopic.hasMany(db.CourseInterview, {foreignKey: 'courseTopicId', as: 'courseInterview'})
 
 db.CourseVideo.belongsTo(db.Course, {foreignKey: 'courseId', as: 'course'})
 db.CourseVideo.belongsTo(db.CourseTopic, {foreignKey: 'courseTopicId', as: 'coursetopic'})
@@ -46,6 +49,10 @@ db.CourseInterview.belongsTo(db.User, {foreignKey: 'userId', as: 'user'})
 
 db.UserEnrollment.belongsTo(db.Course, {foreignKey: 'courseId', as: 'course'})
 db.UserEnrollment.belongsTo(db.User, {foreignKey: 'userId', as: 'user'})
+
+db.User.belongsToMany(db.Course, {
+    through: db.UserEnrollment, foreignKey: 'userId', otherKey: 'courseId', as: 'courses',
+});
 
 db.Notes.belongsTo(db.User, {foreignKey: 'userId', as: 'user'})
 db.Notes.belongsTo(db.Course, {foreignKey: 'courseId', as: 'course'})

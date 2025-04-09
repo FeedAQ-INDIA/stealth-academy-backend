@@ -16,36 +16,41 @@ const getUser = async (userId) => {
 
 
 const enrollUserCourse = async (userId, courseId) => {
-    const enrollUserCourseData = await db.UserEnrollment.findAll({
-        where: {
-            courseId: courseId, userId: userId
-        }
-    });
+    const enrollUserCourseData =  await enrollStatus(userId, courseId);
     let enrollmentObj;
-    if (!enrollUserCourseData || enrollUserCourseData?.length == 0) {
+    if (enrollUserCourseData && !enrollUserCourseData.isUserEnrolled) {
         enrollmentObj = await db.UserEnrollment.create({
             userId: userId,
             courseId: courseId
         })
     }
+     return enrollmentObj ? {message : 'Enrollment is successfully'}: {message : 'Enrollment failed'};
 
-
-    return enrollmentObj.toJSON();
 };
 
-const disrollUserCourse = async (userId, courseId) => {
+const enrollStatus = async (userId, courseId) => {
     const enrollUserCourseData = await db.UserEnrollment.findAll({
         where: {
             courseId: courseId, userId: userId
         }
     });
+
+    if(enrollUserCourseData && enrollUserCourseData.length>0){
+        return {isUserEnrolled: true}
+    }else{
+        return {isUserEnrolled: false}
+    }
+ };
+
+const disrollUserCourse = async (userId, courseId) => {
+    const enrollUserCourseData =  await enrollStatus(userId, courseId);
     let disrollmentObj;
-    if (enrollUserCourseData) {
-        disrollmentObj = await enrollUserCourseData.destroy({where: {courseId: courseId, userId: userId}})
+    if (enrollUserCourseData && enrollUserCourseData.isUserEnrolled) {
+        disrollmentObj = await db.UserEnrollment.destroy({where: {courseId: courseId, userId: userId}})
     }
 
 
-    return disrollmentObj.toJSON();
+    return disrollmentObj ? {message : 'Disrollment is successfully'}: {message : 'Disrollment failed'};
 };
 
 
@@ -178,6 +183,6 @@ module.exports = {
     getUser,
     searchRecord,
     enrollUserCourse,
-    disrollUserCourse
+    disrollUserCourse,enrollStatus
 };
 
