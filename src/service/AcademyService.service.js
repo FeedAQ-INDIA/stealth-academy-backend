@@ -4,6 +4,7 @@ const lodash = require("lodash");
 const logger = require("../config/winston.config.js");
 const jwt = require("jsonwebtoken");
 const crypto = require('crypto');
+const {toJSON} = require("lodash/seq");
 
 
 const getUser = async (userId) => {
@@ -17,7 +18,7 @@ const getUser = async (userId) => {
 const getCourseDetail = async (userId, courseId) => {
     const enrollUserCourseData =  await enrollStatus(userId, courseId);
 
-    const courseDetails =  await db.Course.findAll({
+    const courseDetails =  await db.Course.findOne({
           where : {courseId: courseId},
         include: [{
             model: db.CourseTopic, as: "courseTopic", required: false ,
@@ -30,19 +31,24 @@ const getCourseDetail = async (userId, courseId) => {
         ],
     });
 
-    for (const topic of courseDetails[0]?.courseTopic || []) {
+    for (const topic of courseDetails?.courseTopic || []) {
         for (const content of topic.courseTopicContent || []) {
-            const contentType = content.courseTopicContentType;
-            const contentId = content.contentId;
+            const { courseTopicContentType: contentType, contentId } = content;
 
-            if (db[contentType]) {
-                content[contentType] = await db[contentType].findByPk(contentId);
+            if (db[contentType] && contentId) {
+                try {
+                    const contentObj = await db[contentType].findByPk(contentId);
+                    if (contentObj) {
+                        content.loadedContent = contentObj; // or use content.enrichedContent
+                    }
+                } catch (err) {
+                    console.error("Error loading content:", err);
+                }
             }
-            
         }
     }
-
-    return courseDetails;
+    console.log("Course Detail", courseDetails.toJSON())
+    return  courseDetails.toJSON() ;
 
 };
 
