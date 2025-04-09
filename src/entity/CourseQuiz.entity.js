@@ -1,10 +1,18 @@
 module.exports = (sequelize, Sequelize) => {
-    const CourseTopicContent = sequelize.define("coursetopiccontent", {
-        courseTopicContentId: {
+    const CourseQuiz = sequelize.define("course_quiz", {
+        courseQuizId: {
             type: Sequelize.INTEGER,
             primaryKey: true,
             autoIncrement: true,
-            field: "coursetopiccontent_id",
+            field: "course_quiz_id",
+        },
+        courseQuizTitle: {
+            type: Sequelize.STRING(500),
+            field: "course_quiz_title",
+        },
+        courseQuizDescription: {
+            type: Sequelize.STRING(500),
+            field: "course_quiz_description",
         },
         courseTopicId: {
             type: Sequelize.INTEGER,
@@ -12,7 +20,7 @@ module.exports = (sequelize, Sequelize) => {
                 model: "course_topic",
                 key: "course_topic_id",
             },
-            field: "coursetopiccontent_topic_id",
+            field: "course_quiz_topic_id",
         },
         courseId: {
             type: Sequelize.INTEGER,
@@ -20,25 +28,13 @@ module.exports = (sequelize, Sequelize) => {
                 model: "course",
                 key: "course_id",
             },
-            field: "coursetopiccontent_course_id",
-        },
-        contentId: {
-            type: Sequelize.INTEGER,
-            field: "coursetopiccontent_content_id",
-        },
-        courseTopicContentType: {
-            type: Sequelize.ENUM('CourseVideo', 'CourseWritten', 'CourseInterview', 'ComprehensionReading', 'CourseQuiz'),
-            field: "coursetopiccontent_type",
-        },
-        courseTopicContentSequence: {
-            type: Sequelize.INTEGER,
-            field: "coursetopiccontent_seq",
+            field: "course_quiz_course_id",
         },
         created_date: {
             type: Sequelize.VIRTUAL,
             get() {
-                if (!this.coursetopiccontent_created_at) return null;
-                const date = new Date(this.coursetopiccontent_created_at);
+                if (!this.course_quiz_created_at) return null;
+                const date = new Date(this.course_quiz_created_at);
                 const day = String(date.getDate()).padStart(2, "0");
                 const month = date.toLocaleString("en-US", { month: "short" });
                 const year = date.getFullYear();
@@ -48,16 +44,16 @@ module.exports = (sequelize, Sequelize) => {
         created_time: {
             type: Sequelize.VIRTUAL,
             get() {
-                if (!this.coursetopiccontent_created_at) return null;
-                return this.coursetopiccontent_created_at.toTimeString().split(" ")[0]; // Format: HH:MM:SS
+                if (!this.course_quiz_created_at) return null;
+                return this.course_quiz_created_at.toTimeString().split(" ")[0]; // Format: HH:MM:SS
             },
         },
 
         updated_date: {
             type: Sequelize.VIRTUAL,
             get() {
-                if (!this.coursetopiccontent_updated_at) return null;
-                const date = new Date(this.coursetopiccontent_updated_at);
+                if (!this.course_quiz_updated_at) return null;
+                const date = new Date(this.course_quiz_updated_at);
                 const day = String(date.getDate()).padStart(2, "0");
                 const month = date.toLocaleString("en-US", { month: "short" });
                 const year = date.getFullYear();
@@ -67,15 +63,15 @@ module.exports = (sequelize, Sequelize) => {
         updated_time: {
             type: Sequelize.VIRTUAL,
             get() {
-                if (!this.coursetopiccontent_updated_at) return null;
-                return this.coursetopiccontent_updated_at.toTimeString().split(" ")[0]; // Format: HH:MM:SS
+                if (!this.course_quiz_updated_at) return null;
+                return this.course_quiz_updated_at.toTimeString().split(" ")[0]; // Format: HH:MM:SS
             },
         },
     } , {
         timestamps: true,
-        createdAt: "coursetopiccontent_created_at",
-        updatedAt: "coursetopiccontent_updated_at",
+        createdAt: "course_quiz_created_at",
+        updatedAt: "course_quiz_updated_at",
     });
-    return CourseTopicContent;
+    return CourseQuiz;
 };
 

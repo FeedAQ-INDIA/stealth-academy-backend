@@ -14,6 +14,38 @@ const getUser = async (userId) => {
     return userData.toJSON();
 };
 
+const getCourseDetail = async (userId, courseId) => {
+    const enrollUserCourseData =  await enrollStatus(userId, courseId);
+
+    const courseDetails =  await db.Course.findAll({
+          where : {courseId: courseId},
+        include: [{
+            model: db.CourseTopic, as: "courseTopic", required: false ,
+            include:[
+                {
+                    model: db.CourseTopicContent , as: "courseTopicContent", required: false,
+                }
+            ]
+        },
+        ],
+    });
+
+    for (const topic of courseDetails[0]?.courseTopic || []) {
+        for (const content of topic.courseTopicContent || []) {
+            const contentType = content.courseTopicContentType;
+            const contentId = content.contentId;
+
+            if (db[contentType]) {
+                content[contentType] = await db[contentType].findByPk(contentId);
+            }
+            
+        }
+    }
+
+    return courseDetails;
+
+};
+
 
 const enrollUserCourse = async (userId, courseId) => {
     const enrollUserCourseData =  await enrollStatus(userId, courseId);
@@ -183,6 +215,7 @@ module.exports = {
     getUser,
     searchRecord,
     enrollUserCourse,
-    disrollUserCourse,enrollStatus
+    disrollUserCourse,enrollStatus,
+    getCourseDetail
 };
 

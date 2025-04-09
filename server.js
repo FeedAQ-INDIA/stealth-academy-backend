@@ -44,9 +44,6 @@ app.use(cookieParser());
 app.use(bodyParser.json());
 
 // db.UserStatusGroup.sync({ alter: true });
-// db.UserStatusGroupLink.sync({ alter: true });
-// db.UserStatus.sync({ alter: true });
-// db.PortalGroupFieldConfig.sync({ alter: true });
 
 
 // db.sequelize.sync({ alter : true }).then(() => {
