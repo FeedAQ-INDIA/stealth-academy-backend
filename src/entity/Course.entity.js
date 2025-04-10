@@ -14,6 +14,10 @@ module.exports = (sequelize, Sequelize) => {
             type: Sequelize.STRING(500),
             field: "course_description",
         },
+        courseVideoUrl: {
+            type: Sequelize.STRING(500),
+            field: "course_video_url",
+        },
         courseLevel: {
             type: Sequelize.STRING(500),
             field: "course_level",

@@ -88,12 +88,61 @@ async function getCourseDetail(req, res, next) {
 }
 
 
+async function saveNote(req, res, next) {
+    const {notesId,
+        courseTopicId,
+        courseId,
+        courseTopicContentId,
+        notesText,} = req.body;
+    try {
+        let val = await AcademyService.saveNote(req.user.userId, notesId,
+            courseTopicId,
+            courseId,
+            courseTopicContentId,
+            notesText,);
+        res.status(200).send({
+            status: 200, message: "Success", data: val != null ? val : [],
+        });
+    } catch (err) {
+        console.error(`Error occured`, err.message);
+        res.status(500).send({
+            status: 500, message: err.message || "Some error occurred while creating the Tutorial.",
+        });
+        next(err);
+    }
+}
+
+
 async function searchRecord(req, res, next) {
     const {
         searchValue, searchKey, attributes, limit, offset, sortBy, sortOrder, filters, associate,
     } = req.body;
     try {
         let val = await AcademyService.searchRecord(req, res);
+        res.status(200).send({
+            status: 200, message: "Success", data: val != null ? val : [],
+        });
+    } catch (err) {
+        console.error(`Error occured`, err.message);
+        res.status(500).send({
+            status: 500, message: err.message || "Some error occurred while creating the Tutorial.",
+        });
+        next(err);
+    }
+}
+
+async function saveUserDetail(req, res, next) {
+    const {
+        firstName ,
+        lastName ,
+        number ,
+        profilePic
+    } = req.body;
+    try {
+        let val = await AcademyService.saveUserDetail(req.user.userId, firstName ,
+            lastName ,
+            number ,
+            profilePic );
         res.status(200).send({
             status: 200, message: "Success", data: val != null ? val : [],
         });
@@ -113,5 +162,7 @@ module.exports = {
     searchRecord,
     enrollUserCourse,
     disrollUserCourse,
-    enrollStatus
+    enrollStatus,
+    saveUserDetail,
+    saveNote
 };

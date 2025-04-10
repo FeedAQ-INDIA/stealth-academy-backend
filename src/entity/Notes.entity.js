@@ -18,6 +18,14 @@ module.exports = (sequelize, Sequelize) => {
                 },
                 allowNull: false,
             },
+            courseTopicContentId: {
+                type: Sequelize.INTEGER,
+                references: {
+                    model: "coursetopiccontent",
+                    key: "coursetopiccontent_id",
+                },
+                field: "notes_coursetopiccontent_id",
+            },
             courseTopicId: {
                 type: Sequelize.INTEGER,
                 references: {
@@ -34,16 +42,7 @@ module.exports = (sequelize, Sequelize) => {
                 },
                 field: "notes_course_id",
             },
-            notesContentType: {
-                type: Sequelize.STRING(100),
-                field: "notes_content_type",
-                allowNull: false,
-            },
-            notesContentId: {
-                type: Sequelize.STRING(100),
-                field: "notes_content_id",
-                allowNull: false,
-            },
+
             notesText: {
                 type: Sequelize.STRING(3000),
                 field: "notes_text",

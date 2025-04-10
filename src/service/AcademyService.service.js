@@ -7,6 +7,56 @@ const crypto = require('crypto');
 const {toJSON} = require("lodash/seq");
 
 
+const saveUserDetail = async (
+    userId,
+    firstName,
+    lastName,
+    number,
+    profilePic,
+) => {
+    const userData = await db.User.findByPk(userId);
+
+    if (!userData) throw new Error("User not found"); // Handle case where user is not found
+
+    userData.firstName = firstName;
+    userData.lastName = lastName;
+    userData.number = number;
+    userData.profilePic = profilePic;
+
+    await userData.save();
+    return {message: 'User saved successfully'};
+};
+
+const saveNote = async (
+    userId,
+    notesId,
+    courseTopicId,
+    courseId,
+    courseTopicContentId,
+    notesText,
+) => {
+    if (notesId) {
+        const notesData = await db.Notes.findByPk(notesId);
+        notesData.notesText = notesText;
+        await notesData.save();
+
+        return {message: 'Notes updated successfully'};
+
+    } else {
+        await db.Notes.create({
+            userId: userId,
+            courseTopicId: courseTopicId,
+            courseId: courseId,
+            courseTopicContentId: courseTopicId,
+            notesText: notesText
+        })
+        return {message: 'Notes created successfully'};
+
+    }
+
+
+};
+
 const getUser = async (userId) => {
     const userData = await db.User.findByPk(userId);
 
@@ -16,45 +66,41 @@ const getUser = async (userId) => {
 };
 
 const getCourseDetail = async (userId, courseId) => {
-    const enrollUserCourseData =  await enrollStatus(userId, courseId);
+    const enrollUserCourseData = await enrollStatus(userId, courseId);
 
-    const courseDetails =  await db.Course.findOne({
-          where : {courseId: courseId},
+    const courseDetailsRaw = await db.Course.findOne({
+        where: { courseId: courseId },
         include: [{
-            model: db.CourseTopic, as: "courseTopic", required: false ,
-            include:[
+            model: db.CourseTopic,
+            as: "courseTopic",
+            required: false,
+            include: [
                 {
-                    model: db.CourseTopicContent , as: "courseTopicContent", required: false,
+                    model: db.CourseTopicContent,
+                    as: "courseTopicContent",
+                    required: false
                 }
             ]
-        },
-        ],
+        }],
     });
 
-    for (const topic of courseDetails?.courseTopic || []) {
-        for (const content of topic.courseTopicContent || []) {
-            const { courseTopicContentType: contentType, contentId } = content;
+    const courseDetails = courseDetailsRaw.toJSON();
 
-            if (db[contentType] && contentId) {
-                try {
-                    const contentObj = await db[contentType].findByPk(contentId);
-                    if (contentObj) {
-                        content.loadedContent = contentObj; // or use content.enrichedContent
-                    }
-                } catch (err) {
-                    console.error("Error loading content:", err);
-                }
-            }
+    // Sort courseTopicContent in each courseTopic by courseTopicContentSequence ASC
+    courseDetails.courseTopic?.forEach(topic => {
+        if (Array.isArray(topic.courseTopicContent)) {
+            topic.courseTopicContent.sort((a, b) => a.courseTopicContentSequence - b.courseTopicContentSequence);
         }
-    }
-    console.log("Course Detail", courseDetails.toJSON())
-    return  courseDetails.toJSON() ;
+    });
 
+    console.log("Course Detail", courseDetails);
+    return courseDetails;
 };
 
 
+
 const enrollUserCourse = async (userId, courseId) => {
-    const enrollUserCourseData =  await enrollStatus(userId, courseId);
+    const enrollUserCourseData = await enrollStatus(userId, courseId);
     let enrollmentObj;
     if (enrollUserCourseData && !enrollUserCourseData.isUserEnrolled) {
         enrollmentObj = await db.UserEnrollment.create({
@@ -62,7 +108,7 @@ const enrollUserCourse = async (userId, courseId) => {
             courseId: courseId
         })
     }
-     return enrollmentObj ? {message : 'Enrollment is successfully'}: {message : 'Enrollment failed'};
+    return enrollmentObj ? {message: 'Enrollment is successfully'} : {message: 'Enrollment failed'};
 
 };
 
@@ -73,22 +119,22 @@ const enrollStatus = async (userId, courseId) => {
         }
     });
 
-    if(enrollUserCourseData && enrollUserCourseData.length>0){
+    if (enrollUserCourseData && enrollUserCourseData.length > 0) {
         return {isUserEnrolled: true}
-    }else{
+    } else {
         return {isUserEnrolled: false}
     }
- };
+};
 
 const disrollUserCourse = async (userId, courseId) => {
-    const enrollUserCourseData =  await enrollStatus(userId, courseId);
+    const enrollUserCourseData = await enrollStatus(userId, courseId);
     let disrollmentObj;
     if (enrollUserCourseData && enrollUserCourseData.isUserEnrolled) {
         disrollmentObj = await db.UserEnrollment.destroy({where: {courseId: courseId, userId: userId}})
     }
 
 
-    return disrollmentObj ? {message : 'Disrollment is successfully'}: {message : 'Disrollment failed'};
+    return disrollmentObj ? {message: 'Disrollment is successfully'} : {message: 'Disrollment failed'};
 };
 
 
@@ -221,7 +267,9 @@ module.exports = {
     getUser,
     searchRecord,
     enrollUserCourse,
-    disrollUserCourse,enrollStatus,
-    getCourseDetail
+    disrollUserCourse, enrollStatus,
+    getCourseDetail,
+    saveUserDetail,
+    saveNote
 };
 

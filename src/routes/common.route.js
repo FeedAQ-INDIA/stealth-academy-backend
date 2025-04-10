@@ -14,8 +14,9 @@ router.post("/searchCourse", authMiddleware, genericController.searchRecord);
 router.post("/enrollStatus", authMiddleware, genericController.enrollStatus);
 router.post("/enroll", authMiddleware, genericController.enrollUserCourse);
 router.post("/disroll", authMiddleware, genericController.disrollUserCourse);
-router.post("/updateUser", authMiddleware, genericController.getUser);
+router.post("/saveUserDetail", authMiddleware, genericController.saveUserDetail);
 router.post("/getCourseDetail", authMiddleware, genericController.getCourseDetail);
+router.post("/saveNote", authMiddleware, genericController.saveNote);
 
 
 module.exports = router;
