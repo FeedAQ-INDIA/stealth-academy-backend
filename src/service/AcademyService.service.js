@@ -47,7 +47,7 @@ const saveNote = async (
             userId: userId,
             courseTopicId: courseTopicId,
             courseId: courseId,
-            courseTopicContentId: courseTopicId,
+            courseTopicContentId: courseTopicContentId,
             notesText: notesText
         })
         return {message: 'Notes created successfully'};
