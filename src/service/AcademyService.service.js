@@ -57,6 +57,24 @@ const saveNote = async (
 
 };
 
+
+const deleteNote = async (
+    userId, notesId,
+) => {
+    if (notesId) {
+        const notesData = await db.Notes.findByPk(notesId);
+         await notesData.destroy();
+
+        return {message: 'Notes delete successfully'};
+
+    } else {
+        throw new Error("Not found notes with that id");
+
+    }
+
+
+};
+
 const getUser = async (userId) => {
     const userData = await db.User.findByPk(userId);
 
@@ -270,6 +288,7 @@ module.exports = {
     disrollUserCourse, enrollStatus,
     getCourseDetail,
     saveUserDetail,
-    saveNote
+    saveNote,
+    deleteNote
 };
 

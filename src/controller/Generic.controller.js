@@ -93,13 +93,31 @@ async function saveNote(req, res, next) {
         courseTopicId,
         courseId,
         courseTopicContentId,
-        notesText,} = req.body;
+        notesText} = req.body;
     try {
         let val = await AcademyService.saveNote(req.user.userId, notesId,
             courseTopicId,
             courseId,
             courseTopicContentId,
             notesText,);
+        res.status(200).send({
+            status: 200, message: "Success", data: val != null ? val : [],
+        });
+    } catch (err) {
+        console.error(`Error occured`, err.message);
+        res.status(500).send({
+            status: 500, message: err.message || "Some error occurred while creating the Tutorial.",
+        });
+        next(err);
+    }
+}
+
+
+async function deleteNote(req, res, next) {
+    const {notesId,
+        } = req.body;
+    try {
+        let val = await AcademyService.deleteNote(req.user.userId, notesId);
         res.status(200).send({
             status: 200, message: "Success", data: val != null ? val : [],
         });
@@ -164,5 +182,6 @@ module.exports = {
     disrollUserCourse,
     enrollStatus,
     saveUserDetail,
-    saveNote
+    saveNote,
+    deleteNote
 };

@@ -17,6 +17,7 @@ router.post("/disroll", authMiddleware, genericController.disrollUserCourse);
 router.post("/saveUserDetail", authMiddleware, genericController.saveUserDetail);
 router.post("/getCourseDetail", authMiddleware, genericController.getCourseDetail);
 router.post("/saveNote", authMiddleware, genericController.saveNote);
+router.post("/deleteNote", authMiddleware, genericController.deleteNote);
 
 
 module.exports = router;
