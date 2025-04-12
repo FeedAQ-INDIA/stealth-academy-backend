@@ -38,6 +38,10 @@ module.exports = (sequelize, Sequelize) => {
             type: Sequelize.STRING(60),
             field: "coursetopiccontent_title",
         },
+        courseTopicContentDuration: {
+            type: Sequelize.INTEGER,
+            field: "coursetopiccontent_duration",
+        },
         created_date: {
             type: Sequelize.VIRTUAL,
             get() {

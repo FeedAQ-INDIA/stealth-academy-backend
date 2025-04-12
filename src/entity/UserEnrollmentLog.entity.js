@@ -1,0 +1,105 @@
+module.exports = (sequelize, Sequelize) => {
+    const UserEnrollmentLog = sequelize.define("user_enrollment_log", {
+        userEnrollmentLogId: {
+            type: Sequelize.INTEGER,
+            primaryKey: true,
+            autoIncrement: true,
+            field: "uel_id",
+        },
+        userEnrollmentId: {
+            type: Sequelize.INTEGER,
+            references: {
+                model: "user_enrollment",
+                key: "user_enrollment_id",
+            },
+            field: "uel_enrollment_id",
+        },
+        userId: {
+            type: Sequelize.INTEGER,
+            references: {
+                model: "user",
+                key: "user_id",
+            },
+            field: "uel_user_id",
+        },
+        courseId: {
+            type: Sequelize.INTEGER,
+            references: {
+                model: "course",
+                key: "course_id",
+            },
+            field: "uel_course_id",
+        },
+        courseTopicContentId: {
+            type: Sequelize.INTEGER,
+            references: {
+                model: "coursetopiccontent",
+                key: "coursetopiccontent_id",
+            },
+            field: "uel_coursetopiccontent_id",
+        },
+        courseTopicId: {
+            type: Sequelize.INTEGER,
+            references: {
+                model: "course_topic",
+                key: "course_topic_id",
+            },
+            field: "uel_topic_id",
+        },
+        enrollmentStatus: {
+            type: Sequelize.ENUM('ENROLLED','IN PROGRESS','PAUSED', 'COMPLETED', 'CERTIFIED'),
+            field: "uel_status",
+        },
+        completionStats: {
+            type: Sequelize.INTEGER,
+            field: "uel_completion_stats",
+        },
+        timeSpent: {
+            type: Sequelize.INTEGER,
+            field: "uel_time_spent",
+        },
+        created_date: {
+            type: Sequelize.VIRTUAL,
+            get() {
+                if (!this.uel_created_at) return null;
+                const date = new Date(this.uel_created_at);
+                const day = String(date.getDate()).padStart(2, "0");
+                const month = date.toLocaleString("en-US", { month: "short" });
+                const year = date.getFullYear();
+                return `${day}-${month}-${year}`; // Format: dd-MMM-YYYY
+            },
+        },
+        created_time: {
+            type: Sequelize.VIRTUAL,
+            get() {
+                if (!this.uel_created_at) return null;
+                return this.uel_created_at.toTimeString().split(" ")[0]; // Format: HH:MM:SS
+            },
+        },
+
+        updated_date: {
+            type: Sequelize.VIRTUAL,
+            get() {
+                if (!this.uel_updated_at) return null;
+                const date = new Date(this.uel_updated_at);
+                const day = String(date.getDate()).padStart(2, "0");
+                const month = date.toLocaleString("en-US", { month: "short" });
+                const year = date.getFullYear();
+                return `${day}-${month}-${year}`; // Format: dd-MMM-YYYY
+            },
+        },
+        updated_time: {
+            type: Sequelize.VIRTUAL,
+            get() {
+                if (!this.uel_updated_at) return null;
+                return this.uel_updated_at.toTimeString().split(" ")[0]; // Format: HH:MM:SS
+            },
+        },
+    } , {
+        timestamps: true,
+        createdAt: "uel_created_at",
+        updatedAt: "uel_updated_at",
+    });
+    return UserEnrollmentLog;
+};
+
