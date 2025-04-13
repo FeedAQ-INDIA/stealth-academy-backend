@@ -15,6 +15,9 @@ require("./google_oauth.js");
 require("./microsoft_oauth.js");
 const logger = require('./src/config/winston.config.js')
 
+const dns = require('dns');
+dns.setDefaultResultOrder('ipv4first');
+
 const swaggerOptions = {
     definition: {
         openapi: "3.1.0", info: {

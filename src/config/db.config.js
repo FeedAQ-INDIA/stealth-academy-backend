@@ -14,9 +14,8 @@ module.exports = {
     dialectOptions: {
         ssl: {
             require: true,
+            rejectUnauthorized: false // Supabase requires this for SSL
         },
-        // ----> Pass the family option here <----
-        family: 4 // 4 means IPv4, 6 means IPv6
     },
     // HOST: "db.vtsiasguucuvjjqqooeo.supabase.co",
     // USER: "postgres",
