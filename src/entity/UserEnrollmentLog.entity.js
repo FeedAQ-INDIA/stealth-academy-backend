@@ -30,14 +30,6 @@ module.exports = (sequelize, Sequelize) => {
             },
             field: "uel_course_id",
         },
-        courseTopicContentId: {
-            type: Sequelize.INTEGER,
-            references: {
-                model: "coursetopiccontent",
-                key: "coursetopiccontent_id",
-            },
-            field: "uel_coursetopiccontent_id",
-        },
         courseTopicId: {
             type: Sequelize.INTEGER,
             references: {
@@ -46,17 +38,17 @@ module.exports = (sequelize, Sequelize) => {
             },
             field: "uel_topic_id",
         },
+        courseTopicContentId: {
+            type: Sequelize.INTEGER,
+            references: {
+                model: "coursetopiccontent",
+                key: "coursetopiccontent_id",
+            },
+            field: "uel_coursetopiccontent_id",
+        },
         enrollmentStatus: {
-            type: Sequelize.ENUM('ENROLLED','IN PROGRESS','PAUSED', 'COMPLETED', 'CERTIFIED'),
+            type: Sequelize.ENUM('NOT STARTED','IN PROGRESS','PAUSED', 'COMPLETED'),
             field: "uel_status",
-        },
-        completionStats: {
-            type: Sequelize.INTEGER,
-            field: "uel_completion_stats",
-        },
-        timeSpent: {
-            type: Sequelize.INTEGER,
-            field: "uel_time_spent",
         },
         created_date: {
             type: Sequelize.VIRTUAL,

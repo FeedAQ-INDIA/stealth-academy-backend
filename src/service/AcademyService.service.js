@@ -111,6 +111,12 @@ const getCourseDetail = async (userId, courseId) => {
         }
     });
 
+    courseDetails?.courseTopic?.map(a=> {
+         let sumDuration = a?.courseTopicContent?.reduce((sum, b) => sum + parseInt(b.courseTopicContentDuration), 0);
+         console.log(sumDuration);
+        a['courseTopicDuration'] = sumDuration
+    })
+
     console.log("Course Detail", courseDetails);
     return courseDetails;
 };
@@ -138,7 +144,7 @@ const enrollStatus = async (userId, courseId) => {
     });
 
     if (enrollUserCourseData && enrollUserCourseData.length > 0) {
-        return {isUserEnrolled: true}
+        return {isUserEnrolled: true, enrollmentData:enrollUserCourseData}
     } else {
         return {isUserEnrolled: false}
     }
@@ -148,6 +154,8 @@ const disrollUserCourse = async (userId, courseId) => {
     const enrollUserCourseData = await enrollStatus(userId, courseId);
     let disrollmentObj;
     if (enrollUserCourseData && enrollUserCourseData.isUserEnrolled) {
+        await db.UserEnrollmentLog.destroy({where: { userId,
+            courseId}})
         disrollmentObj = await db.UserEnrollment.destroy({where: {courseId: courseId, userId: userId}})
     }
 
@@ -155,6 +163,37 @@ const disrollUserCourse = async (userId, courseId) => {
     return disrollmentObj ? {message: 'Disrollment is successfully'} : {message: 'Disrollment failed'};
 };
 
+
+const saveUserEnrollmentData = async (
+    userId ,
+    userEnrollmentId ,
+    courseId ,
+    courseTopicContentId,
+    courseTopicId ,
+    enrollmentStatus ,
+
+) => {
+    const enrollUserCourseData = await enrollStatus(userId, courseId);
+    let enrollmentObj;
+    if (enrollUserCourseData && enrollUserCourseData.isUserEnrolled) {
+        const [enrollmentObj, created] = await db.UserEnrollmentLog.findOrCreate({
+            where: {
+                userEnrollmentId,
+                courseId,
+                courseTopicContentId,
+                courseTopicId,
+            },
+            defaults: {
+                userId,
+                enrollmentStatus,
+            }
+        });
+    }else{
+        throw new Error("User not enrolled")
+    }
+    return enrollmentObj ? {message: 'Enrollment is updated'} : {message: 'Enrollment is updated'};
+
+};
 
 const searchRecord = async (req, res) => {
     try {
@@ -289,6 +328,7 @@ module.exports = {
     getCourseDetail,
     saveUserDetail,
     saveNote,
-    deleteNote
+    deleteNote,
+    saveUserEnrollmentData
 };
 

@@ -88,6 +88,33 @@ async function getCourseDetail(req, res, next) {
 }
 
 
+async function saveUserEnrollmentData(req, res, next) {
+    const {
+        userEnrollmentId ,
+        courseId ,
+        courseTopicContentId,
+        courseTopicId ,
+        enrollmentStatus  } = req.body;
+    try {
+        let val = await AcademyService.saveUserEnrollmentData(req.user.userId,
+            userEnrollmentId ,
+            courseId ,
+            courseTopicContentId,
+            courseTopicId ,
+            enrollmentStatus );
+        res.status(200).send({
+            status: 200, message: "Success", data: val != null ? val : [],
+        });
+    } catch (err) {
+        console.error(`Error occured`, err.message);
+        res.status(500).send({
+            status: 500, message: err.message || "Some error occurred while creating the Tutorial.",
+        });
+        next(err);
+    }
+}
+
+
 async function saveNote(req, res, next) {
     const {notesId,
         courseTopicId,
@@ -183,5 +210,6 @@ module.exports = {
     enrollStatus,
     saveUserDetail,
     saveNote,
-    deleteNote
+    deleteNote,saveUserEnrollmentData
+
 };

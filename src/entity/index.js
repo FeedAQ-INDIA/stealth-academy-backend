@@ -34,6 +34,15 @@ db.ListenAndRead = require("./ListenAndRead.entity.js")(sequelize, Sequelize);
 db.CourseQuiz = require("./CourseQuiz.entity.js")(sequelize, Sequelize);
 db.QuizQuestion = require("./QuizQuestion.entity.js")(sequelize, Sequelize);
 db.InterviewLog = require("./InterviewLog.entity.js")(sequelize, Sequelize);
+db.UserEnrollmentLog = require("./UserEnrollmentLog.entity.js")(sequelize, Sequelize);
+
+
+db.UserEnrollmentLog.belongsTo(db.Course, {foreignKey: 'courseId', as: 'course'})
+db.UserEnrollmentLog.belongsTo(db.CourseTopic, {foreignKey: 'courseTopicId', as: 'coursetopic'})
+db.UserEnrollmentLog.belongsTo(db.User, {foreignKey: 'userId', as: 'user'})
+db.UserEnrollmentLog.belongsTo(db.CourseTopicContent, {foreignKey: 'courseTopicContentId', as: 'courseTopicContent'})
+
+
 
 db.Course.hasMany(db.CourseTopic, {foreignKey: 'courseId', as: 'courseTopic'})
 

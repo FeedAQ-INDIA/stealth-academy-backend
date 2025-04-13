@@ -26,10 +26,6 @@ module.exports = (sequelize, Sequelize) => {
             },
             field: "course_topic_course_id",
         },
-        courseTopicDuration: {
-            type: Sequelize.INTEGER,
-            field: "course_topic_duration",
-        },
         created_date: {
             type: Sequelize.VIRTUAL,
             get() {

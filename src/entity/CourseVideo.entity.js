@@ -23,10 +23,6 @@ module.exports = (sequelize, Sequelize) => {
             type: Sequelize.STRING(500),
             field: "course_video_url",
         },
-        courseVideoDescription: {
-            type: Sequelize.STRING(500),
-            field: "course_video_description",
-        },
         courseTopicId: {
             type: Sequelize.INTEGER,
             references: {
