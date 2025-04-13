@@ -19,6 +19,7 @@ router.post("/getCourseDetail", authMiddleware, genericController.getCourseDetai
 router.post("/saveNote", authMiddleware, genericController.saveNote);
 router.post("/deleteNote", authMiddleware, genericController.deleteNote);
 router.post("/saveUserEnrollmentData", authMiddleware, genericController.saveUserEnrollmentData);
+router.post("/deleteUserEnrollmentData", authMiddleware, genericController.deleteUserEnrollmentData);
 
 
 module.exports = router;

@@ -195,6 +195,33 @@ const saveUserEnrollmentData = async (
 
 };
 
+const deleteUserEnrollmentData = async (
+    userId ,
+    userEnrollmentId ,
+    courseId ,
+    courseTopicContentId,
+    courseTopicId
+) => {
+    const enrollUserCourseData = await enrollStatus(userId, courseId);
+    let enrollmentObj;
+    if (enrollUserCourseData && enrollUserCourseData.isUserEnrolled) {
+        const  enrollmentObj = await db.UserEnrollmentLog.destroy({
+            where: {
+                userEnrollmentId ,
+                userId,
+                courseId ,
+                courseTopicContentId,
+                courseTopicId ,
+            },
+        });
+    }else{
+        throw new Error("User not enrolled")
+    }
+    return enrollmentObj ? {message: 'Enrollment is updated'} : {message: 'Enrollment is updated'};
+
+};
+
+
 const searchRecord = async (req, res) => {
     try {
         const {limit, offset, getThisData} = req.body;
@@ -329,6 +356,7 @@ module.exports = {
     saveUserDetail,
     saveNote,
     deleteNote,
-    saveUserEnrollmentData
+    saveUserEnrollmentData,
+    deleteUserEnrollmentData
 };
 
