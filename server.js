@@ -37,7 +37,7 @@ const specs = swaggerJsdoc(swaggerOptions);
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(specs, {explorer: true}));
 
 app.use(cors({
-    origin: "http://localhost:5174", // Update this to your frontend URL
+    origin: process.env.ACCESS_CONTROL_ALLOW_ORIGIN, // Update this to your frontend URL
     credentials: true, // Allow credentials (cookies, authorization headers)
 }));
 app.use(cookieParser());
@@ -45,15 +45,15 @@ app.use(bodyParser.json());
 
 // db.UserStatusGroup.sync({ alter: true });
 
-
-// db.sequelize.sync({ alter : true }).then(() => {
+// db.sequelize.sync({ force : true }).then(() => {
 //     console.log("Drop and re-sync db.");
 // });
 
 
+
 app.use(function (req, res, next) {
     // console.log("Req type : " + req.method + ' : ' + req)
-    res.setHeader("Access-Control-Allow-Origin", "http://localhost:5174");
+    res.setHeader("Access-Control-Allow-Origin", process.env.ACCESS_CONTROL_ALLOW_ORIGIN);
     res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PUT, PATCH, DELETE");
     res.setHeader("Access-Control-Allow-Headers", "X-Requested-With,content-type");
     res.setHeader("Access-Control-Allow-Credentials", true);
