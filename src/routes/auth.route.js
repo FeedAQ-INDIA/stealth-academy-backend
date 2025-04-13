@@ -8,7 +8,7 @@ const logger = require("../config/winston.config.js");
 
 const accessTokenSecret = process.env.ACCESS_TOKEN_SECRET;
  const refreshTokenSecret = process.env.REFRESH_TOKEN_SECRET;
-const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5174";
+const frontendUrl = process.env.FRONTEND_URL  ;
 
 router.get(
   "/auth/google",
