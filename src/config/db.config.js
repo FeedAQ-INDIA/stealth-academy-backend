@@ -10,8 +10,14 @@ module.exports = {
         min: 0,
         acquire: 30000,
         idle: 10000
-    }
-
+    },
+    dialectOptions: {
+        ssl: {
+            require: true,
+        },
+        // ----> Pass the family option here <----
+        family: 4 // 4 means IPv4, 6 means IPv6
+    },
     // HOST: "db.vtsiasguucuvjjqqooeo.supabase.co",
     // USER: "postgres",
     // PASSWORD: "Feedaq@123", // replace with your actual Supabase password
