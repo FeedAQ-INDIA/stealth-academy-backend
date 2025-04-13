@@ -4,7 +4,7 @@ const jwt = require("jsonwebtoken");
 passport.use(
   new GoogleStrategy(
     {
-      callbackURL: `http://localhost:3000/auth/google/redirect`, //same URI as registered in Google console portal
+      callbackURL: process.env.GOOGLE_CALLBACK_URL, //same URI as registered in Google console portal
       clientID: `464005159463-df8gfae917jn76f37p8ssmn9hl7jdi5v.apps.googleusercontent.com`, //replace with copied value from Google console
       clientSecret: `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`,
     },
