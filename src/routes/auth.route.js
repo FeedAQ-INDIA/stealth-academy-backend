@@ -75,7 +75,7 @@ router.get(
         sameSite: "strict",
         maxAge: 7 * 24 * 60 * 60 * 1000,
       });
-      res.cookie("userId")
+      res.cookie("userId", userId)
 
       res.redirect(redirectUrl);
     } catch (err) {
