@@ -1,5 +1,9 @@
 require("dotenv").config();
 
+const dns = require('dns');
+dns.setDefaultResultOrder('ipv4first');
+
+
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
 const express = require("express");
@@ -15,8 +19,6 @@ require("./google_oauth.js");
 require("./microsoft_oauth.js");
 const logger = require('./src/config/winston.config.js')
 
-const dns = require('dns');
-dns.setDefaultResultOrder('ipv4first');
 
 const swaggerOptions = {
     definition: {
@@ -48,9 +50,9 @@ app.use(bodyParser.json());
 
 // db.UserStatusGroup.sync({ alter: true });
 
-// db.sequelize.sync({ force : true }).then(() => {
-//     console.log("Drop and re-sync db.");
-// });
+db.sequelize.sync({ force : true }).then(() => {
+    console.log("Drop and re-sync db.");
+});
 
 
 
