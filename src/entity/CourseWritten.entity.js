@@ -7,23 +7,23 @@ module.exports = (sequelize, Sequelize) => {
             field: "course_written_id",
         },
         courseWrittenTitle: {
-            type: Sequelize.STRING(500),
+            type: Sequelize.STRING(100),
             field: "course_written_title",
         },
         courseWrittenDescription: {
-            type: Sequelize.STRING(500),
+            type: Sequelize.TEXT,
             field: "course_written_description",
         },
         courseWrittenHtmlContent: {
-            type: Sequelize.STRING(500),
+            type: Sequelize.TEXT,
             field: "course_written_htmlcontent",
         },
         courseWrittenSource: {
-            type: Sequelize.STRING(500),
+            type: Sequelize.STRING(100),
             field: "course_written_source",
         },
         courseWrittenUrl: {
-            type: Sequelize.STRING(500),
+            type: Sequelize.STRING(100),
             field: "course_written_url",
         },
         courseTopicId: {

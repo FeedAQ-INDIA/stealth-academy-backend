@@ -7,15 +7,15 @@ module.exports = (sequelize, Sequelize) => {
             field: "course_topic_id",
         },
         courseTopicTitle: {
-            type: Sequelize.STRING(500),
+            type: Sequelize.STRING(100),
             field: "course_topic_title",
         },
         courseTopicDescription: {
-            type: Sequelize.STRING(500),
+            type: Sequelize.TEXT,
             field: "course_topic_description",
         },
         courseTopicSequence: {
-            type: Sequelize.STRING(500),
+            type: Sequelize.STRING(100),
             field: "course_topic_level",
         },
         courseId: {

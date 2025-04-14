@@ -7,20 +7,20 @@ module.exports = (sequelize, Sequelize) => {
             field: "course_video_id",
         },
         courseVideoTitle: {
-            type: Sequelize.STRING(500),
+            type: Sequelize.STRING(100),
             field: "course_video_title",
         },
         courseVideoDescription: {
-            type: Sequelize.STRING(500),
+            type: Sequelize.TEXT,
             field: "course_video_description",
         },
 
         courseVideoSource: {
-            type: Sequelize.STRING(500),
+            type: Sequelize.ENUM("YOUTUBE"),
             field: "course_video_source",
         },
         courseVideoUrl: {
-            type: Sequelize.STRING(500),
+            type: Sequelize.STRING(100),
             field: "course_video_url",
         },
         courseTopicId: {

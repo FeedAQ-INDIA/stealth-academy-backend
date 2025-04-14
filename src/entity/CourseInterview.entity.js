@@ -7,11 +7,11 @@ module.exports = (sequelize, Sequelize) => {
             field: "course_interview_id",
         },
         courseInterviewTitle: {
-            type: Sequelize.STRING(500),
+            type: Sequelize.STRING(100),
             field: "course_interview_title",
         },
         courseInterviewDescription: {
-            type: Sequelize.STRING(500),
+            type: Sequelize.TEXT,
             field: "course_interview_description",
         },
         courseInterviewDemoUrl: {

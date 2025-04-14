@@ -50,10 +50,9 @@ app.use(bodyParser.json());
 
 // db.UserStatusGroup.sync({ alter: true });
 
-// db.sequelize.sync({ force : true }).then(() => {
+// db.sequelize.sync({ alter : true }).then(() => {
 //     console.log("Drop and re-sync db.");
 // });
-
 
 
 app.use(function (req, res, next) {

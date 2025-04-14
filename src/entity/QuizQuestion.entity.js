@@ -7,11 +7,11 @@ module.exports = (sequelize, Sequelize) => {
             field: "course_quiz_id",
         },
         quizQuestionTitle: {
-            type: Sequelize.STRING(500),
+            type: Sequelize.TEXT,
             field: "course_quiz_title",
         },
         quizQuestionNote: {
-            type: Sequelize.STRING(500),
+            type: Sequelize.STRING(100),
             field: "course_quiz_note",
         },
         quizQuestionOption: {
@@ -19,7 +19,7 @@ module.exports = (sequelize, Sequelize) => {
             field: "course_quiz_option",
         },
         quizQuestionCorrectAnswer: {
-            type: Sequelize.STRING(500),
+            type: Sequelize.STRING(100),
             field: "course_quiz_answer",
         },
         quizQuestionPosPoint: {
@@ -35,7 +35,7 @@ module.exports = (sequelize, Sequelize) => {
             field: "course_quiz_is_timed",
         },
         quizQuestionTimer: {
-            type: Sequelize.STRING(500),
+            type: Sequelize.INTEGER,
             field: "course_quiz_timer",
         },
         courseTopicId: {

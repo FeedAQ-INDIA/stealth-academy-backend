@@ -7,26 +7,25 @@ module.exports = (sequelize, Sequelize) => {
             field: "course_id",
         },
         courseTitle: {
-            type: Sequelize.STRING(500),
+            type: Sequelize.STRING(100),
             field: "course_title",
         },
         courseDescription: {
-            type: Sequelize.STRING(500),
+            type: Sequelize.TEXT,
             field: "course_description",
         },
         courseVideoUrl: {
-            type: Sequelize.STRING(500),
+            type: Sequelize.STRING(100),
             field: "course_video_url",
         },
         courseLevel: {
-            type: Sequelize.STRING(500),
+            type: Sequelize.STRING(100),
             field: "course_level",
         },
         courseDuration: {
-            type: Sequelize.STRING(500),
+            type: Sequelize.INTEGER,
             field: "course_duration",
-            unique: true,
-        },
+         },
         courseTutor: {
             type: Sequelize.STRING(500),
             field: "course_tutor",
@@ -36,7 +35,7 @@ module.exports = (sequelize, Sequelize) => {
             field: "course_tags",
         },
         courseCost: {
-            type: Sequelize.STRING(500),
+            type: Sequelize.INTEGER,
             field: "course_cost",
         },
         created_date: {
@@ -83,4 +82,6 @@ module.exports = (sequelize, Sequelize) => {
     });
     return Course;
 };
+
+
 

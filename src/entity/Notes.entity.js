@@ -44,7 +44,7 @@ module.exports = (sequelize, Sequelize) => {
             },
 
             notesText: {
-                type: Sequelize.STRING(3000),
+                type: Sequelize.TEXT,
                 field: "notes_text",
                 allowNull: false,
             },

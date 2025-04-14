@@ -7,15 +7,15 @@ module.exports = (sequelize, Sequelize) => {
             field: "comprehension_reading_id",
         },
         comprehensionReadingTitle: {
-            type: Sequelize.STRING(500),
+            type: Sequelize.STRING(100),
             field: "comprehension_reading_title",
         },
         comprehensionReadingDescription: {
-            type: Sequelize.STRING(500),
+            type: Sequelize.TEXT,
             field: "comprehension_reading_description",
         },
         comprehensionReadingContent: {
-            type: Sequelize.STRING(500),
+            type: Sequelize.TEXT,
             field: "comprehension_reading_content",
         },
         courseTopicId: {

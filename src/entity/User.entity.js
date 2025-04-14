@@ -7,28 +7,28 @@ module.exports = (sequelize, Sequelize) => {
         field: "user_id",
       },
       firstName: {
-        type: Sequelize.STRING(500),
+        type: Sequelize.STRING(100),
         field: "user_first_name",
       },
       lastName: {
-        type: Sequelize.STRING(500),
+        type: Sequelize.STRING(100),
         field: "user_last_name",
       },
       nameInitial: {
-        type: Sequelize.STRING(500),
+        type: Sequelize.STRING(5),
         field: "user_name_initial",
       },
       email: {
-        type: Sequelize.STRING(500),
+        type: Sequelize.STRING(50),
         field: "user_email", 
         unique: true,
       },
       number: {
-        type: Sequelize.STRING(500),
+        type: Sequelize.STRING(15),
         field: "user_number",
       },
       profilePic: {
-        type: Sequelize.STRING(500),
+        type: Sequelize.STRING(200),
         field: "user_profile_pic",
       },
       derivedUserName: {

@@ -7,15 +7,15 @@ module.exports = (sequelize, Sequelize) => {
             field: "listen_read_id",
         },
         listenReadTitle: {
-            type: Sequelize.STRING(500),
+            type: Sequelize.STRING(100),
             field: "listen_read_title",
         },
         listenReadDescription: {
-            type: Sequelize.STRING(500),
+            type: Sequelize.TEXT,
             field: "listen_read_description",
         },
         listenReadContentUrl: {
-            type: Sequelize.STRING(500),
+            type: Sequelize.STRING(100),
             field: "listen_read_url",
         },
         courseTopicId: {
