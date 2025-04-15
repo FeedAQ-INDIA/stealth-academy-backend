@@ -15,7 +15,7 @@ module.exports = (sequelize, Sequelize) => {
             field: "course_interview_description",
         },
         courseInterviewDemoUrl: {
-            type: Sequelize.STRING(500),
+            type: Sequelize.STRING(200),
             field: "course_interview_url",
         },
         courseTopicId: {

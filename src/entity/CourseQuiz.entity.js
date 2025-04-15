@@ -7,12 +7,16 @@ module.exports = (sequelize, Sequelize) => {
             field: "course_quiz_id",
         },
         courseQuizTitle: {
-            type: Sequelize.STRING(500),
+            type: Sequelize.STRING(100),
             field: "course_quiz_title",
         },
         courseQuizDescription: {
-            type: Sequelize.STRING(500),
+            type: Sequelize.TEXT,
             field: "course_quiz_description",
+        },
+        isMandatoryForCompletionQuiz: {
+            type: Sequelize.BOOLEAN,
+            field: "course_quiz_is_mandatory",
         },
         courseTopicId: {
             type: Sequelize.INTEGER,

@@ -27,11 +27,11 @@ module.exports = (sequelize, Sequelize) => {
             field: "course_duration",
          },
         courseTutor: {
-            type: Sequelize.STRING(500),
+            type: Sequelize.STRING(100),
             field: "course_tutor",
         },
         courseTags: {
-            type: Sequelize.STRING(500),
+            type: Sequelize.STRING(200),
             field: "course_tags",
         },
         courseCost: {

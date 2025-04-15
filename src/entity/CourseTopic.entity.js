@@ -15,8 +15,8 @@ module.exports = (sequelize, Sequelize) => {
             field: "course_topic_description",
         },
         courseTopicSequence: {
-            type: Sequelize.STRING(100),
-            field: "course_topic_level",
+            type: Sequelize.INTEGER,
+            field: "course_topic_sequence",
         },
         courseId: {
             type: Sequelize.INTEGER,

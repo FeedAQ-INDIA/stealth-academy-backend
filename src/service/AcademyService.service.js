@@ -104,8 +104,11 @@ const getCourseDetail = async (userId, courseId) => {
 
     const courseDetails = courseDetailsRaw.toJSON();
 
+    // Sort courseTopic in each course by courseTopicSequence ASC
+    courseDetails?.courseTopic?.sort((a, b) => a.courseTopicSequence - b.courseTopicSequence);
+
     // Sort courseTopicContent in each courseTopic by courseTopicContentSequence ASC
-    courseDetails.courseTopic?.forEach(topic => {
+    courseDetails?.courseTopic?.forEach(topic => {
         if (Array.isArray(topic.courseTopicContent)) {
             topic.courseTopicContent.sort((a, b) => a.courseTopicContentSequence - b.courseTopicContentSequence);
         }

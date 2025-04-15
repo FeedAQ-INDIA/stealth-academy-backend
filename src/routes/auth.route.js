@@ -35,7 +35,7 @@ router.get(
       if (!userDataFromDB) {
         const newUser = await authService.createUser(
           user.name.givenName || user.displayName,
-          user.name.familyName || user.displayName,
+          user.name.familyName || '',
           email,
           null
         );

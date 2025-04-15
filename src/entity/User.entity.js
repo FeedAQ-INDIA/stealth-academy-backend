@@ -19,7 +19,7 @@ module.exports = (sequelize, Sequelize) => {
         field: "user_name_initial",
       },
       email: {
-        type: Sequelize.STRING(50),
+        type: Sequelize.STRING(60),
         field: "user_email", 
         unique: true,
       },

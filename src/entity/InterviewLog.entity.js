@@ -31,7 +31,7 @@ module.exports = (sequelize, Sequelize) => {
             field: "interview_log_mode",
         },
         interviewLogUrl: {
-            type: Sequelize.STRING(500),
+            type: Sequelize.STRING(100),
             field: "interview_log_url",
         },
         courseTopicId: {

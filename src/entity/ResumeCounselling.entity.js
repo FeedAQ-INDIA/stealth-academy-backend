@@ -15,7 +15,7 @@ module.exports = (sequelize, Sequelize) => {
             field: "resumecounselling_user_id",
         },
         resumeCounsellingAttachUrl : {
-            type: Sequelize.STRING(200),
+            type: Sequelize.STRING(100),
             field: "resumecounselling_url",
         },
         resumeCounsellingDate: {
@@ -31,11 +31,11 @@ module.exports = (sequelize, Sequelize) => {
             field: "resumecounselling_status",
         },
         resumeCounsellingMode: {
-            type: Sequelize.STRING(500),
+            type: Sequelize.STRING(100),
             field: "resumecounselling_mode",
         },
         resumeCounsellingUrl: {
-            type: Sequelize.STRING(500),
+            type: Sequelize.STRING(100),
             field: "resumecounselling_url",
         },
         created_date: {

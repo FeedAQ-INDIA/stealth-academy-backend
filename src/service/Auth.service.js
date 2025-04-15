@@ -4,20 +4,18 @@ const logger = require('../config/winston.config.js')
 
 
 const getInitials = (name) => {
-    // Trim the input to handle extra spaces
     const trimmedName = name.trim();
 
-    // If there's only one word, return its first two letters in uppercase
     if (!trimmedName.includes(" ")) {
         return trimmedName.slice(0, 2).toUpperCase();
     }
 
-    // For multiple words, split and get initials
-    const words = trimmedName.split(" ");
+    const words = trimmedName.split(" ").filter(word => word.length > 0);
     const initials = words.map(word => word.charAt(0).toUpperCase()).join("");
 
-    return initials;
-}
+    return initials.slice(0, 2);
+};
+
 
 async function createUser(firstName, lastName, email, number) {
     const user = {

@@ -27,11 +27,11 @@ module.exports = (sequelize, Sequelize) => {
             field: "counselling_status",
         },
         counsellingMode: {
-            type: Sequelize.STRING(500),
+            type: Sequelize.STRING(100),
             field: "counselling_mode",
         },
         counsellingUrl: {
-            type: Sequelize.STRING(500),
+            type: Sequelize.STRING(100),
             field: "counselling_url",
         },
         created_date: {
