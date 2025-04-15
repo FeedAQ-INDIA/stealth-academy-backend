@@ -54,6 +54,7 @@ app.use(bodyParser.json());
 //     console.log("Drop and re-sync db.");
 // });
 
+
 app.use(function (req, res, next) {
     // console.log("Req type : " + req.method + ' : ' + req)
     res.setHeader("Access-Control-Allow-Origin", process.env.ACCESS_CONTROL_ALLOW_ORIGIN);

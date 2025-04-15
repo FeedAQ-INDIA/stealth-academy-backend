@@ -72,9 +72,11 @@ db.ListenAndRead.belongsTo(db.CourseTopic, {foreignKey: 'courseTopicId', as: 'co
 
 db.CourseQuiz.belongsTo(db.Course, {foreignKey: 'courseId', as: 'course'})
 db.CourseQuiz.belongsTo(db.CourseTopic, {foreignKey: 'courseTopicId', as: 'coursetopic'})
+db.CourseQuiz.hasMany(db.QuizQuestion, {foreignKey: 'courseQuizId', as: 'quizquestion'})
 
 db.QuizQuestion.belongsTo(db.Course, {foreignKey: 'courseId', as: 'course'})
 db.QuizQuestion.belongsTo(db.CourseTopic, {foreignKey: 'courseTopicId', as: 'coursetopic'})
+db.QuizQuestion.belongsTo(db.CourseQuiz, {foreignKey: 'courseQuizId', as: 'coursequiz'})
 
 
 db.CourseWritten.belongsTo(db.Course, {foreignKey: 'courseId', as: 'course'})

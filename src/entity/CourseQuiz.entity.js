@@ -14,9 +14,9 @@ module.exports = (sequelize, Sequelize) => {
             type: Sequelize.TEXT,
             field: "course_quiz_description",
         },
-        isMandatoryForCompletionQuiz: {
-            type: Sequelize.BOOLEAN,
-            field: "course_quiz_is_mandatory",
+        courseQuizType: {
+            type: Sequelize.ENUM('CERTIFICATION', 'KNOWLEDGE CHECK'),
+            field: "course_quiz_type",
         },
         courseTopicId: {
             type: Sequelize.INTEGER,

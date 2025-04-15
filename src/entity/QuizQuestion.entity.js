@@ -15,11 +15,11 @@ module.exports = (sequelize, Sequelize) => {
             field: "course_quiz_note",
         },
         quizQuestionOption: {
-            type: Sequelize.STRING(500),
+            type: Sequelize.ARRAY(Sequelize.STRING),
             field: "course_quiz_option",
         },
         quizQuestionCorrectAnswer: {
-            type: Sequelize.STRING(100),
+            type: Sequelize.ARRAY(Sequelize.STRING),
             field: "course_quiz_answer",
         },
         quizQuestionPosPoint: {
@@ -53,6 +53,14 @@ module.exports = (sequelize, Sequelize) => {
                 key: "course_id",
             },
             field: "course_quiz_course_id",
+        },
+        courseQuizId: {
+            type: Sequelize.INTEGER,
+            references: {
+                model: "course_quiz",
+                key: "course_quiz_id",
+            },
+            field: "course_quiz_quiz_id",
         },
         created_date: {
             type: Sequelize.VIRTUAL,
