@@ -109,7 +109,7 @@ router.get(
       if (!userDataFromDB) {
         const newUser = await authService.createUser(
             user.name.givenName || user.displayName,
-            user.name.familyName || user.displayName,
+            user.name.familyName || '',
             email,
             null
         );
@@ -149,7 +149,7 @@ router.get(
         sameSite: "None",
         maxAge: 7 * 24 * 60 * 60 * 1000,
       });
-      res.cookie("userId")
+      res.cookie("userId", userId)
 
       res.redirect(redirectUrl);
     } catch (err) {
