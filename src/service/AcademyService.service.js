@@ -224,6 +224,18 @@ const deleteUserEnrollmentData = async (
 
 };
 
+const validateCourseCompletion = async (userId ,
+                                  userEnrollmentId) => {
+    await db.UserEnrollment.findByPk(userEnrollmentId);
+    await db.UserEnrollmentLog.findAll({
+        where: {
+            userEnrollmentId ,
+        }
+    });
+
+
+}
+
 
 const searchRecord = async (req, res) => {
     try {
