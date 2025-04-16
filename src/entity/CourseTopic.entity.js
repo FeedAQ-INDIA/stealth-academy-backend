@@ -10,10 +10,6 @@ module.exports = (sequelize, Sequelize) => {
             type: Sequelize.STRING(100),
             field: "course_topic_title",
         },
-        courseTopicDescription: {
-            type: Sequelize.TEXT,
-            field: "course_topic_description",
-        },
         courseTopicSequence: {
             type: Sequelize.INTEGER,
             field: "course_topic_sequence",
