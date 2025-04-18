@@ -50,6 +50,7 @@ db.UserEnrollmentLog.belongsTo(db.CourseTopicContent, {foreignKey: 'courseTopicC
 
 
 db.Course.hasMany(db.CourseTopic, {foreignKey: 'courseId', as: 'courseTopic'})
+db.Course.hasMany(db.CourseTopicContent, {foreignKey: 'courseTopicContentId', as: 'courseTopicContent'})
 
 db.CourseTopicContent.belongsTo(db.Course, {foreignKey: 'courseId', as: 'course'})
 db.CourseTopicContent.belongsTo(db.CourseTopic, {foreignKey: 'courseTopicId', as: 'coursetopic'})

@@ -102,6 +102,8 @@ const getCourseDetail = async (userId, courseId) => {
         }],
     });
 
+
+
     const courseDetails = courseDetailsRaw.toJSON();
 
     // Sort courseTopic in each course by courseTopicSequence ASC
@@ -132,7 +134,8 @@ const enrollUserCourse = async (userId, courseId) => {
     if (enrollUserCourseData && !enrollUserCourseData.isUserEnrolled) {
         enrollmentObj = await db.UserEnrollment.create({
             userId: userId,
-            courseId: courseId
+            courseId: courseId,
+            enrollmentStatus: "ENROLLED"
         })
     }
     return enrollmentObj ? {message: 'Enrollment is successfully'} : {message: 'Enrollment failed'};
@@ -159,7 +162,8 @@ const disrollUserCourse = async (userId, courseId) => {
     if (enrollUserCourseData && enrollUserCourseData.isUserEnrolled) {
         await db.UserEnrollmentLog.destroy({where: { userId,
             courseId}})
-        disrollmentObj = await db.UserEnrollment.destroy({where: {courseId: courseId, userId: userId}})
+        disrollmentObj = await db.UserEnrollment.destroy({where: {courseId: courseId, userId: userId}});
+        await db.Notes.destroy({where: {courseId: courseId, userId: userId}});
     }
 
 
@@ -191,6 +195,18 @@ const saveUserEnrollmentData = async (
                 enrollmentStatus,
             }
         });
+
+        const isCourseComplted = await validateCourseCompletion(userId, userEnrollmentId);
+        console.log("Is course Completed : ", isCourseComplted == true ? "TRUE": "FALSE");
+        if(isCourseComplted.isCourseCompleted &&  enrollUserCourseData?.enrollmentData?.enrollmentStatus != 'CERTIFIED'){
+            const obj = await db.UserEnrollment.findByPk(userEnrollmentId);
+            obj.enrollmentStatus = isCourseComplted.possibleStatus
+            await obj.save();
+        } else if(!isCourseComplted.isCourseCompleted  &&  enrollUserCourseData?.enrollmentData?.enrollmentStatus == 'ENROLLED'){
+            const obj = await db.UserEnrollment.findByPk(userEnrollmentId);
+            obj.enrollmentStatus = isCourseComplted.possibleStatus
+            await obj.save();
+        }
     }else{
         throw new Error("User not enrolled")
     }
@@ -217,6 +233,13 @@ const deleteUserEnrollmentData = async (
                 courseTopicId ,
             },
         });
+        const isCourseComplted = await validateCourseCompletion(userId, userEnrollmentId);
+        console.log("Is course Completed : ", isCourseComplted == true ? "TRUE": "FALSE");
+        if(!isCourseComplted.isCourseCompleted && enrollUserCourseData?.enrollmentData?.enrollmentStatus == 'COMPLETED'){
+            const obj = await db.UserEnrollment.findByPk(userEnrollmentId);
+            obj.enrollmentStatus = isCourseComplted.possibleStatus
+            await obj.save();
+        }
     }else{
         throw new Error("User not enrolled")
     }
@@ -226,14 +249,42 @@ const deleteUserEnrollmentData = async (
 
 const validateCourseCompletion = async (userId ,
                                   userEnrollmentId) => {
-    await db.UserEnrollment.findByPk(userEnrollmentId);
-    await db.UserEnrollmentLog.findAll({
+    const userEnrollment =await db.UserEnrollment.findByPk(userEnrollmentId);
+    const userEnrollmentLog = await db.UserEnrollmentLog.findAll({
         where: {
             userEnrollmentId ,
-        }
+            enrollmentStatus: 'COMPLETED'
+        },
+        attributes:["courseTopicContentId"],
     });
 
+    const courseTopicContent = await db.CourseTopicContent.findAll({
+        where :{
+            courseId: userEnrollment.courseId
+        },
+        attributes:["courseTopicContentId"],
+    })
 
+    console.log(userEnrollmentLog?.map(a => a.courseTopicContentId), courseTopicContent?.map(a => a.courseTopicContentId))
+    let isCourseCompleted = haveSameElements(userEnrollmentLog?.map(a => a.courseTopicContentId), courseTopicContent?.map(a => a.courseTopicContentId));
+    let possibleStatus;
+    if(isCourseCompleted && userEnrollmentLog?.length > 0 ){
+        possibleStatus = 'COMPLETED'
+    }else if(!isCourseCompleted && userEnrollmentLog?.length > 0 ){
+        possibleStatus = 'IN PROGRESS';
+    }
+    return {
+        isCourseCompleted : isCourseCompleted,
+        possibleStatus: possibleStatus,
+    }
+
+}
+
+function haveSameElements(arr1, arr2) {
+    if (arr1.length !== arr2.length) return false;
+    const sorted1 = [...arr1].sort((a, b) => a - b);
+    const sorted2 = [...arr2].sort((a, b) => a - b);
+    return sorted1.every((val, index) => val === sorted2[index]);
 }
 
 
