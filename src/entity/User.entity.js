@@ -7,15 +7,15 @@ module.exports = (sequelize, Sequelize) => {
         field: "user_id",
       },
       firstName: {
-        type: Sequelize.STRING(100),
+        type: Sequelize.STRING(50),
         field: "user_first_name",
       },
       lastName: {
-        type: Sequelize.STRING(100),
+        type: Sequelize.STRING(50),
         field: "user_last_name",
       },
       nameInitial: {
-        type: Sequelize.STRING(5),
+        type: Sequelize.STRING(2),
         field: "user_name_initial",
       },
       email: {

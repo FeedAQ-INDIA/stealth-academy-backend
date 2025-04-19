@@ -49,7 +49,7 @@ app.use(cookieParser());
 app.use(bodyParser.json());
 
 // db.UserStatusGroup.sync({ alter: true });
-//
+
 // db.sequelize.sync({ alter : true }).then(() => {
 //     console.log("Drop and re-sync db.");
 // });

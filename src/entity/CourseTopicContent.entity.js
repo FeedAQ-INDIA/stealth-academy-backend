@@ -35,7 +35,7 @@ module.exports = (sequelize, Sequelize) => {
             field: "coursetopiccontent_seq",
         },
         courseTopicContentTitle: {
-            type: Sequelize.STRING(60),
+            type: Sequelize.STRING(100),
             field: "coursetopiccontent_title",
         },
         courseTopicContentDuration: {

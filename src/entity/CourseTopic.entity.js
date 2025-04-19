@@ -7,7 +7,7 @@ module.exports = (sequelize, Sequelize) => {
             field: "course_topic_id",
         },
         courseTopicTitle: {
-            type: Sequelize.STRING(100),
+            type: Sequelize.STRING(50),
             field: "course_topic_title",
         },
         courseTopicSequence: {
