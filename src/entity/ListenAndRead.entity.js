@@ -6,10 +6,6 @@ module.exports = (sequelize, Sequelize) => {
             autoIncrement: true,
             field: "listen_read_id",
         },
-        listenReadTitle: {
-            type: Sequelize.STRING(100),
-            field: "listen_read_title",
-        },
         listenReadDescription: {
             type: Sequelize.TEXT,
             field: "listen_read_description",

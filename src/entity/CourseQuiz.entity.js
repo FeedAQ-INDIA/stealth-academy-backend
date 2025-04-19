@@ -6,10 +6,6 @@ module.exports = (sequelize, Sequelize) => {
             autoIncrement: true,
             field: "course_quiz_id",
         },
-        courseQuizTitle: {
-            type: Sequelize.STRING(100),
-            field: "course_quiz_title",
-        },
         courseQuizDescription: {
             type: Sequelize.TEXT,
             field: "course_quiz_description",
@@ -17,6 +13,14 @@ module.exports = (sequelize, Sequelize) => {
         courseQuizType: {
             type: Sequelize.ENUM('CERTIFICATION', 'KNOWLEDGE CHECK'),
             field: "course_quiz_type",
+        },
+        isQuizTimed: {
+            type: Sequelize.BOOLEAN,
+            field: "course_is_quiz_timed",
+        },
+        courseQuizTimer: {
+            type: Sequelize.INTEGER,
+            field: "course_quiz_timer",
         },
         courseTopicId: {
             type: Sequelize.INTEGER,

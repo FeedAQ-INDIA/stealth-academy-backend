@@ -226,6 +226,28 @@ async function saveUserDetail(req, res, next) {
 }
 
 
+
+async function submitQuiz(req, res, next) {
+    const {
+        courseId, courseQuizId, submissionList
+          } = req.body;
+    try {
+        let val = await AcademyService.submitQuiz(req.user.userId,
+            courseId, courseQuizId, submissionList);
+        res.status(200).send({
+            status: 200, message: "Success", data: val != null ? val : [],
+        });
+    } catch (err) {
+        console.error(`Error occured`, err.message);
+        res.status(500).send({
+            status: 500, message: err.message || "Some error occurred while creating the Tutorial.",
+        });
+        next(err);
+    }
+}
+
+
+
 module.exports = {
     getCourseDetail,
     getUser,
@@ -236,6 +258,6 @@ module.exports = {
     saveUserDetail,
     saveNote,
     deleteNote,saveUserEnrollmentData,
-    deleteUserEnrollmentData
+    deleteUserEnrollmentData,submitQuiz
 
 };

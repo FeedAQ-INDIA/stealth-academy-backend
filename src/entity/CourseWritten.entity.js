@@ -6,10 +6,6 @@ module.exports = (sequelize, Sequelize) => {
             autoIncrement: true,
             field: "course_written_id",
         },
-        courseWrittenTitle: {
-            type: Sequelize.STRING(100),
-            field: "course_written_title",
-        },
         courseWrittenDescription: {
             type: Sequelize.TEXT,
             field: "course_written_description",

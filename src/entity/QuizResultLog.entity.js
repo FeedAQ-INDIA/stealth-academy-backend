@@ -1,26 +1,26 @@
 module.exports = (sequelize, Sequelize) => {
-    const CourseInterview = sequelize.define("course_interview", {
-        courseInterviewId: {
+    const QuizResultLog = sequelize.define("quiz_result_log", {
+        quizResultId: {
             type: Sequelize.INTEGER,
             primaryKey: true,
             autoIncrement: true,
-            field: "course_interview_id",
+            field: "quiz_result_id",
         },
-        courseInterviewDescription: {
-            type: Sequelize.TEXT,
-            field: "course_interview_description",
+        quizResultSnapshot: {
+            type: Sequelize.JSON,
+            field: "quiz_result_snap",
         },
-        courseInterviewDemoUrl: {
-            type: Sequelize.STRING(200),
-            field: "course_interview_url",
+        quizResultPoint: {
+            type: Sequelize.INTEGER,
+            field: "quiz_result_point",
         },
-        courseTopicId: {
+        userId: {
             type: Sequelize.INTEGER,
             references: {
-                model: "course_topic",
-                key: "course_topic_id",
+                model: "user",
+                key: "user_id",
             },
-            field: "course_interview_topic_id",
+            field: "quiz_result_user_id",
         },
         courseId: {
             type: Sequelize.INTEGER,
@@ -28,13 +28,21 @@ module.exports = (sequelize, Sequelize) => {
                 model: "course",
                 key: "course_id",
             },
-            field: "course_interview_course_id",
+            field: "quiz_result_course_id",
+        },
+        courseQuizId: {
+            type: Sequelize.INTEGER,
+            references: {
+                model: "course_quiz",
+                key: "course_quiz_id",
+            },
+            field: "quiz_result_quiz_id",
         },
         created_date: {
             type: Sequelize.VIRTUAL,
             get() {
-                if (!this.course_interview_created_at) return null;
-                const date = new Date(this.course_interview_created_at);
+                if (!this.quiz_result_created_at) return null;
+                const date = new Date(this.quiz_result_created_at);
                 const day = String(date.getDate()).padStart(2, "0");
                 const month = date.toLocaleString("en-US", { month: "short" });
                 const year = date.getFullYear();
@@ -44,16 +52,16 @@ module.exports = (sequelize, Sequelize) => {
         created_time: {
             type: Sequelize.VIRTUAL,
             get() {
-                if (!this.course_interview_created_at) return null;
-                return this.course_interview_created_at.toTimeString().split(" ")[0]; // Format: HH:MM:SS
+                if (!this.quiz_result_created_at) return null;
+                return this.quiz_result_created_at.toTimeString().split(" ")[0]; // Format: HH:MM:SS
             },
         },
 
         updated_date: {
             type: Sequelize.VIRTUAL,
             get() {
-                if (!this.course_interview_updated_at) return null;
-                const date = new Date(this.course_interview_updated_at);
+                if (!this.quiz_result_updated_at) return null;
+                const date = new Date(this.quiz_result_updated_at);
                 const day = String(date.getDate()).padStart(2, "0");
                 const month = date.toLocaleString("en-US", { month: "short" });
                 const year = date.getFullYear();
@@ -63,15 +71,15 @@ module.exports = (sequelize, Sequelize) => {
         updated_time: {
             type: Sequelize.VIRTUAL,
             get() {
-                if (!this.course_interview_updated_at) return null;
-                return this.course_interview_updated_at.toTimeString().split(" ")[0]; // Format: HH:MM:SS
+                if (!this.quiz_result_updated_at) return null;
+                return this.quiz_result_updated_at.toTimeString().split(" ")[0]; // Format: HH:MM:SS
             },
         },
     } , {
         timestamps: true,
-        createdAt: "course_interview_created_at",
-        updatedAt: "course_interview_updated_at",
+        createdAt: "quiz_result_created_at",
+        updatedAt: "quiz_result_updated_at",
     });
-    return CourseInterview;
+    return QuizResultLog;
 };
 

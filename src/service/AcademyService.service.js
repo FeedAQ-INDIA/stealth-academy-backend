@@ -7,6 +7,46 @@ const crypto = require('crypto');
 const {toJSON} = require("lodash/seq");
 
 
+const submitQuiz = async (userId, courseId, courseQuizId, submissionList) => {
+
+    const quesList = await db.QuizQuestion.findAll({
+        where: {
+            courseId: courseQuizId,
+        }
+    });
+
+    let points = 0;
+    submissionList.map(a => {
+        const itemQues = quesList.find(b => b.quizQuestionId == a.quizQuestionId);
+        let isAnswerSame = haveSameElements(a.answerList, itemQues.quizQuestionCorrectAnswer);
+        if (isAnswerSame) {
+            points += itemQues.quizQuestionPosPoint
+        }else{
+            points -= itemQues.quizQuestionNegPoint
+        }
+        a['isAnswerCorrect']=isAnswerSame
+    });
+
+
+    await db.QuizResultLog.destroy({
+        where:{
+            userId,
+            courseQuizId
+        }
+    })
+
+    const result = await db.QuizResultLog.create({
+        userId,
+        quizResultSnapshot: submissionList,
+        quizResultPoint: points,
+        courseId,
+        courseQuizId,
+    });
+
+    return result  ;
+};
+
+
 const saveUserDetail = async (
     userId,
     firstName,
@@ -423,6 +463,7 @@ module.exports = {
     saveNote,
     deleteNote,
     saveUserEnrollmentData,
-    deleteUserEnrollmentData
+    deleteUserEnrollmentData,
+    submitQuiz
 };
 

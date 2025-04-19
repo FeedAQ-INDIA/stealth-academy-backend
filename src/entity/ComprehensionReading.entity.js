@@ -6,10 +6,6 @@ module.exports = (sequelize, Sequelize) => {
             autoIncrement: true,
             field: "comprehension_reading_id",
         },
-        comprehensionReadingTitle: {
-            type: Sequelize.STRING(100),
-            field: "comprehension_reading_title",
-        },
         comprehensionReadingDescription: {
             type: Sequelize.TEXT,
             field: "comprehension_reading_description",
