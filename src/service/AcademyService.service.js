@@ -238,15 +238,9 @@ const saveUserEnrollmentData = async (
 
         const isCourseComplted = await validateCourseCompletion(userId, userEnrollmentId);
         console.log("Is course Completed : ", isCourseComplted == true ? "TRUE": "FALSE");
-        if(isCourseComplted.isCourseCompleted &&  enrollUserCourseData?.enrollmentData?.enrollmentStatus != 'CERTIFIED'){
-            const obj = await db.UserEnrollment.findByPk(userEnrollmentId);
-            obj.enrollmentStatus = isCourseComplted.possibleStatus
-            await obj.save();
-        } else if(!isCourseComplted.isCourseCompleted  &&  enrollUserCourseData?.enrollmentData?.enrollmentStatus == 'ENROLLED'){
-            const obj = await db.UserEnrollment.findByPk(userEnrollmentId);
-            obj.enrollmentStatus = isCourseComplted.possibleStatus
-            await obj.save();
-        }
+        const obj = await db.UserEnrollment.findByPk(userEnrollmentId);
+        obj.enrollmentStatus = isCourseComplted.possibleStatus
+        await obj.save();
     }else{
         throw new Error("User not enrolled")
     }
@@ -275,11 +269,9 @@ const deleteUserEnrollmentData = async (
         });
         const isCourseComplted = await validateCourseCompletion(userId, userEnrollmentId);
         console.log("Is course Completed : ", isCourseComplted == true ? "TRUE": "FALSE");
-        if(!isCourseComplted.isCourseCompleted && enrollUserCourseData?.enrollmentData?.enrollmentStatus == 'COMPLETED'){
-            const obj = await db.UserEnrollment.findByPk(userEnrollmentId);
-            obj.enrollmentStatus = isCourseComplted.possibleStatus
-            await obj.save();
-        }
+        const obj = await db.UserEnrollment.findByPk(userEnrollmentId);
+        obj.enrollmentStatus = isCourseComplted.possibleStatus
+        await obj.save();
     }else{
         throw new Error("User not enrolled")
     }
@@ -308,7 +300,7 @@ const validateCourseCompletion = async (userId ,
     console.log(userEnrollmentLog?.map(a => a.courseTopicContentId), courseTopicContent?.map(a => a.courseTopicContentId))
     let isCourseCompleted = haveSameElements(userEnrollmentLog?.map(a => a.courseTopicContentId), courseTopicContent?.map(a => a.courseTopicContentId));
     let possibleStatus;
-    if(isCourseCompleted && userEnrollmentLog?.length > 0 ){
+    if(isCourseCompleted){
         possibleStatus = 'COMPLETED'
     }else if(!isCourseCompleted && userEnrollmentLog?.length > 0 ){
         possibleStatus = 'IN PROGRESS';
