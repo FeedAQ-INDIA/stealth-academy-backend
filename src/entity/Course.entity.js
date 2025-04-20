@@ -31,7 +31,7 @@ module.exports = (sequelize, Sequelize) => {
             field: "course_tutor",
         },
         courseTags: {
-            type: Sequelize.STRING(200),
+            type: Sequelize.ARRAY(Sequelize.STRING),
             field: "course_tags",
         },
         courseCost: {
@@ -82,6 +82,5 @@ module.exports = (sequelize, Sequelize) => {
     });
     return Course;
 };
-
 
 
