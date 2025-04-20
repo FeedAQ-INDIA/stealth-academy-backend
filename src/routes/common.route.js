@@ -21,6 +21,7 @@ router.post("/deleteNote", authMiddleware, genericController.deleteNote);
 router.post("/saveUserEnrollmentData", authMiddleware, genericController.saveUserEnrollmentData);
 router.post("/deleteUserEnrollmentData", authMiddleware, genericController.deleteUserEnrollmentData);
 router.post("/submitQuiz", authMiddleware, genericController.submitQuiz);
+router.post("/clearQuizResult", authMiddleware, genericController.clearQuizResult);
 
 
 module.exports = router;

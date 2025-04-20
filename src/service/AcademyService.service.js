@@ -47,6 +47,22 @@ const submitQuiz = async (userId, courseId, courseQuizId, submissionList) => {
 };
 
 
+const clearQuizResult = async (userId, courseId, courseQuizId, courseTopicId) => {
+
+
+
+    await db.QuizResultLog.destroy({
+        where:{
+            userId,
+            courseQuizId
+        }
+    })
+
+
+    return {message: "Reset Quiz is Successfull"}  ;
+};
+
+
 const saveUserDetail = async (
     userId,
     firstName,
@@ -456,6 +472,7 @@ module.exports = {
     deleteNote,
     saveUserEnrollmentData,
     deleteUserEnrollmentData,
-    submitQuiz
+    submitQuiz,
+    clearQuizResult
 };
 
