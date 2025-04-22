@@ -22,6 +22,10 @@ module.exports = (sequelize, Sequelize) => {
             type: Sequelize.INTEGER,
             field: "course_quiz_timer",
         },
+        courseQuizPassPercent: {
+            type: Sequelize.INTEGER,
+            field: "course_quiz_pass_percent",
+        },
         courseTopicId: {
             type: Sequelize.INTEGER,
             references: {

@@ -9,11 +9,14 @@ const {toJSON} = require("lodash/seq");
 
 const submitQuiz = async (userId, courseId, courseQuizId, submissionList) => {
 
+    const courseQuiz = await db.CourseQuiz.findByPk(courseQuizId);
     const quesList = await db.QuizQuestion.findAll({
         where: {
             courseId: courseQuizId,
         }
     });
+
+    const totalPoints = quesList.reduce((accumulator, currentValue) => accumulator + currentValue.quizQuestionPosPoint, 0);
 
     let points = 0;
     submissionList.map(a => {
@@ -39,6 +42,8 @@ const submitQuiz = async (userId, courseId, courseQuizId, submissionList) => {
         userId,
         quizResultSnapshot: submissionList,
         quizResultPoint: points,
+        totalPoints :totalPoints,
+        isPassed : points >= courseQuiz?.courseQuizPassPercent ?  true:false,
         courseId,
         courseQuizId,
     });

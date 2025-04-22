@@ -14,6 +14,14 @@ module.exports = (sequelize, Sequelize) => {
             type: Sequelize.INTEGER,
             field: "quiz_result_point",
         },
+        totalPoints: {
+            type: Sequelize.INTEGER,
+            field: "quiz_result_tot_point",
+        },
+        isPassed: {
+            type: Sequelize.BOOLEAN,
+            field: "quiz_result_is_passed",
+        },
         userId: {
             type: Sequelize.INTEGER,
             references: {
