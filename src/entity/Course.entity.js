@@ -30,6 +30,10 @@ module.exports = (sequelize, Sequelize) => {
             type: Sequelize.STRING(100),
             field: "course_tutor",
         },
+        courseSource: {
+            type: Sequelize.ENUM("YOUTUBE"),
+            field: "course_source",
+        },
         courseTags: {
             type: Sequelize.ARRAY(Sequelize.STRING),
             field: "course_tags",
