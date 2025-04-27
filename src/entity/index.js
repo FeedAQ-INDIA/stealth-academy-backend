@@ -42,6 +42,8 @@ db.InterviewLog = require("./InterviewLog.entity.js")(sequelize, Sequelize);
 db.UserEnrollmentLog = require("./UserEnrollmentLog.entity.js")(sequelize, Sequelize);
 db.QuizResultLog = require("./QuizResultLog.entity.js")(sequelize, Sequelize);
 
+db.Webinar = require("./Webinar.entity.js")(sequelize, Sequelize);
+
 
 db.QuizResultLog.belongsTo(db.Course, {foreignKey: 'courseId', as: 'course'})
 db.QuizResultLog.belongsTo(db.CourseQuiz, {foreignKey: 'courseQuizId', as: 'coursequiz'})
@@ -99,9 +101,13 @@ db.InterviewLog.belongsTo(db.User, {foreignKey: 'userId', as: 'user'})
 
 db.UserEnrollment.belongsTo(db.Course, {foreignKey: 'courseId', as: 'course'})
 db.UserEnrollment.belongsTo(db.User, {foreignKey: 'userId', as: 'user'})
+db.UserEnrollment.belongsTo(db.Webinar, {foreignKey: 'webinarId', as: 'webinar'})
 
 db.User.belongsToMany(db.Course, {
     through: db.UserEnrollment, foreignKey: 'userId', otherKey: 'courseId', as: 'courses',
+});
+db.User.belongsToMany(db.Webinar, {
+    through: db.UserEnrollment, foreignKey: 'userId', otherKey: 'webinarId', as: 'webinars',
 });
 
 db.Notes.belongsTo(db.User, {foreignKey: 'userId', as: 'user'})

@@ -189,13 +189,14 @@ const getCourseDetail = async (userId, courseId) => {
 
 
 
-const enrollUserCourse = async (userId, courseId) => {
-    const enrollUserCourseData = await enrollStatus(userId, courseId);
+const enrollUserCourse = async (userId, courseId, webinarId) => {
+    const enrollUserCourseData = await enrollStatus(userId, courseId, webinarId);
     let enrollmentObj;
     if (enrollUserCourseData && !enrollUserCourseData.isUserEnrolled) {
         enrollmentObj = await db.UserEnrollment.create({
             userId: userId,
-            courseId: courseId,
+            ...(courseId && {courseId: courseId}),
+            ...(webinarId && {webinarId: webinarId}),
             enrollmentStatus: "ENROLLED"
         })
     }
@@ -203,12 +204,22 @@ const enrollUserCourse = async (userId, courseId) => {
 
 };
 
-const enrollStatus = async (userId, courseId) => {
-    const enrollUserCourseData = await db.UserEnrollment.findAll({
-        where: {
-            courseId: courseId, userId: userId
-        }
-    });
+const enrollStatus = async (userId, courseId, webinarId=null) => {
+    let enrollUserCourseData
+    if(courseId){
+         enrollUserCourseData = await db.UserEnrollment.findAll({
+            where: {
+                courseId: courseId, userId: userId
+            }
+        });
+    } else  if(webinarId){
+        enrollUserCourseData = await db.UserEnrollment.findAll({
+            where: {
+                webinarId: webinarId, userId: userId
+            }
+        });
+    }
+
 
     if (enrollUserCourseData && enrollUserCourseData.length > 0) {
         return {isUserEnrolled: true, enrollmentData:enrollUserCourseData}
@@ -217,14 +228,17 @@ const enrollStatus = async (userId, courseId) => {
     }
 };
 
-const disrollUserCourse = async (userId, courseId) => {
-    const enrollUserCourseData = await enrollStatus(userId, courseId);
+const disrollUserCourse = async (userId, courseId, webinarId) => {
+    const enrollUserCourseData = await enrollStatus(userId, courseId, webinarId);
     let disrollmentObj;
     if (enrollUserCourseData && enrollUserCourseData.isUserEnrolled) {
         await db.UserEnrollmentLog.destroy({where: { userId,
-            courseId}})
-        disrollmentObj = await db.UserEnrollment.destroy({where: {courseId: courseId, userId: userId}});
-        await db.Notes.destroy({where: {courseId: courseId, userId: userId}});
+            ...(courseId && {courseId: courseId}), ...(webinarId && {webinarId: webinarId}),}})
+        disrollmentObj = await db.UserEnrollment.destroy({where: { ...(courseId && {courseId: courseId}), ...(webinarId && {webinarId: webinarId}), userId: userId}});
+       if(courseId){
+           await db.Notes.destroy({where: {courseId: courseId, userId: userId}});
+       }
+
     }
 
 

@@ -14,6 +14,14 @@ module.exports = (sequelize, Sequelize) => {
             },
             field: "user_enrollment_user_id",
         },
+        webinarId: {
+            type: Sequelize.INTEGER,
+            references: {
+                model: "webinar",
+                key: "webinar_id",
+            },
+            field: "user_enrollment_webinar_id",
+        },
         courseId: {
             type: Sequelize.INTEGER,
             references: {

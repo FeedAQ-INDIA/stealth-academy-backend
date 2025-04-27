@@ -23,9 +23,9 @@ async function getUser(req, res, next) {
 }
 
 async function enrollStatus(req, res, next) {
-    const {courseId} = req.body;
+    const {courseId, webinarId} = req.body;
     try {
-        let val = await AcademyService.enrollStatus(req.user.userId, courseId);
+        let val = await AcademyService.enrollStatus(req.user.userId, courseId, webinarId);
         res.status(200).send({
             status: 200, message: "Success", data: val != null ? val : [],
         });
@@ -40,9 +40,9 @@ async function enrollStatus(req, res, next) {
 
 
 async function enrollUserCourse(req, res, next) {
-    const {courseId} = req.body;
+    const {courseId,webinarId} = req.body;
     try {
-        let val = await AcademyService.enrollUserCourse(req.user.userId, courseId);
+        let val = await AcademyService.enrollUserCourse(req.user.userId, courseId, webinarId);
         res.status(200).send({
             status: 200, message: "Success", data: val != null ? val : [],
         });
@@ -56,9 +56,9 @@ async function enrollUserCourse(req, res, next) {
 }
 
 async function disrollUserCourse(req, res, next) {
-    const {courseId} = req.body;
+    const {courseId, webinarId} = req.body;
     try {
-        let val = await AcademyService.disrollUserCourse(req.user.userId, courseId);
+        let val = await AcademyService.disrollUserCourse(req.user.userId, courseId, webinarId);
         res.status(200).send({
             status: 200, message: "Success", data: val != null ? val : [],
         });

@@ -10,9 +10,17 @@ module.exports = (sequelize, Sequelize) => {
             type: Sequelize.STRING(100),
             field: "course_title",
         },
+        courseType: {
+            type: Sequelize.ENUM("COURSE", "WEBINAR"),
+            field: "course_type",
+        },
         courseDescription: {
             type: Sequelize.TEXT,
             field: "course_description",
+        },
+        courseImageUrl: {
+            type: Sequelize.ARRAY(Sequelize.STRING),
+            field: "course_image_url",
         },
         courseVideoUrl: {
             type: Sequelize.STRING(100),
@@ -25,7 +33,11 @@ module.exports = (sequelize, Sequelize) => {
         courseDuration: {
             type: Sequelize.INTEGER,
             field: "course_duration",
-         },
+        },
+        courseValidity: {
+            type: Sequelize.INTEGER,
+            field: "course_validity",
+        },
         courseTutor: {
             type: Sequelize.STRING(100),
             field: "course_tutor",
