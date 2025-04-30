@@ -66,6 +66,78 @@ module.exports = (sequelize, Sequelize) => {
             type: Sequelize.INTEGER,
             field: "webinar_cost",
         },
+        webinar_start_date: {
+            type: Sequelize.VIRTUAL,
+            get() {
+                if (!this.webinarStartDate) return null;
+                const date = new Date(this.webinarStartDate);
+                const day = String(date.getDate()).padStart(2, "0");
+                const month = date.toLocaleString("en-US", { month: "short" });
+                const year = date.getFullYear();
+                return `${day}-${month}-${year}`; // Format: dd-MMM-YYYY
+            },
+        },
+        webinar_start_time: {
+            type: Sequelize.VIRTUAL,
+            get() {
+                if (!this.webinarStartDate) return null;
+                return this.webinarStartDate.toTimeString().split(" ")[0]; // Format: HH:MM:SS
+            },
+        },
+        webinar_end_date: {
+            type: Sequelize.VIRTUAL,
+            get() {
+                if (!this.webinarEndDate) return null;
+                const date = new Date(this.webinarEndDate);
+                const day = String(date.getDate()).padStart(2, "0");
+                const month = date.toLocaleString("en-US", { month: "short" });
+                const year = date.getFullYear();
+                return `${day}-${month}-${year}`; // Format: dd-MMM-YYYY
+            },
+        },
+        webinar_end_time: {
+            type: Sequelize.VIRTUAL,
+            get() {
+                if (!this.webinarEndDate) return null;
+                return this.webinarEndDate.toTimeString().split(" ")[0]; // Format: HH:MM:SS
+            },
+        },
+        webinar_registration_start_date: {
+            type: Sequelize.VIRTUAL,
+            get() {
+                if (!this.webinarRegistrationStartDateTime) return null;
+                const date = new Date(this.webinarRegistrationStartDateTime);
+                const day = String(date.getDate()).padStart(2, "0");
+                const month = date.toLocaleString("en-US", { month: "short" });
+                const year = date.getFullYear();
+                return `${day}-${month}-${year}`; // Format: dd-MMM-YYYY
+            },
+        },
+        webinar_registration_start_time: {
+            type: Sequelize.VIRTUAL,
+            get() {
+                if (!this.webinarRegistrationStartDateTime) return null;
+                return this.webinarRegistrationStartDateTime.toTimeString().split(" ")[0]; // Format: HH:MM:SS
+            },
+        },
+        webinar_registration_end_date: {
+            type: Sequelize.VIRTUAL,
+            get() {
+                if (!this.webinarRegistrationEndDateTime) return null;
+                const date = new Date(this.webinarRegistrationEndDateTime);
+                const day = String(date.getDate()).padStart(2, "0");
+                const month = date.toLocaleString("en-US", { month: "short" });
+                const year = date.getFullYear();
+                return `${day}-${month}-${year}`; // Format: dd-MMM-YYYY
+            },
+        },
+        webinar_registration_end_time: {
+            type: Sequelize.VIRTUAL,
+            get() {
+                if (!this.webinarRegistrationEndDateTime) return null;
+                return this.webinarRegistrationEndDateTime.toTimeString().split(" ")[0]; // Format: HH:MM:SS
+            },
+        },
         created_date: {
             type: Sequelize.VIRTUAL,
             get() {
