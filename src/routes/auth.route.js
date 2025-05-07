@@ -25,6 +25,7 @@ router.get(
     failureRedirect: `${frontendUrl}/login`,
   }),
   async (req, res) => {
+
     try {
       const user = req.user;
       console.log(user)
@@ -50,9 +51,9 @@ router.get(
       };
 
 
+      console.log("Redirect URL :: "+req.query.redirect)
 
-
-      const redirectUrl = `${frontendUrl}/dashboard`
+      const redirectUrl =  req.query.redirect || `${frontendUrl}/dashboard`;
 
       let accessToken  = jwt.sign(claims, accessTokenSecret, {
           expiresIn: '1m',

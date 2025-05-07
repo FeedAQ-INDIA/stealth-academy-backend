@@ -14,16 +14,12 @@ module.exports = (sequelize, Sequelize) => {
             type: Sequelize.TEXT,
             field: "webinar_description",
         },
-        webinarStructure: {
-            type: Sequelize.TEXT,
-            field: "webinar_structure",
-        },
         webinarImageUrl: {
             type: Sequelize.ARRAY(Sequelize.STRING),
             field: "webinar_image_url",
         },
         webinarVideoUrl: {
-            type: Sequelize.STRING(100),
+            type: Sequelize.STRING ,
             field: "webinar_video_url",
         },
         webinarDuration: {
@@ -47,12 +43,20 @@ module.exports = (sequelize, Sequelize) => {
             field: "webinar_reg_end",
         },
         webinarPresenter: {
-            type: Sequelize.STRING(100),
+            type: Sequelize.ARRAY(Sequelize.STRING),
             field: "webinar_presenter",
         },
+        webinarMode: {
+            type: Sequelize.ENUM("ONLINE", "OFFLINE", "HYBRID"),
+            field: "webinar_mode",
+        },
         webinarSource: {
-            type: Sequelize.ENUM("YOUTUBE"),
+            type: Sequelize.ENUM("MICROSOFT TEAMS", "ZOOM", "WEBEX", "GMEET"),
             field: "webinar_source",
+        },
+        webinarHostLocation: {
+            type: Sequelize.TEXT,
+            field: "webinar_host_location",
         },
         webinarLanguage: {
             type: Sequelize.ENUM("ENGLISH"),
