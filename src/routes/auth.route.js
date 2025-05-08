@@ -11,18 +11,34 @@ const accessTokenSecret = process.env.ACCESS_TOKEN_SECRET;
 const frontendUrl = process.env.FRONTEND_URL  ;
 
 router.get(
-  "/auth/google",
-  passport.authenticate("google", {
-    scope: ["profile", "email"],
-    session: false,
-  })
+  "/auth/google",  (req, res, next) => {
+      // passport.authenticate("google", {
+      //   scope: ["profile", "email"],
+      //   session: false,
+      // })
+      const redirect = req.query.redirectUri || `${frontendUrl}/dashboard`;
+
+      console.log("Redirect URL :: " + redirect);
+
+      res.cookie("postAuthRedirect", redirect, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "None",
+        maxAge: 5 * 60 * 1000, // optional: 5 mins
+      });
+
+      passport.authenticate("google", {
+        scope: ["profile", "email"],
+        session: false,
+      })(req, res, next);
+    }
 );
 
 router.get(
   "/auth/google/redirect",
   passport.authenticate("google", {
     session: false,
-    failureRedirect: `${frontendUrl}/login`,
+    failureRedirect: `${frontendUrl}/signin`,
   }),
   async (req, res) => {
 
@@ -51,9 +67,9 @@ router.get(
       };
 
 
-      console.log("Redirect URL :: "+req.query.redirect)
+      console.log("Redirect URL :: "+req.cookies?.postAuthRedirect)
 
-      const redirectUrl =  req.query.redirect || `${frontendUrl}/dashboard`;
+      const redirectUrl =  req.cookies?.postAuthRedirect || `${frontendUrl}/dashboard`;
 
       let accessToken  = jwt.sign(claims, accessTokenSecret, {
           expiresIn: '1m',
@@ -88,10 +104,32 @@ router.get(
 
 router.get(
   "/auth/microsoft",
-  passport.authenticate("microsoft", {
-    scope: ["openid", "profile", "email", "user.read"],
-    session: false,
-  })
+
+    (req, res, next) => {
+      // passport.authenticate("google", {
+      //   scope: ["profile", "email"],
+      //   session: false,
+      // })
+      const redirect = req.query.redirectUri || `${frontendUrl}/dashboard`;
+
+      console.log("Redirect URL :: " + redirect);
+
+      res.cookie("postAuthRedirect", redirect, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "None",
+        maxAge: 5 * 60 * 1000, // optional: 5 mins
+      });
+
+      passport.authenticate("microsoft", {
+        scope: ["openid", "profile", "email", "user.read"],
+        session: false,
+      })(req, res, next);
+    }
+  // passport.authenticate("microsoft", {
+  //   scope: ["openid", "profile", "email", "user.read"],
+  //   session: false,
+  // })
 );
 
 router.get(
@@ -127,7 +165,9 @@ router.get(
 
 
 
-      const redirectUrl = `${frontendUrl}/dashboard`
+      console.log("Redirect URL :: "+req.cookies?.postAuthRedirect)
+
+      const redirectUrl =  req.cookies?.postAuthRedirect || `${frontendUrl}/dashboard`;
 
       let accessToken  = jwt.sign(claims, accessTokenSecret, {
         expiresIn: '1m',
