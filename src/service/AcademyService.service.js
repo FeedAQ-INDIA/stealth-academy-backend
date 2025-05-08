@@ -88,6 +88,48 @@ const saveUserDetail = async (
     return {message: 'User saved successfully'};
 };
 
+
+
+const raiseInterviewRequest = async (
+    userId, interviewReqId,
+    isCancel, date ,
+    time ,
+    duration ,
+    resumeLink ,
+    attachmentLink ,
+    note
+) => {
+    if (interviewReqId && isCancel) {
+        const interviewReq = await db.InterviewReq.findByPk(interviewReqId);
+        if(interviewReq.interviewReqCancelReason != "COMPLETED") {
+            interviewReq.interviewReqCancelReason = "CANCELLED";
+            await interviewReq.save();
+
+            return {message: 'Interview request cancelled successfully'};
+        }else{
+            return {message: 'Interview request is already completed'};
+
+        }
+    } else {
+        await db.InterviewReq.create({
+            userId,
+            interviewReqDate : date ,
+            interviewReqTime : time ,
+            interviewReqDuration : duration ,
+            interviewReqStatus: "REQUESTED",
+            interviewReqMedium : "ONLINE",
+            interviewReqCV : resumeLink ,
+            interviewReqAttach : attachmentLink ,
+            interviewReqNote : note
+        })
+        return {message: 'Interview request created successfully'};
+
+    }
+
+};
+
+
+
 const saveNote = async (
     userId,
     notesId,
@@ -492,6 +534,7 @@ module.exports = {
     saveUserEnrollmentData,
     deleteUserEnrollmentData,
     submitQuiz,
-    clearQuizResult
+    clearQuizResult,
+    raiseInterviewRequest
 };
 

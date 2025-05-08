@@ -139,6 +139,38 @@ async function deleteUserEnrollmentData(req, res, next) {
     }
 }
 
+async function raiseInterviewRequest(req, res, next) {
+    const {
+        interviewReqId,
+        isCancel,
+        date ,
+        time ,
+        duration ,
+        resumeLink ,
+        attachmentLink ,
+        note ,
+    } = req.body;
+    try {
+        let val = await AcademyService.raiseInterviewRequest(req.user.userId, interviewReqId,
+            isCancel, date ,
+            time ,
+            duration ,
+            resumeLink ,
+            attachmentLink ,
+            note ,);
+        res.status(200).send({
+            status: 200, message: "Success", data: val != null ? val : [],
+        });
+    } catch (err) {
+        console.error(`Error occured`, err.message);
+        res.status(500).send({
+            status: 500, message: err.message || "Some error occurred while creating the Tutorial.",
+        });
+        next(err);
+    }
+}
+
+
 
 async function saveNote(req, res, next) {
     const {notesId,
@@ -279,7 +311,7 @@ module.exports = {
     saveUserDetail,
     saveNote,
     deleteNote,saveUserEnrollmentData,
-    deleteUserEnrollmentData,submitQuiz,clearQuizResult
-
+    deleteUserEnrollmentData,submitQuiz,clearQuizResult,
+    raiseInterviewRequest
 
 };

@@ -38,7 +38,7 @@ db.ComprehensionReading = require("./ComprehensionReading.entity.js")(sequelize,
 db.ListenAndRead = require("./ListenAndRead.entity.js")(sequelize, Sequelize);
 db.CourseQuiz = require("./CourseQuiz.entity.js")(sequelize, Sequelize);
 db.QuizQuestion = require("./QuizQuestion.entity.js")(sequelize, Sequelize);
-db.InterviewLog = require("./InterviewLog.entity.js")(sequelize, Sequelize);
+db.InterviewReq = require("./InterviewReq.entity.js")(sequelize, Sequelize);
 db.UserEnrollmentLog = require("./UserEnrollmentLog.entity.js")(sequelize, Sequelize);
 db.QuizResultLog = require("./QuizResultLog.entity.js")(sequelize, Sequelize);
 
@@ -94,9 +94,9 @@ db.CourseWritten.belongsTo(db.CourseTopic, {foreignKey: 'courseTopicId', as: 'co
 db.CourseInterview.belongsTo(db.Course, {foreignKey: 'courseId', as: 'course'})
 db.CourseInterview.belongsTo(db.CourseTopic, {foreignKey: 'courseTopicId', as: 'coursetopic'})
 
-db.InterviewLog.belongsTo(db.Course, {foreignKey: 'courseId', as: 'course'})
-db.InterviewLog.belongsTo(db.CourseTopic, {foreignKey: 'courseTopicId', as: 'coursetopic'})
-db.InterviewLog.belongsTo(db.User, {foreignKey: 'userId', as: 'user'})
+db.InterviewReq.belongsTo(db.Course, {foreignKey: 'courseId', as: 'course'})
+db.InterviewReq.belongsTo(db.CourseTopic, {foreignKey: 'courseTopicId', as: 'coursetopic'})
+db.InterviewReq.belongsTo(db.User, {foreignKey: 'userId', as: 'user'})
 
 
 db.UserEnrollment.belongsTo(db.Course, {foreignKey: 'courseId', as: 'course'})

@@ -50,10 +50,9 @@ app.use(bodyParser.json());
 
 // db.Webinar.sync({ alter: true });
 
-// db.sequelize.sync({ alter : true }).then(() => {
+// db.sequelize.sync().then(() => {
 //     console.log("Drop and re-sync db.");
 // });
-
 
 
 app.use(function (req, res, next) {
