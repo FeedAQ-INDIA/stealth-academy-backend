@@ -46,6 +46,14 @@ module.exports = (sequelize, Sequelize) => {
             type: Sequelize.ENUM("YOUTUBE"),
             field: "course_source",
         },
+        courseMode: {
+            type: Sequelize.ENUM("RECORDED", "LIVE"),
+            field: "course_mode",
+        },
+        deliveryMode: {
+            type: Sequelize.ENUM("ONLINE", "OFFLINE", "HYBRID"),
+            field: "delivery_mode",
+        },
         courseTags: {
             type: Sequelize.ARRAY(Sequelize.STRING),
             field: "course_tags",
