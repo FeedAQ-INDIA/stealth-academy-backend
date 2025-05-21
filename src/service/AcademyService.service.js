@@ -97,12 +97,14 @@ const raiseInterviewRequest = async (
     duration ,
     resumeLink ,
     attachmentLink ,
-    note
+    note,
+    cancelReason,
 ) => {
     if (interviewReqId && isCancel) {
         const interviewReq = await db.InterviewReq.findByPk(interviewReqId);
-        if(interviewReq.interviewReqCancelReason != "COMPLETED") {
-            interviewReq.interviewReqCancelReason = "CANCELLED";
+        if(interviewReq.interviewReqStatus != "COMPLETED") {
+            interviewReq.interviewReqStatus = "CANCELLED";
+            interviewReq.interviewReqCancelReason = cancelReason;
             await interviewReq.save();
 
             return {message: 'Interview request cancelled successfully'};

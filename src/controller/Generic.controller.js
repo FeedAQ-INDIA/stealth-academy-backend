@@ -171,7 +171,6 @@ async function raiseInterviewRequest(req, res, next) {
 }
 
 
-
 async function saveNote(req, res, next) {
     const {notesId,
         courseTopicId,

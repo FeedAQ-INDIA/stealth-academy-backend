@@ -50,6 +50,14 @@ module.exports = (sequelize, Sequelize) => {
             type: Sequelize.STRING(100),
             field: "interview_req_url",
         },
+        interviewRecUrl: {
+            type: Sequelize.STRING(100),
+            field: "interview_rec_url",
+        },
+        interviewResult: {
+            type: Sequelize.STRING(100),
+            field: "interview_result",
+        },
         interviewReqTags: {
             type: Sequelize.ARRAY(Sequelize.STRING),
             field: "interview_req_tags",
@@ -65,6 +73,10 @@ module.exports = (sequelize, Sequelize) => {
         interviewReqAttach: {
             type: Sequelize.JSON,
             field: "interview_req_attach",
+        },
+        interviewInstruct: {
+            type: Sequelize.TEXT,
+            field: "interview_req_instruct",
         },
         courseTopicId: {
             type: Sequelize.INTEGER,

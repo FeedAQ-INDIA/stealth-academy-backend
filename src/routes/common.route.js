@@ -24,6 +24,6 @@ router.post("/submitQuiz", authMiddleware, genericController.submitQuiz);
 router.post("/clearQuizResult", authMiddleware, genericController.clearQuizResult);
 
 router.post("/raiseInterviewRequest", authMiddleware, genericController.raiseInterviewRequest);
-
+ 
 
 module.exports = router;
