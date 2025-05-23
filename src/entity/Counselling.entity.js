@@ -23,16 +23,36 @@ module.exports = (sequelize, Sequelize) => {
             field: "counselling_time",
         },
         counsellingStatus : {
-            type: Sequelize.STRING(100),
+            type: Sequelize.ENUM('REQUESTED','APPROVED','SCHEDULED', 'COMPLETED', 'CANCELLED'),
             field: "counselling_status",
         },
         counsellingMode: {
-            type: Sequelize.STRING(100),
+            type: Sequelize.ENUM("ONLINE", "OFFLINE", "HYBRID"),
             field: "counselling_mode",
         },
         counsellingUrl: {
             type: Sequelize.STRING(100),
             field: "counselling_url",
+        },
+        counsellingLanguage: {
+            type: Sequelize.STRING(100),
+            field: "counselling_language",
+        },
+        counsellingBackground: {
+            type: Sequelize.STRING(100),
+            field: "counselling_background",
+        },
+        counsellingTopic: {
+            type: Sequelize.STRING(100),
+            field: "counselling_topic",
+        },
+        counsellingNote: {
+            type: Sequelize.STRING(300),
+            field: "counselling_note",
+        },
+        counsellingCancelReason: {
+            type: Sequelize.STRING(100),
+            field: "counselling_cancel_reason",
         },
         created_date: {
             type: Sequelize.VIRTUAL,

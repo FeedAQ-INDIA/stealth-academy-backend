@@ -170,6 +170,47 @@ async function raiseInterviewRequest(req, res, next) {
     }
 }
 
+async function raiseCounsellingRequest(req, res, next) {
+    const {
+        counsellingId  ,
+         counsellingDate   ,
+        counsellingTime ,
+        counsellingStatus   ,
+    counsellingMode ,
+    counsellingUrl ,
+    counsellingLanguage  ,
+    counsellingBackground ,
+    counsellingTopic ,
+    counsellingNote  ,
+        isCancel,
+        counsellingCancelReason
+    } = req.body;
+    try {
+        let val = await AcademyService.raiseCounsellingRequest(req.user.userId, counsellingId  ,
+            counsellingDate   ,
+            counsellingTime ,
+            counsellingStatus   ,
+            counsellingMode ,
+            counsellingUrl ,
+            counsellingLanguage  ,
+            counsellingBackground ,
+            counsellingTopic ,
+            counsellingNote  ,
+            isCancel,
+            counsellingCancelReason);
+        res.status(200).send({
+            status: 200, message: "Success", data: val != null ? val : [],
+        });
+    } catch (err) {
+        console.error(`Error occured`, err.message);
+        res.status(500).send({
+            status: 500, message: err.message || "Some error occurred while scheduling counselling.",
+        });
+        next(err);
+    }
+}
+
+
 
 async function saveNote(req, res, next) {
     const {notesId,
@@ -311,6 +352,6 @@ module.exports = {
     saveNote,
     deleteNote,saveUserEnrollmentData,
     deleteUserEnrollmentData,submitQuiz,clearQuizResult,
-    raiseInterviewRequest
-
+    raiseInterviewRequest,
+    raiseCounsellingRequest
 };

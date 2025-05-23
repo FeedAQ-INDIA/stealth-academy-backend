@@ -48,7 +48,7 @@ app.use(cors({
 app.use(cookieParser());
 app.use(bodyParser.json());
 
-// db.InterviewReq.sync({ alter: true });
+// db.Counselling.sync({ alter: true });
 
 // db.sequelize.sync().then(() => {
 //     console.log("Drop and re-sync db.");

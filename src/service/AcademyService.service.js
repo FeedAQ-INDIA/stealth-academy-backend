@@ -132,6 +132,56 @@ const raiseInterviewRequest = async (
 
 
 
+
+
+const raiseCounsellingRequest = async (
+    userId, counsellingId  ,
+    counsellingDate   ,
+    counsellingTime ,
+    counsellingStatus   ,
+    counsellingMode ,
+    counsellingUrl ,
+    counsellingLanguage  ,
+    counsellingBackground ,
+    counsellingTopic ,
+    counsellingNote  ,
+    isCancel,
+    counsellingCancelReason
+) => {
+    if (counsellingId && isCancel) {
+        const counsellingReq = await db.Counselling.findByPk(counsellingId);
+        if(counsellingReq.counsellingStatus != "COMPLETED") {
+            counsellingReq.counsellingStatus = "CANCELLED";
+            counsellingReq.counsellingCancelReason = counsellingCancelReason;
+            await counsellingReq.save();
+
+            return {message: 'Counselling request cancelled successfully'};
+        }else{
+            return {message: 'Counselling request is already completed'};
+
+        }
+    } else {
+        await db.Counselling.create({
+            userId, counsellingId  ,
+            counsellingDate   ,
+            counsellingTime ,
+            counsellingStatus   ,
+            counsellingMode ,
+            counsellingUrl ,
+            counsellingLanguage  ,
+            counsellingBackground ,
+            counsellingTopic ,
+            counsellingNote  ,
+             counsellingCancelReason
+        })
+        return {message: 'Counselling request created successfully'};
+
+    }
+
+};
+
+
+
 const saveNote = async (
     userId,
     notesId,
@@ -537,6 +587,7 @@ module.exports = {
     deleteUserEnrollmentData,
     submitQuiz,
     clearQuizResult,
-    raiseInterviewRequest
+    raiseInterviewRequest,
+    raiseCounsellingRequest
 };
 
