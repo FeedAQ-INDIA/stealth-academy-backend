@@ -56,14 +56,14 @@ app.use(bodyParser.json());
 
 
 
-app.use(function (req, res, next) {
-    // console.log("Req type : " + req.method + ' : ' + req)
-    res.setHeader("Access-Control-Allow-Origin", process.env.ACCESS_CONTROL_ALLOW_ORIGIN);
-    res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PUT, PATCH, DELETE");
-    res.setHeader("Access-Control-Allow-Headers", "X-Requested-With,content-type");
-    res.setHeader("Access-Control-Allow-Credentials", true);
-    next();
-});
+// app.use(function (req, res, next) {
+//     // console.log("Req type : " + req.method + ' : ' + req)
+//     res.setHeader("Access-Control-Allow-Origin", process.env.ACCESS_CONTROL_ALLOW_ORIGIN);
+//     res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PUT, PATCH, DELETE");
+//     res.setHeader("Access-Control-Allow-Headers", "X-Requested-With,content-type");
+//     res.setHeader("Access-Control-Allow-Credentials", true);
+//     next();
+// });
 
 app.use(commonRoute);
 app.use(authRoute);
