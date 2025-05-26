@@ -62,7 +62,7 @@ module.exports = (sequelize, Sequelize) => {
             },
             field: "course_quiz_quiz_id",
         },
-        created_date: {
+        v_created_date: {
             type: Sequelize.VIRTUAL,
             get() {
                 if (!this.course_quiz_created_at) return null;
@@ -73,7 +73,7 @@ module.exports = (sequelize, Sequelize) => {
                 return `${day}-${month}-${year}`; // Format: dd-MMM-YYYY
             },
         },
-        created_time: {
+        v_created_time: {
             type: Sequelize.VIRTUAL,
             get() {
                 if (!this.course_quiz_created_at) return null;
@@ -81,7 +81,7 @@ module.exports = (sequelize, Sequelize) => {
             },
         },
 
-        updated_date: {
+        v_updated_date: {
             type: Sequelize.VIRTUAL,
             get() {
                 if (!this.course_quiz_updated_at) return null;
@@ -92,7 +92,7 @@ module.exports = (sequelize, Sequelize) => {
                 return `${day}-${month}-${year}`; // Format: dd-MMM-YYYY
             },
         },
-        updated_time: {
+        v_updated_time: {
             type: Sequelize.VIRTUAL,
             get() {
                 if (!this.course_quiz_updated_at) return null;

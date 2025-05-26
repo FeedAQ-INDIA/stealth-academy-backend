@@ -107,13 +107,13 @@ const raiseInterviewRequest = async (
             interviewReq.interviewReqCancelReason = cancelReason;
             await interviewReq.save();
 
-            return {message: 'Interview request cancelled successfully'};
+            return {message: 'Interview request cancelled successfully', data:interviewReq};
         }else{
-            return {message: 'Interview request is already completed'};
+            return {message: 'Interview request is already completed', data:interviewReq};
 
         }
     } else {
-        await db.InterviewReq.create({
+       const interviewReq = await db.InterviewReq.create({
             userId,
             interviewReqDate : date ,
             interviewReqTime : time ,
@@ -124,7 +124,7 @@ const raiseInterviewRequest = async (
             interviewReqAttach : attachmentLink ,
             interviewReqNote : note
         })
-        return {message: 'Interview request created successfully'};
+        return {message: 'Interview request created successfully', data:interviewReq};
 
     }
 
@@ -155,14 +155,15 @@ const raiseCounsellingRequest = async (
             counsellingReq.counsellingCancelReason = counsellingCancelReason;
             await counsellingReq.save();
 
-            return {message: 'Counselling request cancelled successfully'};
+            return {message: 'Counselling request cancelled successfully', data: counsellingReq};
         }else{
-            return {message: 'Counselling request is already completed'};
+            return {message: 'Counselling request is already completed', data: counsellingReq};
 
         }
     } else {
-        await db.Counselling.create({
-            userId, counsellingId  ,
+       const  counsellingReq = await db.Counselling.create({
+            userId,
+            counsellingId  ,
             counsellingDate   ,
             counsellingTime ,
             counsellingStatus : 'REQUESTED'   ,
@@ -172,9 +173,9 @@ const raiseCounsellingRequest = async (
             counsellingBackground ,
             counsellingTopic ,
             counsellingNote  ,
-             counsellingCancelReason
+            counsellingCancelReason
         })
-        return {message: 'Counselling request created successfully'};
+        return {message: 'Counselling request created successfully', data: counsellingReq};
 
     }
 

@@ -14,10 +14,12 @@ module.exports = (sequelize, Sequelize) => {
         courseVideoSource: {
             type: Sequelize.ENUM("YOUTUBE"),
             field: "course_video_source",
+            allowNull: false,
         },
         courseVideoUrl: {
             type: Sequelize.STRING(100),
             field: "course_video_url",
+            allowNull: false,
         },
         courseTopicId: {
             type: Sequelize.INTEGER,
@@ -35,7 +37,7 @@ module.exports = (sequelize, Sequelize) => {
             },
             field: "course_video_course_id",
         },
-        created_date: {
+        v_created_date: {
             type: Sequelize.VIRTUAL,
             get() {
                 if (!this.course_video_created_at) return null;
@@ -46,7 +48,7 @@ module.exports = (sequelize, Sequelize) => {
                 return `${day}-${month}-${year}`; // Format: dd-MMM-YYYY
             },
         },
-        created_time: {
+        v_created_time: {
             type: Sequelize.VIRTUAL,
             get() {
                 if (!this.course_video_created_at) return null;
@@ -54,7 +56,7 @@ module.exports = (sequelize, Sequelize) => {
             },
         },
 
-        updated_date: {
+        v_updated_date: {
             type: Sequelize.VIRTUAL,
             get() {
                 if (!this.course_video_updated_at) return null;
@@ -65,7 +67,7 @@ module.exports = (sequelize, Sequelize) => {
                 return `${day}-${month}-${year}`; // Format: dd-MMM-YYYY
             },
         },
-        updated_time: {
+        v_updated_time: {
             type: Sequelize.VIRTUAL,
             get() {
                 if (!this.course_video_updated_at) return null;

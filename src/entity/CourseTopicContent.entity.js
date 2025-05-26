@@ -25,24 +25,29 @@ module.exports = (sequelize, Sequelize) => {
         contentId: {
             type: Sequelize.INTEGER,
             field: "coursetopiccontent_content_id",
+            allowNull: false,
         },
         courseTopicContentType: {
             type: Sequelize.ENUM('CourseVideo', 'CourseWritten', 'CourseInterview', 'ComprehensionReading', 'CourseQuiz'),
             field: "coursetopiccontent_type",
+            allowNull: false,
         },
         courseTopicContentSequence: {
             type: Sequelize.INTEGER,
             field: "coursetopiccontent_seq",
+            allowNull: false,
         },
         courseTopicContentTitle: {
             type: Sequelize.STRING(100),
             field: "coursetopiccontent_title",
+            allowNull: false,
         },
         courseTopicContentDuration: {
             type: Sequelize.INTEGER,
             field: "coursetopiccontent_duration",
+            allowNull: false,
         },
-        created_date: {
+        v_created_date: {
             type: Sequelize.VIRTUAL,
             get() {
                 if (!this.coursetopiccontent_created_at) return null;
@@ -53,7 +58,7 @@ module.exports = (sequelize, Sequelize) => {
                 return `${day}-${month}-${year}`; // Format: dd-MMM-YYYY
             },
         },
-        created_time: {
+        v_created_time: {
             type: Sequelize.VIRTUAL,
             get() {
                 if (!this.coursetopiccontent_created_at) return null;
@@ -61,7 +66,7 @@ module.exports = (sequelize, Sequelize) => {
             },
         },
 
-        updated_date: {
+        v_updated_date: {
             type: Sequelize.VIRTUAL,
             get() {
                 if (!this.coursetopiccontent_updated_at) return null;
@@ -72,7 +77,7 @@ module.exports = (sequelize, Sequelize) => {
                 return `${day}-${month}-${year}`; // Format: dd-MMM-YYYY
             },
         },
-        updated_time: {
+        v_updated_time: {
             type: Sequelize.VIRTUAL,
             get() {
                 if (!this.coursetopiccontent_updated_at) return null;

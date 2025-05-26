@@ -9,10 +9,12 @@ module.exports = (sequelize, Sequelize) => {
         courseTitle: {
             type: Sequelize.STRING(100),
             field: "course_title",
+            allowNull: false,
         },
         courseType: {
             type: Sequelize.ENUM("COURSE", "WEBINAR"),
             field: "course_type",
+            allowNull: false,
         },
         courseDescription: {
             type: Sequelize.TEXT,
@@ -33,6 +35,7 @@ module.exports = (sequelize, Sequelize) => {
         courseDuration: {
             type: Sequelize.INTEGER,
             field: "course_duration",
+            allowNull: false,
         },
         courseValidity: {
             type: Sequelize.INTEGER,
@@ -45,14 +48,17 @@ module.exports = (sequelize, Sequelize) => {
         courseSource: {
             type: Sequelize.ENUM("YOUTUBE"),
             field: "course_source",
+            allowNull: false,
         },
         courseMode: {
             type: Sequelize.ENUM("RECORDED", "LIVE"),
             field: "course_mode",
+            allowNull: false,
         },
         deliveryMode: {
             type: Sequelize.ENUM("ONLINE", "OFFLINE", "HYBRID"),
             field: "delivery_mode",
+            allowNull: false,
         },
         courseTags: {
             type: Sequelize.ARRAY(Sequelize.STRING),
@@ -61,8 +67,9 @@ module.exports = (sequelize, Sequelize) => {
         courseCost: {
             type: Sequelize.INTEGER,
             field: "course_cost",
+            allowNull: false,
         },
-        created_date: {
+        v_created_date: {
             type: Sequelize.VIRTUAL,
             get() {
                 if (!this.course_created_at) return null;
@@ -73,7 +80,7 @@ module.exports = (sequelize, Sequelize) => {
                 return `${day}-${month}-${year}`; // Format: dd-MMM-YYYY
             },
         },
-        created_time: {
+        v_created_time: {
             type: Sequelize.VIRTUAL,
             get() {
                 if (!this.course_created_at) return null;
@@ -81,7 +88,7 @@ module.exports = (sequelize, Sequelize) => {
             },
         },
 
-        updated_date: {
+        v_updated_date: {
             type: Sequelize.VIRTUAL,
             get() {
                 if (!this.course_updated_at) return null;
@@ -92,7 +99,7 @@ module.exports = (sequelize, Sequelize) => {
                 return `${day}-${month}-${year}`; // Format: dd-MMM-YYYY
             },
         },
-        updated_time: {
+        v_updated_time: {
             type: Sequelize.VIRTUAL,
             get() {
                 if (!this.course_updated_at) return null;

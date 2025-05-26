@@ -70,7 +70,7 @@ module.exports = (sequelize, Sequelize) => {
             type: Sequelize.INTEGER,
             field: "webinar_cost",
         },
-        webinar_start_date: {
+        v_webinar_start_date: {
             type: Sequelize.VIRTUAL,
             get() {
                 if (!this.webinarStartDate) return null;
@@ -81,14 +81,14 @@ module.exports = (sequelize, Sequelize) => {
                 return `${day}-${month}-${year}`; // Format: dd-MMM-YYYY
             },
         },
-        webinar_start_time: {
+        v_webinar_start_time: {
             type: Sequelize.VIRTUAL,
             get() {
                 if (!this.webinarStartDate) return null;
                 return this.webinarStartDate.toTimeString().split(" ")[0]; // Format: HH:MM:SS
             },
         },
-        webinar_end_date: {
+        v_webinar_end_date: {
             type: Sequelize.VIRTUAL,
             get() {
                 if (!this.webinarEndDate) return null;
@@ -99,14 +99,14 @@ module.exports = (sequelize, Sequelize) => {
                 return `${day}-${month}-${year}`; // Format: dd-MMM-YYYY
             },
         },
-        webinar_end_time: {
+        v_webinar_end_time: {
             type: Sequelize.VIRTUAL,
             get() {
                 if (!this.webinarEndDate) return null;
                 return this.webinarEndDate.toTimeString().split(" ")[0]; // Format: HH:MM:SS
             },
         },
-        webinar_registration_start_date: {
+        v_webinar_registration_start_date: {
             type: Sequelize.VIRTUAL,
             get() {
                 if (!this.webinarRegistrationStartDateTime) return null;
@@ -117,14 +117,14 @@ module.exports = (sequelize, Sequelize) => {
                 return `${day}-${month}-${year}`; // Format: dd-MMM-YYYY
             },
         },
-        webinar_registration_start_time: {
+        v_webinar_registration_start_time: {
             type: Sequelize.VIRTUAL,
             get() {
                 if (!this.webinarRegistrationStartDateTime) return null;
                 return this.webinarRegistrationStartDateTime.toTimeString().split(" ")[0]; // Format: HH:MM:SS
             },
         },
-        webinar_registration_end_date: {
+        v_webinar_registration_end_date: {
             type: Sequelize.VIRTUAL,
             get() {
                 if (!this.webinarRegistrationEndDateTime) return null;
@@ -135,14 +135,14 @@ module.exports = (sequelize, Sequelize) => {
                 return `${day}-${month}-${year}`; // Format: dd-MMM-YYYY
             },
         },
-        webinar_registration_end_time: {
+        v_webinar_registration_end_time: {
             type: Sequelize.VIRTUAL,
             get() {
                 if (!this.webinarRegistrationEndDateTime) return null;
                 return this.webinarRegistrationEndDateTime.toTimeString().split(" ")[0]; // Format: HH:MM:SS
             },
         },
-        created_date: {
+        v_created_date: {
             type: Sequelize.VIRTUAL,
             get() {
                 if (!this.webinar_created_at) return null;
@@ -153,7 +153,7 @@ module.exports = (sequelize, Sequelize) => {
                 return `${day}-${month}-${year}`; // Format: dd-MMM-YYYY
             },
         },
-        created_time: {
+        v_created_time: {
             type: Sequelize.VIRTUAL,
             get() {
                 if (!this.webinar_created_at) return null;
@@ -161,7 +161,7 @@ module.exports = (sequelize, Sequelize) => {
             },
         },
 
-        updated_date: {
+        v_updated_date: {
             type: Sequelize.VIRTUAL,
             get() {
                 if (!this.webinar_updated_at) return null;
@@ -172,7 +172,7 @@ module.exports = (sequelize, Sequelize) => {
                 return `${day}-${month}-${year}`; // Format: dd-MMM-YYYY
             },
         },
-        updated_time: {
+        v_updated_time: {
             type: Sequelize.VIRTUAL,
             get() {
                 if (!this.webinar_updated_at) return null;

@@ -13,22 +13,27 @@ module.exports = (sequelize, Sequelize) => {
                 key: "user_id",
             },
             field: "counselling_user_id",
+            allowNull: false,
         },
         counsellingDate: {
             type: Sequelize.DATE,
             field: "counselling_date",
+            allowNull: false,
         },
         counsellingTime: {
             type: Sequelize.TIME,
             field: "counselling_time",
+            allowNull: false,
         },
         counsellingStatus : {
             type: Sequelize.ENUM('REQUESTED','APPROVED','SCHEDULED', 'COMPLETED', 'CANCELLED'),
             field: "counselling_status",
+            allowNull: false,
         },
         counsellingMode: {
             type: Sequelize.ENUM("ONLINE", "OFFLINE", "HYBRID"),
             field: "counselling_mode",
+            allowNull: false,
         },
         counsellingUrl: {
             type: Sequelize.STRING(100),
@@ -37,6 +42,7 @@ module.exports = (sequelize, Sequelize) => {
         counsellingLanguage: {
             type: Sequelize.STRING(100),
             field: "counselling_language",
+            allowNull: false,
         },
         counsellingBackground: {
             type: Sequelize.STRING(100),
@@ -54,7 +60,7 @@ module.exports = (sequelize, Sequelize) => {
             type: Sequelize.STRING(100),
             field: "counselling_cancel_reason",
         },
-        created_date: {
+        v_created_date: {
             type: Sequelize.VIRTUAL,
             get() {
                 if (!this.counselling_created_at) return null;
@@ -65,7 +71,7 @@ module.exports = (sequelize, Sequelize) => {
                 return `${day}-${month}-${year}`; // Format: dd-MMM-YYYY
             },
         },
-        created_time: {
+        v_created_time: {
             type: Sequelize.VIRTUAL,
             get() {
                 if (!this.counselling_created_at) return null;
@@ -73,7 +79,7 @@ module.exports = (sequelize, Sequelize) => {
             },
         },
 
-        updated_date: {
+        v_updated_date: {
             type: Sequelize.VIRTUAL,
             get() {
                 if (!this.counselling_updated_at) return null;
@@ -84,7 +90,7 @@ module.exports = (sequelize, Sequelize) => {
                 return `${day}-${month}-${year}`; // Format: dd-MMM-YYYY
             },
         },
-        updated_time: {
+        v_updated_time: {
             type: Sequelize.VIRTUAL,
             get() {
                 if (!this.counselling_updated_at) return null;

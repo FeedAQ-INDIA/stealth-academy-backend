@@ -13,6 +13,7 @@ module.exports = (sequelize, Sequelize) => {
                 key: "user_id",
             },
             field: "user_enrollment_user_id",
+            allowNull: false,
         },
         webinarId: {
             type: Sequelize.INTEGER,
@@ -34,7 +35,7 @@ module.exports = (sequelize, Sequelize) => {
             type: Sequelize.ENUM('ENROLLED','IN PROGRESS','PAUSED', 'COMPLETED', 'CERTIFIED'),
             field: "uel_status",
         },
-        created_date: {
+        v_created_date: {
             type: Sequelize.VIRTUAL,
             get() {
                 if (!this.userEnrollment_created_at) return null;
@@ -45,7 +46,7 @@ module.exports = (sequelize, Sequelize) => {
                 return `${day}-${month}-${year}`; // Format: dd-MMM-YYYY
             },
         },
-        created_time: {
+        v_created_time: {
             type: Sequelize.VIRTUAL,
             get() {
                 if (!this.userEnrollment_created_at) return null;
@@ -53,7 +54,7 @@ module.exports = (sequelize, Sequelize) => {
             },
         },
 
-        updated_date: {
+        v_updated_date: {
             type: Sequelize.VIRTUAL,
             get() {
                 if (!this.userEnrollment_updated_at) return null;
@@ -64,7 +65,7 @@ module.exports = (sequelize, Sequelize) => {
                 return `${day}-${month}-${year}`; // Format: dd-MMM-YYYY
             },
         },
-        updated_time: {
+        v_updated_time: {
             type: Sequelize.VIRTUAL,
             get() {
                 if (!this.userEnrollment_updated_at) return null;

@@ -9,10 +9,12 @@ module.exports = (sequelize, Sequelize) => {
         courseTopicTitle: {
             type: Sequelize.STRING(50),
             field: "course_topic_title",
+            allowNull: false,
         },
         courseTopicSequence: {
             type: Sequelize.INTEGER,
             field: "course_topic_sequence",
+            allowNull: false,
         },
         courseId: {
             type: Sequelize.INTEGER,
@@ -22,7 +24,7 @@ module.exports = (sequelize, Sequelize) => {
             },
             field: "course_topic_course_id",
         },
-        created_date: {
+        v_created_date: {
             type: Sequelize.VIRTUAL,
             get() {
                 if (!this.course_topic_created_at) return null;
@@ -33,7 +35,7 @@ module.exports = (sequelize, Sequelize) => {
                 return `${day}-${month}-${year}`; // Format: dd-MMM-YYYY
             },
         },
-        created_time: {
+        v_created_time: {
             type: Sequelize.VIRTUAL,
             get() {
                 if (!this.course_topic_created_at) return null;
@@ -41,7 +43,7 @@ module.exports = (sequelize, Sequelize) => {
             },
         },
 
-        updated_date: {
+        v_updated_date: {
             type: Sequelize.VIRTUAL,
             get() {
                 if (!this.course_topic_updated_at) return null;
@@ -52,7 +54,7 @@ module.exports = (sequelize, Sequelize) => {
                 return `${day}-${month}-${year}`; // Format: dd-MMM-YYYY
             },
         },
-        updated_time: {
+        v_updated_time: {
             type: Sequelize.VIRTUAL,
             get() {
                 if (!this.course_topic_updated_at) return null;

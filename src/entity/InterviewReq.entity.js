@@ -17,14 +17,17 @@ module.exports = (sequelize, Sequelize) => {
         interviewReqDate: {
             type: Sequelize.DATE,
             field: "interview_req_date",
+            allowNull: false,
         },
         interviewReqTime: {
             type: Sequelize.TIME,
             field: "interview_req_time",
+            allowNull: false,
         },
         interviewReqDuration: {
             type: Sequelize.INTEGER,
             field: "interview_req_duration",
+            allowNull: false,
         },
         interviewReqCost: {
             type: Sequelize.INTEGER,
@@ -33,6 +36,7 @@ module.exports = (sequelize, Sequelize) => {
         interviewReqStatus : {
             type: Sequelize.ENUM('REQUESTED','APPROVED','SCHEDULED', 'COMPLETED', 'CANCELLED'),
             field: "interview_req_status",
+            allowNull: false,
         },
         interviewReqCancelReason : {
             type: Sequelize.STRING(100),
@@ -41,10 +45,12 @@ module.exports = (sequelize, Sequelize) => {
         interviewReqMode: {
             type: Sequelize.ENUM("MICROSOFT TEAMS", "ZOOM", "WEBEX", "GMEET"),
             field: "interview_req_mode",
+            allowNull: false,
         },
         interviewReqMedium: {
             type: Sequelize.ENUM("ONLINE", "OFFLINE", "HYBRID"),
             field: "interview_req_medium",
+            allowNull: false,
         },
         interviewReqUrl: {
             type: Sequelize.STRING(100),
@@ -69,6 +75,7 @@ module.exports = (sequelize, Sequelize) => {
         interviewReqCV: {
             type: Sequelize.STRING(100),
             field: "interview_req_cv",
+            allowNull: false,
         },
         interviewReqAttach: {
             type: Sequelize.JSON,
@@ -94,7 +101,7 @@ module.exports = (sequelize, Sequelize) => {
             },
             field: "interview_req_course_id",
         },
-        created_date: {
+        v_created_date: {
             type: Sequelize.VIRTUAL,
             get() {
                 if (!this.interview_req_created_at) return null;
@@ -105,7 +112,7 @@ module.exports = (sequelize, Sequelize) => {
                 return `${day}-${month}-${year}`; // Format: dd-MMM-YYYY
             },
         },
-        created_time: {
+        v_created_time: {
             type: Sequelize.VIRTUAL,
             get() {
                 if (!this.interview_req_created_at) return null;
@@ -113,7 +120,7 @@ module.exports = (sequelize, Sequelize) => {
             },
         },
 
-        updated_date: {
+        v_updated_date: {
             type: Sequelize.VIRTUAL,
             get() {
                 if (!this.interview_req_updated_at) return null;
@@ -124,7 +131,7 @@ module.exports = (sequelize, Sequelize) => {
                 return `${day}-${month}-${year}`; // Format: dd-MMM-YYYY
             },
         },
-        updated_time: {
+        v_updated_time: {
             type: Sequelize.VIRTUAL,
             get() {
                 if (!this.interview_req_updated_at) return null;
