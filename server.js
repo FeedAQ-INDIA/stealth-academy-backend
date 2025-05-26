@@ -48,12 +48,11 @@ app.use(cors({
 app.use(cookieParser());
 app.use(bodyParser.json());
 
-// db.Counselling.sync({ alter: true });
+// db.Webinar.sync({ alter: true });
 
-// db.sequelize.sync().then(() => {
+// db.sequelize.sync({alter:true}).then(() => {
 //     console.log("Drop and re-sync db.");
 // });
-
 
 
 // app.use(function (req, res, next) {
