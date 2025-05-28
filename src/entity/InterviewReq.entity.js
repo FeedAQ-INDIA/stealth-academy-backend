@@ -45,8 +45,7 @@ module.exports = (sequelize, Sequelize) => {
         interviewReqMode: {
             type: Sequelize.ENUM("MICROSOFT TEAMS", "ZOOM", "WEBEX", "GMEET"),
             field: "interview_req_mode",
-            allowNull: false,
-        },
+         },
         interviewReqMedium: {
             type: Sequelize.ENUM("ONLINE", "OFFLINE", "HYBRID"),
             field: "interview_req_medium",

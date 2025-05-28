@@ -122,7 +122,7 @@ const raiseInterviewRequest = async (
             interviewReqMedium : "ONLINE",
             interviewReqCV : resumeLink ,
             interviewReqAttach : attachmentLink ,
-            interviewReqNote : note
+             interviewReqNote : note
         })
         return {message: 'Interview request created successfully', data:interviewReq};
 
