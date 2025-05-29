@@ -41,9 +41,11 @@ db.QuizQuestion = require("./QuizQuestion.entity.js")(sequelize, Sequelize);
 db.InterviewReq = require("./InterviewReq.entity.js")(sequelize, Sequelize);
 db.UserEnrollmentLog = require("./UserEnrollmentLog.entity.js")(sequelize, Sequelize);
 db.QuizResultLog = require("./QuizResultLog.entity.js")(sequelize, Sequelize);
-
+db.CourseSchedule = require("./CourseSchedule.entity.js")(sequelize, Sequelize);
 db.Webinar = require("./Webinar.entity.js")(sequelize, Sequelize);
 
+
+db.CourseSchedule.belongsTo(db.Course, {foreignKey: 'courseId', as: 'course'})
 
 db.QuizResultLog.belongsTo(db.Course, {foreignKey: 'courseId', as: 'course'})
 db.QuizResultLog.belongsTo(db.CourseQuiz, {foreignKey: 'courseQuizId', as: 'coursequiz'})
