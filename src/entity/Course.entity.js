@@ -69,6 +69,11 @@ module.exports = (sequelize, Sequelize) => {
             field: "course_cost",
             allowNull: false,
         },
+        courseTotalBatch: {
+            type: Sequelize.INTEGER,
+            field: "course_total_batch",
+            defaultValue: 1
+        },
         v_created_date: {
             type: Sequelize.VIRTUAL,
             get() {

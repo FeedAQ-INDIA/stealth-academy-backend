@@ -14,6 +14,11 @@ module.exports = (sequelize, Sequelize) => {
             },
             field: "course_schedule_course_id",
         },
+        courseBatch: {
+            type: Sequelize.INTEGER,
+            field: "course_schedule_batch",
+            defaultValue: 1
+        },
         scheduledTitle: {
             type: Sequelize.STRING(60),
             field: "course_schedule_title",

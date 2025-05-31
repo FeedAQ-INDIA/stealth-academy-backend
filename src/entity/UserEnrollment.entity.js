@@ -35,6 +35,11 @@ module.exports = (sequelize, Sequelize) => {
             type: Sequelize.ENUM('ENROLLED','IN PROGRESS','PAUSED', 'COMPLETED', 'CERTIFIED'),
             field: "uel_status",
         },
+        enrollmentBatch: {
+            type: Sequelize.INTEGER,
+            field: "user_enrollment_course_batch",
+            defaultValue: 1
+        },
         v_created_date: {
             type: Sequelize.VIRTUAL,
             get() {
