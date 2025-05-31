@@ -22,6 +22,23 @@ async function getUser(req, res, next) {
     }
 }
 
+async function fetchScheduledCourseMeet(req, res, next) {
+    const {page, limit} = req.body;
+    try {
+        let val = await AcademyService.fetchScheduledCourseMeet(req.user.userId, page, limit);
+        res.status(200).send({
+            status: 200, message: "Success", data: val != null ? val : [],
+        });
+    } catch (err) {
+        console.error(`Error occured`, err.message);
+        res.status(500).send({
+            status: 500, message: err.message || "Some error occurred while creating the Tutorial.",
+        });
+        next(err);
+    }
+}
+
+
 async function enrollStatus(req, res, next) {
     const {courseId, webinarId} = req.body;
     try {
@@ -353,5 +370,6 @@ module.exports = {
     deleteNote,saveUserEnrollmentData,
     deleteUserEnrollmentData,submitQuiz,clearQuizResult,
     raiseInterviewRequest,
-    raiseCounsellingRequest
+    raiseCounsellingRequest,
+    fetchScheduledCourseMeet
 };

@@ -1,4 +1,4 @@
-const {Op, fn, col} = require("sequelize");
+const {Op, fn, col, QueryTypes} = require("sequelize");
 const db = require("../entity/index.js");
 const lodash = require("lodash");
 const logger = require("../config/winston.config.js");
@@ -238,6 +238,56 @@ const getUser = async (userId) => {
 
     return userData.toJSON();
 };
+
+
+const fetchScheduledCourseMeet = async (userId, page1, limit1) => {
+    const page = parseInt(page1) || 1;
+    const limit = parseInt(limit1) || 5;
+    // const offset = (page - 1) * limit;
+    const offset = page1
+
+// Total count query
+    const totalCountResult = await db.sequelize.query(
+        `SELECT COUNT(*) AS totalCount 
+   FROM user_enrollment ue 
+   INNER JOIN course_schedule cs 
+     ON ue.user_enrollment_course_id = cs.course_schedule_course_id 
+    AND ue.user_enrollment_course_batch = cs.course_schedule_batch 
+   WHERE ue.user_enrollment_user_id = :userId`,
+        {
+            type: db.Sequelize.QueryTypes.SELECT,
+            replacements: { userId }
+        }
+    );
+
+    // const totalCount = totalCountResult?.[0]?.totalCount;
+
+// Paginated data query
+    const meetData = await db.sequelize.query(
+        `SELECT cs.* 
+   FROM user_enrollment ue 
+   INNER JOIN course_schedule cs 
+     ON ue.user_enrollment_course_id = cs.course_schedule_course_id 
+    AND ue.user_enrollment_course_batch = cs.course_schedule_batch 
+   WHERE ue.user_enrollment_user_id = :userId
+   LIMIT :limit OFFSET :offset`,
+        {
+            model: db.CourseSchedule,
+            mapToModel: true,
+            replacements: { userId, limit, offset }
+        }
+    );
+
+// Response in your desired format
+    return ({
+        results: meetData,
+        totalCount : parseInt(totalCountResult?.[0]?.["totalcount"]) || 0,
+        limit,
+        offset
+    });
+
+};
+
 
 const getCourseDetail = async (userId, courseId) => {
     const enrollUserCourseData = await enrollStatus(userId, courseId);
@@ -589,6 +639,7 @@ module.exports = {
     submitQuiz,
     clearQuizResult,
     raiseInterviewRequest,
-    raiseCounsellingRequest
+    raiseCounsellingRequest,
+    fetchScheduledCourseMeet
 };
 

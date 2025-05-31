@@ -104,6 +104,7 @@ db.InterviewReq.belongsTo(db.User, {foreignKey: 'userId', as: 'user'})
 db.UserEnrollment.belongsTo(db.Course, {foreignKey: 'courseId', as: 'course'})
 db.UserEnrollment.belongsTo(db.User, {foreignKey: 'userId', as: 'user'})
 db.UserEnrollment.belongsTo(db.Webinar, {foreignKey: 'webinarId', as: 'webinar'})
+db.UserEnrollment.hasMany(db.CourseSchedule, {foreignKey: 'courseId', as: 'courseschedule'})
 
 db.User.belongsToMany(db.Course, {
     through: db.UserEnrollment, foreignKey: 'userId', otherKey: 'courseId', as: 'courses',
