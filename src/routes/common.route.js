@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const genericController = require("../controller/Generic.controller.js");
  const authMiddleware = require("../middleware/authMiddleware");
+const publicauthenticationMiddleware = require("../middleware/publicMiddleware");
  const logger = require('../config/winston.config.js')
 
 router.get("/ping", function (req, res) {
@@ -12,6 +13,7 @@ router.get("/ping", function (req, res) {
 
 router.post("/fetchScheduledCourseMeet", authMiddleware, genericController.fetchScheduledCourseMeet);
 
+router.post("/browseCourse", publicauthenticationMiddleware, genericController.searchRecord);
 router.post("/searchCourse", authMiddleware, genericController.searchRecord);
 router.post("/enrollStatus", authMiddleware, genericController.enrollStatus);
 router.post("/enroll", authMiddleware, genericController.enrollUserCourse);
