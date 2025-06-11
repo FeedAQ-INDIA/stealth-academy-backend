@@ -6,9 +6,9 @@ const logger = require('../config/winston.config')
 const accessTokenSecret = process.env.ACCESS_TOKEN_SECRET;
 
 const authenticateToken = (req, res, next) => {
-  const authHeader = req.headers.authorization;
-  const token = authHeader && authHeader.split(" ")[1]; // Extract token from 'Bearer <token>'
-
+  // const authHeader = req.headers.authorization;
+  // const token = authHeader && authHeader.split(" ")[1];
+  const token = req.cookies?.accessToken
   if (!token) {
     console.error("Token missing from Authorization header");
     return res.status(401).json({ error: "Authorization token missing" }); // Unauthorized
