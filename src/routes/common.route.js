@@ -14,7 +14,7 @@ router.get("/ping", function (req, res) {
 router.post("/fetchScheduledCourseMeet", authMiddleware, genericController.fetchScheduledCourseMeet);
 
 router.post("/browseCourse", publicauthenticationMiddleware, genericController.searchRecord);
-router.post("/searchCourse", authMiddleware, genericController.searchRecord);
+router.post("/searchCourse", publicauthenticationMiddleware, genericController.searchRecord);
 router.post("/enrollStatus", authMiddleware, genericController.enrollStatus);
 router.post("/enroll", authMiddleware, genericController.enrollUserCourse);
 router.post("/disroll", authMiddleware, genericController.disrollUserCourse);
