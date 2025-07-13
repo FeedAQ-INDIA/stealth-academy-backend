@@ -11,25 +11,42 @@ module.exports = (sequelize, Sequelize) => {
             field: "course_title",
             allowNull: false,
         },
-        courseType: {
-            type: Sequelize.ENUM("COURSE", "WEBINAR"),
-            field: "course_type",
-            allowNull: false,
-        },
+        // courseType: {
+        //     type: Sequelize.ENUM("COURSE", "WEBINAR"),
+        //     field: "course_type",
+        //     allowNull: false,
+        // },
         courseDescription: {
             type: Sequelize.TEXT,
             field: "course_description",
         },
+        courseWhatYouWillLearn: {
+            type: Sequelize.ARRAY(Sequelize.STRING),
+            field: "course_what_you_will_learn",
+        },
+        courseKeyFeature: {
+            type: Sequelize.ARRAY(Sequelize.STRING),
+            field: "course_key_feature",
+        },
+        courseWhoCanJoin: {
+            type: Sequelize.ARRAY(Sequelize.STRING),
+            field: "course_who_can_join",
+        },
+        courseIsCertified: {
+            type: Sequelize.BOOLEAN,
+            field: "course_is_certified",
+            defaultValue: false,
+         },
         courseImageUrl: {
             type: Sequelize.ARRAY(Sequelize.STRING),
             field: "course_image_url",
         },
         courseVideoUrl: {
-            type: Sequelize.STRING(100),
+            type:Sequelize.STRING,
             field: "course_video_url",
         },
         courseLevel: {
-            type: Sequelize.STRING(100),
+            type: Sequelize.ENUM("BEGINNER", "ADVANCED", "INTERMEDIATE", "BEGINNER TO ADVANCED"),
             field: "course_level",
         },
         courseDuration: {
@@ -45,11 +62,11 @@ module.exports = (sequelize, Sequelize) => {
             type: Sequelize.STRING(100),
             field: "course_tutor",
         },
-        courseSource: {
-            type: Sequelize.ENUM("YOUTUBE"),
-            field: "course_source",
-            allowNull: false,
-        },
+        // courseSource: {
+        //     type: Sequelize.ENUM("YOUTUBE"),
+        //     field: "course_source",
+        //     allowNull: false,
+        // },
         courseMode: {
             type: Sequelize.ENUM("RECORDED", "LIVE"),
             field: "course_mode",
