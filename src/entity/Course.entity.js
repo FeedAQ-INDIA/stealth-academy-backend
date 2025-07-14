@@ -86,6 +86,10 @@ module.exports = (sequelize, Sequelize) => {
             field: "course_cost",
             allowNull: false,
         },
+        courseMrpCost: {
+            type: Sequelize.INTEGER,
+            field: "course_mrp_cost",
+        },
         courseTotalBatch: {
             type: Sequelize.INTEGER,
             field: "course_total_batch",
