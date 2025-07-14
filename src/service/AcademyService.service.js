@@ -248,12 +248,14 @@ const fetchScheduledCourseMeet = async (userId, page1, limit1) => {
 
 // Total count query
     const totalCountResult = await db.sequelize.query(
-        `SELECT COUNT(*) AS totalCount 
-   FROM user_enrollment ue 
-   INNER JOIN course_schedule cs 
-     ON ue.user_enrollment_course_id = cs.course_schedule_course_id 
-    AND ue.user_enrollment_course_batch = cs.course_schedule_batch 
-   WHERE ue.user_enrollment_user_id = :userId`,
+        `SELECT cs.*, c.course_title
+         FROM user_enrollment ue
+                  INNER JOIN course_schedule cs
+                             ON ue.user_enrollment_course_id = cs.course_schedule_course_id
+                                 AND ue.user_enrollment_course_batch = cs.course_schedule_batch
+                  INNER JOIN course c
+                             ON cs.course_schedule_course_id = c.course_id
+         WHERE ue.user_enrollment_user_id = :userId `,
         {
             type: db.Sequelize.QueryTypes.SELECT,
             replacements: { userId }
@@ -264,13 +266,16 @@ const fetchScheduledCourseMeet = async (userId, page1, limit1) => {
 
 // Paginated data query
     const meetData = await db.sequelize.query(
-        `SELECT cs.* 
-   FROM user_enrollment ue 
-   INNER JOIN course_schedule cs 
-     ON ue.user_enrollment_course_id = cs.course_schedule_course_id 
-    AND ue.user_enrollment_course_batch = cs.course_schedule_batch 
-   WHERE ue.user_enrollment_user_id = :userId
-   LIMIT :limit OFFSET :offset`,
+        ` SELECT cs.*, c.course_title
+          FROM user_enrollment ue
+                   INNER JOIN course_schedule cs
+                              ON ue.user_enrollment_course_id = cs.course_schedule_course_id
+                                  AND ue.user_enrollment_course_batch = cs.course_schedule_batch
+                   INNER JOIN course c
+                              ON cs.course_schedule_course_id = c.course_id
+          WHERE ue.user_enrollment_user_id = :userId
+          ORDER BY cs.course_schedule_start_date ASC
+              LIMIT :limit OFFSET :offset`,
         {
             model: db.CourseSchedule,
             mapToModel: true,
