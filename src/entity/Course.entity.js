@@ -37,6 +37,11 @@ module.exports = (sequelize, Sequelize) => {
             field: "course_is_certified",
             defaultValue: false,
          },
+        courseIsLocked: {
+            type: Sequelize.BOOLEAN,
+            field: "course_is_locked",
+            defaultValue: true,
+        },
         courseImageUrl: {
             type: Sequelize.ARRAY(Sequelize.STRING),
             field: "course_image_url",

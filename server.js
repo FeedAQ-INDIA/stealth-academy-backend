@@ -9,6 +9,7 @@ const cors = require("cors");
 const express = require("express");
 const commonRoute = require("./src/routes/common.route.js");
 const authRoute = require("./src/routes/auth.route.js");
+const paymentRoute = require("./src/routes/payment.route.js");
 const app = express();
 const port = process.env.PORT || 3000;
 const db = require("./src/entity");
@@ -65,6 +66,7 @@ app.use(bodyParser.json());
 // });
 
 app.use(commonRoute);
+app.use(paymentRoute);
 app.use(authRoute);
 
 app.listen(port, '0.0.0.0', () => {
