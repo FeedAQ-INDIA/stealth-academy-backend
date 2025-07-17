@@ -12,37 +12,21 @@ module.exports = (sequelize, Sequelize) => {
             type: Sequelize.INTEGER,
             field: "course_video_course_id",
             allowNull: false,
-            validate: {
-                isInt: true,
-                min: 1
-            }
         },
         courseContentId: {
             type: Sequelize.INTEGER,
             field: "course_video_content_id",
             allowNull: false,
-            validate: {
-                isInt: true,
-                min: 1
-            }
         },
         userId: {
             type: Sequelize.INTEGER,
             field: "course_video_user_id",
             allowNull: false,
-            validate: {
-                isInt: true,
-                min: 1
-            }
         },
         courseVideoTitle: {
             type: Sequelize.STRING(200),
             field: "course_video_title",
             allowNull: false,
-            validate: {
-                notEmpty: true,
-                len: [3, 200]
-            }
         },
         courseVideoDescription: {
             type: Sequelize.TEXT,
@@ -55,27 +39,16 @@ module.exports = (sequelize, Sequelize) => {
             type: Sequelize.STRING(500),
             field: "course_video_url",
             allowNull: false,
-            validate: {
-                notEmpty: true,
-                isUrl: true
-            }
         },
         duration: {
             type: Sequelize.INTEGER, // in seconds
             field: "course_video_duration",
             allowNull: false,
             defaultValue: 0,
-            validate: {
-                isInt: true,
-                min: 0
-            }
         },
         thumbnailUrl: {
             type: Sequelize.STRING(500),
             field: "course_video_thumbnail_url",
-            validate: {
-                isUrl: true
-            }
         },
         isPreview: {
             type: Sequelize.BOOLEAN,

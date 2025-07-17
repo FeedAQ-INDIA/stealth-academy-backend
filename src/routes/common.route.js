@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const genericController = require("../controller/Generic.controller.js");
+const youtubeService = require("../service/YoutubeService.service.js");
  const authMiddleware = require("../middleware/authMiddleware");
 const publicauthenticationMiddleware = require("../middleware/publicMiddleware");
  const logger = require('../config/winston.config.js')
@@ -31,6 +32,7 @@ router.post("/clearQuizResult", authMiddleware, genericController.clearQuizResul
 
 // router.post("/raiseCounsellingRequest", authMiddleware, genericController.raiseCounsellingRequest);
 
+router.get("/importPlaylistToDatabase", authMiddleware, youtubeService.importPlaylistToDatabase);
 
 
 module.exports = router;

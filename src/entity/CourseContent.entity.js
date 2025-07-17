@@ -12,28 +12,24 @@ module.exports = (sequelize, Sequelize) => {
             type: Sequelize.INTEGER,
             field: "course_content_user_id",
             allowNull: false,
-            validate: {
-                isInt: true,
-                min: 1
-            }
+            references: {
+                model: "user",
+                key: "user_id",
+            },
         },
         courseId: {
             type: Sequelize.INTEGER,
             field: "course_content_course_id",
             allowNull: false,
-            validate: {
-                isInt: true,
-                min: 1
-            }
+            references: {
+                model: "course",
+                key: "course_id",
+            },
         },
         courseContentTitle: {
             type: Sequelize.STRING(200),
             field: "course_content_title",
             allowNull: false,
-            validate: {
-                notEmpty: true,
-                len: [3, 200]
-            }
         },
         courseContentType: {
             type: Sequelize.ENUM(
@@ -53,18 +49,11 @@ module.exports = (sequelize, Sequelize) => {
             type: Sequelize.ENUM("YOUTUBE", "COMPANY"),
             field: "course_content_source_mode",
             allowNull: false,
-            validate: {
-                notEmpty: true
-            }
         },
         courseContentSequence: {
             type: Sequelize.INTEGER,
             field: "course_content_seq",
             allowNull: false,
-            validate: {
-                isInt: true,
-                min: 0
-            }
         },
         coursecontentIsLicensed: {
             type: Sequelize.BOOLEAN,
@@ -76,10 +65,6 @@ module.exports = (sequelize, Sequelize) => {
             type: Sequelize.INTEGER,
             field: "course_content_duration",
             allowNull: false,
-            validate: {
-                isInt: true,
-                min: 0
-            }
         },
         isActive: {
             type: Sequelize.BOOLEAN,

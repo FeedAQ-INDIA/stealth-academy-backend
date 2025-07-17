@@ -24,6 +24,14 @@ module.exports = (sequelize, Sequelize) => {
             },
             field: "course_written_course_id",
         },
+        courseContentId: {
+            type: Sequelize.INTEGER,
+            references: {
+                model: "course_content",
+                key: "course_content_id",
+            },
+            field: "course_written_content_id",
+        },
         courseWrittenDescription: {
             type: Sequelize.TEXT,
             field: "course_written_description",

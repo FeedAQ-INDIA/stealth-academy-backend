@@ -30,13 +30,13 @@ module.exports = (sequelize, Sequelize) => {
             type: Sequelize.INTEGER,
             field: "course_quiz_pass_percent",
         },
-        courseTopicId: {
+        courseContentId: {
             type: Sequelize.INTEGER,
             references: {
-                model: "course_topic",
-                key: "course_topic_id",
+                model: "course_content",
+                key: "course_content_id",
             },
-            field: "course_quiz_topic_id",
+            field: "course_quiz_content_id",
         },
         courseId: {
             type: Sequelize.INTEGER,

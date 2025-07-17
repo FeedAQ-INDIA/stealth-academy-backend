@@ -16,16 +16,11 @@ module.exports = (sequelize, Sequelize) => {
         model: "user",
         key: "user_id",
       },
-      onDelete: 'CASCADE'
     },
     courseTitle: {
       type: Sequelize.STRING(100),
       field: "course_title",
       allowNull: false,
-      validate: {
-        notEmpty: true,
-        len: [5, 100]
-      }
     },
     courseDescription: {
       type: Sequelize.TEXT,
@@ -39,44 +34,19 @@ module.exports = (sequelize, Sequelize) => {
     courseImageUrl: {
       type: Sequelize.STRING(500),
       field: "course_image_url",
-      validate: {
-        isUrlArray(value) {
-          if (value && !Array.isArray(value)) {
-            throw new Error('courseImageUrl must be an array of URLs');
-          }
-          if (value) {
-            value.forEach(url => {
-              if (typeof url !== 'string' || url.length > 500) {
-                throw new Error('Each URL must be a string with max length 500 characters');
-              }
-            });
-          }
-        }
-      }
     },
     courseDuration: {
       type: Sequelize.INTEGER,
       field: "course_duration",
       allowNull: false,
-      validate: {
-        min: 0,
-        isInt: true
-      }
     },
     courseValidity: {
       type: Sequelize.INTEGER,
       field: "course_validity",
-      validate: {
-        min: 0,
-        isInt: true
-      }
     },
     courseSourceChannel: {
       type: Sequelize.STRING(100),
       field: "course_source_channel",
-      validate: {
-        len: [0, 100]
-      }
     },
     courseSourceMode: {
       type: Sequelize.ENUM("YOUTUBE"),

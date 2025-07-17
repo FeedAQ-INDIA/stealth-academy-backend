@@ -24,7 +24,7 @@ router.get(
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: "None",
-        maxAge: 5 * 60 * 1000, // optional: 5 mins
+        maxAge: 30 * 60 * 1000, // optional: 5 mins
       });
 
       passport.authenticate("google", {
@@ -72,13 +72,13 @@ router.get(
       const redirectUrl =  req.cookies?.postAuthRedirect || `${frontendUrl}/dashboard`;
 
       let accessToken  = jwt.sign(claims, accessTokenSecret, {
-          expiresIn: '1m',
+          expiresIn: '30m',
         });
       claims = {...claims }
 
 
       const refreshToken = jwt.sign(claims, refreshTokenSecret, {
-        expiresIn: "15m",
+        expiresIn: "60m",
       });
 
       res.cookie("accessToken", accessToken, {
@@ -222,7 +222,7 @@ router.post("/auth/refresh-token", (req, res) => {
           userEmail: decoded.userEmail,
         },
         accessTokenSecret,
-        { expiresIn: "1m" }
+        { expiresIn: "30m" }
     );
 
     res.cookie("accessToken", newAccessToken, {

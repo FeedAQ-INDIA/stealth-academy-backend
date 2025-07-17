@@ -45,7 +45,7 @@ db.UserActivityLog.belongsTo(db.Course, {foreignKey: 'courseId', as: 'course'})
 db.UserActivityLog.belongsTo(db.User, {foreignKey: 'userId', as: 'user'})
 db.UserActivityLog.belongsTo(db.CourseContent, {foreignKey: 'courseContentId', as: 'courseContent'})
 
-db.Course.hasMany(db.CourseContent, {foreignKey: 'courseContentId', as: 'courseContent'})
+db.Course.hasMany(db.CourseContent, {foreignKey: 'courseId', as: 'courseContent'})
 
 db.CourseContent.belongsTo(db.Course, {foreignKey: 'courseId', as: 'course'})
 db.CourseContent.belongsTo(db.User, {foreignKey: 'userId', as: 'user'})
