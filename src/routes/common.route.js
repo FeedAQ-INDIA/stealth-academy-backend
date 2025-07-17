@@ -11,13 +11,13 @@ router.get("/ping", function (req, res) {
 
  router.post("/getUser", authMiddleware, genericController.getUser);
 
-router.post("/fetchScheduledCourseMeet", authMiddleware, genericController.fetchScheduledCourseMeet);
+// router.post("/fetchScheduledCourseMeet", authMiddleware, genericController.fetchScheduledCourseMeet);
 
 router.post("/browseCourse", publicauthenticationMiddleware, genericController.searchRecord);
 router.post("/searchCourse", publicauthenticationMiddleware, genericController.searchRecord);
-router.post("/enrollStatus", authMiddleware, genericController.enrollStatus);
-router.post("/enroll", authMiddleware, genericController.enrollUserCourse);
-router.post("/disroll", authMiddleware, genericController.disrollUserCourse);
+// router.post("/enrollStatus", authMiddleware, genericController.enrollStatus);
+// router.post("/enroll", authMiddleware, genericController.enrollUserCourse);
+// router.post("/disroll", authMiddleware, genericController.disrollUserCourse);
 router.post("/saveUserDetail", authMiddleware, genericController.saveUserDetail);
 router.post("/getCourseDetail", authMiddleware, genericController.getCourseDetail);
 router.post("/saveNote", authMiddleware, genericController.saveNote);
@@ -27,9 +27,10 @@ router.post("/deleteUserEnrollmentData", authMiddleware, genericController.delet
 router.post("/submitQuiz", authMiddleware, genericController.submitQuiz);
 router.post("/clearQuizResult", authMiddleware, genericController.clearQuizResult);
 
-router.post("/raiseInterviewRequest", authMiddleware, genericController.raiseInterviewRequest);
+// router.post("/raiseInterviewRequest", authMiddleware, genericController.raiseInterviewRequest);
 
-router.post("/raiseCounsellingRequest", authMiddleware, genericController.raiseCounsellingRequest);
+// router.post("/raiseCounsellingRequest", authMiddleware, genericController.raiseCounsellingRequest);
+
 
 
 module.exports = router;

@@ -1,3 +1,4 @@
+const { formatDate, formatTime } = require("../utils/dateFormatters");
 module.exports = (sequelize, Sequelize) => {
     const CourseWritten = sequelize.define("course_written", {
         courseWrittenId: {
@@ -5,6 +6,23 @@ module.exports = (sequelize, Sequelize) => {
             primaryKey: true,
             autoIncrement: true,
             field: "course_written_id",
+        },
+        userId: {
+            type: Sequelize.INTEGER,
+            field: "course_written_user_id",
+            references: {
+                model: "user",
+                key: "user_id",
+            },
+            allowNull: false,
+        },
+        courseId: {
+            type: Sequelize.INTEGER,
+            references: {
+                model: "course",
+                key: "course_id",
+            },
+            field: "course_written_course_id",
         },
         courseWrittenDescription: {
             type: Sequelize.TEXT,
@@ -22,57 +40,32 @@ module.exports = (sequelize, Sequelize) => {
             type: Sequelize.STRING(100),
             field: "course_written_url",
         },
-        courseTopicId: {
-            type: Sequelize.INTEGER,
-            references: {
-                model: "course_topic",
-                key: "course_topic_id",
-            },
-            field: "course_written_topic_id",
-        },
-        courseId: {
-            type: Sequelize.INTEGER,
-            references: {
-                model: "course",
-                key: "course_id",
-            },
-            field: "course_written_course_id",
-        },
+
         v_created_date: {
             type: Sequelize.VIRTUAL,
             get() {
-                if (!this.course_written_created_at) return null;
-                const date = new Date(this.course_written_created_at);
-                const day = String(date.getDate()).padStart(2, "0");
-                const month = date.toLocaleString("en-US", { month: "short" });
-                const year = date.getFullYear();
-                return `${day}-${month}-${year}`; // Format: dd-MMM-YYYY
+               return formatDate(this.course_written_created_at)
             },
         },
         v_created_time: {
             type: Sequelize.VIRTUAL,
             get() {
-                if (!this.course_written_created_at) return null;
-                return this.course_written_created_at.toTimeString().split(" ")[0]; // Format: HH:MM:SS
+                return formatTime(this.course_written_created_at)
             },
         },
 
         v_updated_date: {
             type: Sequelize.VIRTUAL,
             get() {
-                if (!this.course_written_updated_at) return null;
-                const date = new Date(this.course_written_updated_at);
-                const day = String(date.getDate()).padStart(2, "0");
-                const month = date.toLocaleString("en-US", { month: "short" });
-                const year = date.getFullYear();
-                return `${day}-${month}-${year}`; // Format: dd-MMM-YYYY
+                return formatDate(this.course_written_updated_at)
+
             },
         },
         v_updated_time: {
             type: Sequelize.VIRTUAL,
             get() {
-                if (!this.course_written_updated_at) return null;
-                return this.course_written_updated_at.toTimeString().split(" ")[0]; // Format: HH:MM:SS
+                return formatTime(this.course_written_updated_at)
+
             },
         },
     } , {

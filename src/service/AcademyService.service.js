@@ -186,9 +186,8 @@ const raiseCounsellingRequest = async (
 const saveNote = async (
     userId,
     notesId,
-    courseTopicId,
     courseId,
-    courseTopicContentId,
+    courseContentId,
     notesText,
 ) => {
     if (notesId) {
@@ -201,7 +200,6 @@ const saveNote = async (
     } else {
         await db.Notes.create({
             userId: userId,
-            courseTopicId: courseTopicId,
             courseId: courseId,
             courseTopicContentId: courseTopicContentId,
             notesText: notesText
@@ -295,43 +293,21 @@ const fetchScheduledCourseMeet = async (userId, page1, limit1) => {
 
 
 const getCourseDetail = async (userId, courseId) => {
-    const enrollUserCourseData = await enrollStatus(userId, courseId);
 
     const courseDetailsRaw = await db.Course.findOne({
-        where: { courseId: courseId },
+        where: { courseId: courseId, userId: userId },
         include: [{
-            model: db.CourseTopic,
-            as: "courseTopic",
+            model: db.CourseContent,
+            as: "courseContent",
             required: false,
-            include: [
-                {
-                    model: db.CourseTopicContent,
-                    as: "courseTopicContent",
-                    required: false
-                }
-            ]
         }],
     });
-
-
 
     const courseDetails = courseDetailsRaw.toJSON();
 
     // Sort courseTopic in each course by courseTopicSequence ASC
-    courseDetails?.courseTopic?.sort((a, b) => a.courseTopicSequence - b.courseTopicSequence);
+    courseDetails?.courseContent?.sort((a, b) => a.courseContentSequence - b.courseContentSequence);
 
-    // Sort courseTopicContent in each courseTopic by courseTopicContentSequence ASC
-    courseDetails?.courseTopic?.forEach(topic => {
-        if (Array.isArray(topic.courseTopicContent)) {
-            topic.courseTopicContent.sort((a, b) => a.courseTopicContentSequence - b.courseTopicContentSequence);
-        }
-    });
-
-    courseDetails?.courseTopic?.map(a=> {
-         let sumDuration = a?.courseTopicContent?.reduce((sum, b) => sum + parseInt(b.courseTopicContentDuration), 0);
-         console.log(sumDuration);
-        a['courseTopicDuration'] = sumDuration
-    })
 
     console.log("Course Detail", courseDetails);
     return courseDetails;
@@ -398,96 +374,82 @@ const disrollUserCourse = async (userId, courseId, webinarId) => {
 
 const saveUserEnrollmentData = async (
     userId ,
-    userEnrollmentId ,
+    userActivityId ,
     courseId ,
-    courseTopicContentId,
-    courseTopicId ,
-    enrollmentStatus ,
+    courseContentId,
+     enrollmentStatus ,
 
 ) => {
-    const enrollUserCourseData = await enrollStatus(userId, courseId);
-    let enrollmentObj;
-    if (enrollUserCourseData && enrollUserCourseData.isUserEnrolled) {
-        const [enrollmentObj, created] = await db.UserEnrollmentLog.findOrCreate({
+          const [enrollmentObj, created] = await db.UserActivityLog.findOrCreate({
             where: {
-                userEnrollmentId,
+                userActivityId,
                 courseId,
-                courseTopicContentId,
-                courseTopicId,
-            },
+                courseContentId,
+             },
             defaults: {
                 userId,
                 enrollmentStatus,
             }
         });
 
-        const isCourseComplted = await validateCourseCompletion(userId, userEnrollmentId);
+        const isCourseComplted = await validateCourseCompletion(userId, userActivityId, courseId);
         console.log("Is course Completed : ", isCourseComplted == true ? "TRUE": "FALSE");
-        const obj = await db.UserEnrollment.findByPk(userEnrollmentId);
+        const obj = await db.Course.findByPk(courseId);
         obj.enrollmentStatus = isCourseComplted.possibleStatus
         await obj.save();
-    }else{
-        throw new Error("User not enrolled")
-    }
+
     return enrollmentObj ? {message: 'Enrollment is updated'} : {message: 'Enrollment is updated'};
 
 };
 
 const deleteUserEnrollmentData = async (
     userId ,
-    userEnrollmentId ,
+    userActivityId ,
     courseId ,
-    courseTopicContentId,
-    courseTopicId
-) => {
-    const enrollUserCourseData = await enrollStatus(userId, courseId);
-    let enrollmentObj;
-    if (enrollUserCourseData && enrollUserCourseData.isUserEnrolled) {
-        const  enrollmentObj = await db.UserEnrollmentLog.destroy({
+    courseContentId,
+ ) => {
+
+        const  userActivityObj = await db.UserActivityLog.destroy({
             where: {
-                userEnrollmentId ,
+                userActivityId ,
                 userId,
                 courseId ,
-                courseTopicContentId,
-                courseTopicId ,
-            },
+                courseContentId,
+             },
         });
-        const isCourseComplted = await validateCourseCompletion(userId, userEnrollmentId);
+        const isCourseComplted = await validateCourseCompletion(userId, userEnrollmentId, courseId);
         console.log("Is course Completed : ", isCourseComplted == true ? "TRUE": "FALSE");
-        const obj = await db.UserEnrollment.findByPk(userEnrollmentId);
+        const obj = await db.Course.findByPk(courseId);
         obj.enrollmentStatus = isCourseComplted.possibleStatus
         await obj.save();
-    }else{
-        throw new Error("User not enrolled")
-    }
-    return enrollmentObj ? {message: 'Enrollment is updated'} : {message: 'Enrollment is updated'};
+
+    return userActivityObj ? {message: 'Enrollment is updated'} : {message: 'Enrollment is updated'};
 
 };
 
 const validateCourseCompletion = async (userId ,
-                                  userEnrollmentId) => {
-    const userEnrollment =await db.UserEnrollment.findByPk(userEnrollmentId);
-    const userEnrollmentLog = await db.UserEnrollmentLog.findAll({
+                                  userActivityId, courseId) => {
+     const userActivityLog = await db.UserActivityLog.findAll({
         where: {
-            userEnrollmentId ,
+            userActivityId ,
             enrollmentStatus: 'COMPLETED'
         },
-        attributes:["courseTopicContentId"],
+        attributes:["courseContentId"],
     });
 
-    const courseTopicContent = await db.CourseTopicContent.findAll({
+    const courseTopicContent = await db.CourseContent.findAll({
         where :{
-            courseId: userEnrollment.courseId
+            courseId: courseId
         },
-        attributes:["courseTopicContentId"],
+        attributes:["courseContentId"],
     })
 
-    console.log(userEnrollmentLog?.map(a => a.courseTopicContentId), courseTopicContent?.map(a => a.courseTopicContentId))
-    let isCourseCompleted = haveSameElements(userEnrollmentLog?.map(a => a.courseTopicContentId), courseTopicContent?.map(a => a.courseTopicContentId));
+    console.log(userActivityLog?.map(a => a.courseContentId), courseTopicContent?.map(a => a.courseContentId))
+    let isCourseCompleted = haveSameElements(userActivityLog?.map(a => a.courseContentId), courseTopicContent?.map(a => a.courseContentId));
     let possibleStatus;
     if(isCourseCompleted){
         possibleStatus = 'COMPLETED'
-    }else if(!isCourseCompleted && userEnrollmentLog?.length > 0 ){
+    }else if(!isCourseCompleted && userActivityLog?.length > 0 ){
         possibleStatus = 'IN PROGRESS';
     }
     return {

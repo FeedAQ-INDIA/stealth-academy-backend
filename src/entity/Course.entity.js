@@ -1,148 +1,153 @@
-module.exports = (sequelize, Sequelize) => {
-    const Course = sequelize.define("course", {
-        courseId: {
-            type: Sequelize.INTEGER,
-            primaryKey: true,
-            autoIncrement: true,
-            field: "course_id",
-        },
-        courseTitle: {
-            type: Sequelize.STRING(100),
-            field: "course_title",
-            allowNull: false,
-        },
-        // courseType: {
-        //     type: Sequelize.ENUM("COURSE", "WEBINAR"),
-        //     field: "course_type",
-        //     allowNull: false,
-        // },
-        courseDescription: {
-            type: Sequelize.TEXT,
-            field: "course_description",
-        },
-        courseWhatYouWillLearn: {
-            type: Sequelize.ARRAY(Sequelize.STRING),
-            field: "course_what_you_will_learn",
-        },
-        courseKeyFeature: {
-            type: Sequelize.ARRAY(Sequelize.STRING),
-            field: "course_key_feature",
-        },
-        courseWhoCanJoin: {
-            type: Sequelize.ARRAY(Sequelize.STRING),
-            field: "course_who_can_join",
-        },
-        courseIsCertified: {
-            type: Sequelize.BOOLEAN,
-            field: "course_is_certified",
-            defaultValue: false,
-         },
-        courseIsLocked: {
-            type: Sequelize.BOOLEAN,
-            field: "course_is_locked",
-            defaultValue: true,
-        },
-        courseImageUrl: {
-            type: Sequelize.ARRAY(Sequelize.STRING),
-            field: "course_image_url",
-        },
-        courseVideoUrl: {
-            type:Sequelize.STRING,
-            field: "course_video_url",
-        },
-        courseLevel: {
-            type: Sequelize.ENUM("BEGINNER", "ADVANCED", "INTERMEDIATE", "BEGINNER TO ADVANCED"),
-            field: "course_level",
-        },
-        courseDuration: {
-            type: Sequelize.INTEGER,
-            field: "course_duration",
-            allowNull: false,
-        },
-        courseValidity: {
-            type: Sequelize.INTEGER,
-            field: "course_validity",
-        },
-        courseTutor: {
-            type: Sequelize.STRING(100),
-            field: "course_tutor",
-        },
-        // courseSource: {
-        //     type: Sequelize.ENUM("YOUTUBE"),
-        //     field: "course_source",
-        //     allowNull: false,
-        // },
-        courseMode: {
-            type: Sequelize.ENUM("RECORDED", "LIVE"),
-            field: "course_mode",
-            allowNull: false,
-        },
-        deliveryMode: {
-            type: Sequelize.ENUM("ONLINE", "OFFLINE", "HYBRID"),
-            field: "delivery_mode",
-            allowNull: false,
-        },
-        courseTags: {
-            type: Sequelize.ARRAY(Sequelize.STRING),
-            field: "course_tags",
-        },
-        courseCost: {
-            type: Sequelize.INTEGER,
-            field: "course_cost",
-            allowNull: false,
-        },
-        courseMrpCost: {
-            type: Sequelize.INTEGER,
-            field: "course_mrp_cost",
-        },
-        courseTotalBatch: {
-            type: Sequelize.INTEGER,
-            field: "course_total_batch",
-            defaultValue: 1
-        },
-        v_created_date: {
-            type: Sequelize.VIRTUAL,
-            get() {
-                if (!this.course_created_at) return null;
-                const date = new Date(this.course_created_at);
-                const day = String(date.getDate()).padStart(2, "0");
-                const month = date.toLocaleString("en-US", { month: "short" });
-                const year = date.getFullYear();
-                return `${day}-${month}-${year}`; // Format: dd-MMM-YYYY
-            },
-        },
-        v_created_time: {
-            type: Sequelize.VIRTUAL,
-            get() {
-                if (!this.course_created_at) return null;
-                return this.course_created_at.toTimeString().split(" ")[0]; // Format: HH:MM:SS
-            },
-        },
+const { formatDate, formatTime } = require("../utils/dateFormatters");
 
-        v_updated_date: {
-            type: Sequelize.VIRTUAL,
-            get() {
-                if (!this.course_updated_at) return null;
-                const date = new Date(this.course_updated_at);
-                const day = String(date.getDate()).padStart(2, "0");
-                const month = date.toLocaleString("en-US", { month: "short" });
-                const year = date.getFullYear();
-                return `${day}-${month}-${year}`; // Format: dd-MMM-YYYY
-            },
-        },
-        v_updated_time: {
-            type: Sequelize.VIRTUAL,
-            get() {
-                if (!this.course_updated_at) return null;
-                return this.course_updated_at.toTimeString().split(" ")[0]; // Format: HH:MM:SS
-            },
-        },
-    } , {
-        timestamps: true,
-        createdAt: "course_created_at",
-        updatedAt: "course_updated_at",
-    });
-    return Course;
+module.exports = (sequelize, Sequelize) => {
+  const Course = sequelize.define("course", {
+    courseId: {
+      type: Sequelize.INTEGER,
+      primaryKey: true,
+      autoIncrement: true,
+      field: "course_id",
+    },
+    userId: {
+      type: Sequelize.INTEGER,
+      field: "course_user_id",
+      allowNull: false,
+      references: {
+        model: "user",
+        key: "user_id",
+      },
+      onDelete: 'CASCADE'
+    },
+    courseTitle: {
+      type: Sequelize.STRING(100),
+      field: "course_title",
+      allowNull: false,
+      validate: {
+        notEmpty: true,
+        len: [5, 100]
+      }
+    },
+    courseDescription: {
+      type: Sequelize.TEXT,
+      field: "course_description",
+    },
+    courseIsLocked: {
+      type: Sequelize.BOOLEAN,
+      field: "course_is_locked",
+      defaultValue: true,
+    },
+    courseImageUrl: {
+      type: Sequelize.STRING(500),
+      field: "course_image_url",
+      validate: {
+        isUrlArray(value) {
+          if (value && !Array.isArray(value)) {
+            throw new Error('courseImageUrl must be an array of URLs');
+          }
+          if (value) {
+            value.forEach(url => {
+              if (typeof url !== 'string' || url.length > 500) {
+                throw new Error('Each URL must be a string with max length 500 characters');
+              }
+            });
+          }
+        }
+      }
+    },
+    courseDuration: {
+      type: Sequelize.INTEGER,
+      field: "course_duration",
+      allowNull: false,
+      validate: {
+        min: 0,
+        isInt: true
+      }
+    },
+    courseValidity: {
+      type: Sequelize.INTEGER,
+      field: "course_validity",
+      validate: {
+        min: 0,
+        isInt: true
+      }
+    },
+    courseSourceChannel: {
+      type: Sequelize.STRING(100),
+      field: "course_source_channel",
+      validate: {
+        len: [0, 100]
+      }
+    },
+    courseSourceMode: {
+      type: Sequelize.ENUM("YOUTUBE"),
+      field: "course_source_mode",
+      allowNull: false,
+    },
+    deliveryMode: {
+      type: Sequelize.ENUM("ONLINE", "OFFLINE", "HYBRID"),
+      field: "course_delivery_mode",
+      allowNull: false,
+      defaultValue: "ONLINE",
+    },
+    status: {
+      type: Sequelize.ENUM("DRAFT", "PUBLISHED", "ARCHIVED"),
+      field: "course_status",
+      defaultValue: "DRAFT",
+    },
+    metadata: {
+      type: Sequelize.JSONB,
+      field: "course_metadata",
+      allowNull: true,
+      defaultValue: {}
+    },
+    v_created_date: {
+      type: Sequelize.VIRTUAL,
+      get() {
+        return formatDate(this.course_created_at);
+      },
+    },
+    v_created_time: {
+      type: Sequelize.VIRTUAL,
+      get() {
+        return formatTime(this.course_created_at);
+      },
+    },
+    v_updated_date: {
+      type: Sequelize.VIRTUAL,
+      get() {
+        return formatDate(this.course_updated_at);
+      },
+    },
+    v_updated_time: {
+      type: Sequelize.VIRTUAL,
+      get() {
+        return formatTime(this.course_updated_at);
+      },
+    },
+  }, {
+    timestamps: true,
+    createdAt: "course_created_at",
+    updatedAt: "course_updated_at",
+    paranoid: true, // Enable soft deletes
+    indexes: [
+      {
+        fields: ['course_user_id']
+      },
+      {
+        fields: ['course_title']
+      },
+      {
+        fields: ['course_status']
+      },
+      {
+        fields: ['course_delivery_mode']
+      }
+    ], 
+  });
+
+ 
+
+  return Course;
 };
 
 

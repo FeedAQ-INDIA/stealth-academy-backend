@@ -107,18 +107,16 @@ async function getCourseDetail(req, res, next) {
 
 async function saveUserEnrollmentData(req, res, next) {
     const {
-        userEnrollmentId ,
+        userActivityId ,
         courseId ,
-        courseTopicContentId,
-        courseTopicId ,
-        enrollmentStatus  } = req.body;
+        courseContentId,
+         enrollmentStatus  } = req.body;
     try {
         let val = await AcademyService.saveUserEnrollmentData(req.user.userId,
-            userEnrollmentId ,
+            userActivityId ,
             courseId ,
-            courseTopicContentId,
-            courseTopicId ,
-            enrollmentStatus );
+            courseContentId,
+             enrollmentStatus );
         res.status(200).send({
             status: 200, message: "Success", data: val != null ? val : [],
         });
@@ -134,16 +132,16 @@ async function saveUserEnrollmentData(req, res, next) {
 
 async function deleteUserEnrollmentData(req, res, next) {
     const {
-        userEnrollmentId ,
+        userActivityId ,
         courseId ,
-        courseTopicContentId,
-        courseTopicId ,  } = req.body;
+        courseContentId,
+    } = req.body;
     try {
         let val = await AcademyService.deleteUserEnrollmentData(req.user.userId,
-            userEnrollmentId ,
+            userActivityId ,
             courseId ,
-            courseTopicContentId,
-            courseTopicId , );
+            courseContentId,
+              );
         res.status(200).send({
             status: 200, message: "Success", data: val != null ? val : [],
         });
@@ -231,15 +229,13 @@ async function raiseCounsellingRequest(req, res, next) {
 
 async function saveNote(req, res, next) {
     const {notesId,
-        courseTopicId,
         courseId,
-        courseTopicContentId,
+        courseContentId,
         notesText} = req.body;
     try {
         let val = await AcademyService.saveNote(req.user.userId, notesId,
-            courseTopicId,
             courseId,
-            courseTopicContentId,
+            courseContentId,
             notesText,);
         res.status(200).send({
             status: 200, message: "Success", data: val != null ? val : [],

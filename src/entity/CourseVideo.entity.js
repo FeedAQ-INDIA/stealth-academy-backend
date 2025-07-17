@@ -1,3 +1,5 @@
+const { formatDate, formatTime } = require("../utils/dateFormatters");
+
 module.exports = (sequelize, Sequelize) => {
     const CourseVideo = sequelize.define("course_video", {
         courseVideoId: {
@@ -6,79 +8,147 @@ module.exports = (sequelize, Sequelize) => {
             autoIncrement: true,
             field: "course_video_id",
         },
+        courseId: {
+            type: Sequelize.INTEGER,
+            field: "course_video_course_id",
+            allowNull: false,
+            validate: {
+                isInt: true,
+                min: 1
+            }
+        },
+        courseContentId: {
+            type: Sequelize.INTEGER,
+            field: "course_video_content_id",
+            allowNull: false,
+            validate: {
+                isInt: true,
+                min: 1
+            }
+        },
+        userId: {
+            type: Sequelize.INTEGER,
+            field: "course_video_user_id",
+            allowNull: false,
+            validate: {
+                isInt: true,
+                min: 1
+            }
+        },
+        courseVideoTitle: {
+            type: Sequelize.STRING(200),
+            field: "course_video_title",
+            allowNull: false,
+            validate: {
+                notEmpty: true,
+                len: [3, 200]
+            }
+        },
         courseVideoDescription: {
             type: Sequelize.TEXT,
             field: "course_video_description",
-        },
-
-        courseVideoSource: {
-            type: Sequelize.ENUM("YOUTUBE"),
-            field: "course_video_source",
-            allowNull: false,
+            validate: {
+                len: [0, 2000]
+            }
         },
         courseVideoUrl: {
-            type: Sequelize.STRING(100),
+            type: Sequelize.STRING(500),
             field: "course_video_url",
             allowNull: false,
+            validate: {
+                notEmpty: true,
+                isUrl: true
+            }
         },
-        courseTopicId: {
-            type: Sequelize.INTEGER,
-            references: {
-                model: "course_topic",
-                key: "course_topic_id",
-            },
-            field: "course_video_topic_id",
+        duration: {
+            type: Sequelize.INTEGER, // in seconds
+            field: "course_video_duration",
+            allowNull: false,
+            defaultValue: 0,
+            validate: {
+                isInt: true,
+                min: 0
+            }
         },
-        courseId: {
-            type: Sequelize.INTEGER,
-            references: {
-                model: "course",
-                key: "course_id",
-            },
-            field: "course_video_course_id",
+        thumbnailUrl: {
+            type: Sequelize.STRING(500),
+            field: "course_video_thumbnail_url",
+            validate: {
+                isUrl: true
+            }
+        },
+        isPreview: {
+            type: Sequelize.BOOLEAN,
+            field: "course_video_is_preview",
+            defaultValue: false
+        },
+        status: {
+            type: Sequelize.ENUM("PENDING", "PROCESSING", "READY", "FAILED"),
+            field: "course_video_status",
+            defaultValue: "PENDING"
+        },
+        metadata: {
+            type: Sequelize.JSONB,
+            field: "course_video_metadata",
+            defaultValue: {}
         },
         v_created_date: {
             type: Sequelize.VIRTUAL,
             get() {
-                if (!this.course_video_created_at) return null;
-                const date = new Date(this.course_video_created_at);
-                const day = String(date.getDate()).padStart(2, "0");
-                const month = date.toLocaleString("en-US", { month: "short" });
-                const year = date.getFullYear();
-                return `${day}-${month}-${year}`; // Format: dd-MMM-YYYY
+                return formatDate(this.course_video_created_at);
             },
         },
         v_created_time: {
             type: Sequelize.VIRTUAL,
             get() {
-                if (!this.course_video_created_at) return null;
-                return this.course_video_created_at.toTimeString().split(" ")[0]; // Format: HH:MM:SS
+                return formatTime(this.course_video_created_at);
             },
         },
-
         v_updated_date: {
             type: Sequelize.VIRTUAL,
             get() {
-                if (!this.course_video_updated_at) return null;
-                const date = new Date(this.course_video_updated_at);
-                const day = String(date.getDate()).padStart(2, "0");
-                const month = date.toLocaleString("en-US", { month: "short" });
-                const year = date.getFullYear();
-                return `${day}-${month}-${year}`; // Format: dd-MMM-YYYY
+                return formatDate(this.course_video_updated_at);
             },
         },
         v_updated_time: {
             type: Sequelize.VIRTUAL,
             get() {
-                if (!this.course_video_updated_at) return null;
-                return this.course_video_updated_at.toTimeString().split(" ")[0]; // Format: HH:MM:SS
+                return formatTime(this.course_video_updated_at);
             },
         },
-    } , {
+        v_duration_formatted: {
+            type: Sequelize.VIRTUAL,
+            get() {
+                if (!this.duration) return '00:00';
+                const minutes = Math.floor(this.duration / 60);
+                const seconds = this.duration % 60;
+                return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            }
+        }
+    }, {
         timestamps: true,
         createdAt: "course_video_created_at",
         updatedAt: "course_video_updated_at",
+        paranoid: true, // Enable soft deletes
+        indexes: [
+            {
+                fields: ['course_video_course_id']
+            },
+            {
+                fields: ['course_video_content_id']
+            },
+            {
+                fields: ['course_video_status']
+            },
+            {
+                fields: ['course_video_is_preview']
+            }
+        ],
+
     });
+
+
+
     return CourseVideo;
 };
 

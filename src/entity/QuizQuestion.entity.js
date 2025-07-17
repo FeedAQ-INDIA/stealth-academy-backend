@@ -1,3 +1,5 @@
+const {formatDate, formatTime} = require("../utils/dateFormatters");
+
 module.exports = (sequelize, Sequelize) => {
     const QuizQuestion = sequelize.define("quiz_question", {
         quizQuestionId: {
@@ -65,38 +67,30 @@ module.exports = (sequelize, Sequelize) => {
         v_created_date: {
             type: Sequelize.VIRTUAL,
             get() {
-                if (!this.course_quiz_created_at) return null;
-                const date = new Date(this.course_quiz_created_at);
-                const day = String(date.getDate()).padStart(2, "0");
-                const month = date.toLocaleString("en-US", { month: "short" });
-                const year = date.getFullYear();
-                return `${day}-${month}-${year}`; // Format: dd-MMM-YYYY
+                return formatTime(this.course_quiz_created_at)
+
             },
         },
         v_created_time: {
             type: Sequelize.VIRTUAL,
             get() {
-                if (!this.course_quiz_created_at) return null;
-                return this.course_quiz_created_at.toTimeString().split(" ")[0]; // Format: HH:MM:SS
+                return formatTime(this.course_quiz_created_at)
+
             },
         },
 
         v_updated_date: {
             type: Sequelize.VIRTUAL,
             get() {
-                if (!this.course_quiz_updated_at) return null;
-                const date = new Date(this.course_quiz_updated_at);
-                const day = String(date.getDate()).padStart(2, "0");
-                const month = date.toLocaleString("en-US", { month: "short" });
-                const year = date.getFullYear();
-                return `${day}-${month}-${year}`; // Format: dd-MMM-YYYY
+                return formatDate(this.course_quiz_updated_at)
+
             },
         },
         v_updated_time: {
             type: Sequelize.VIRTUAL,
             get() {
-                if (!this.course_quiz_updated_at) return null;
-                return this.course_quiz_updated_at.toTimeString().split(" ")[0]; // Format: HH:MM:SS
+                return formatTime(this.course_quiz_updated_at)
+
             },
         },
     } , {

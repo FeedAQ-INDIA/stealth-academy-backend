@@ -1,3 +1,4 @@
+const {formatDate, formatTime} = require("../utils/dateFormatters");
 module.exports = (sequelize, Sequelize) => {
     const Notes = sequelize.define(
         "notes",
@@ -8,7 +9,6 @@ module.exports = (sequelize, Sequelize) => {
                 autoIncrement: true,
                 field: "notes_id",
             },
-
             userId: {
                 type: Sequelize.INTEGER,
                 field: "notes_user_id",
@@ -18,21 +18,13 @@ module.exports = (sequelize, Sequelize) => {
                 },
                 allowNull: false,
             },
-            courseTopicContentId: {
+            courseContentId: {
                 type: Sequelize.INTEGER,
                 references: {
-                    model: "coursetopiccontent",
-                    key: "coursetopiccontent_id",
+                    model: "course_content",
+                    key: "course_content_id",
                 },
-                field: "notes_coursetopiccontent_id",
-            },
-            courseTopicId: {
-                type: Sequelize.INTEGER,
-                references: {
-                    model: "course_topic",
-                    key: "course_topic_id",
-                },
-                field: "notes_topic_id",
+                field: "notes_course_content_id",
             },
             courseId: {
                 type: Sequelize.INTEGER,
@@ -51,38 +43,29 @@ module.exports = (sequelize, Sequelize) => {
             v_created_date: {
                 type: Sequelize.VIRTUAL,
                 get() {
-                    if (!this.notes_created_at) return null;
-                    const date = new Date(this.notes_created_at);
-                    const day = String(date.getDate()).padStart(2, "0");
-                    const month = date.toLocaleString("en-US", {month: "short"});
-                    const year = date.getFullYear();
-                    return `${day}-${month}-${year}`; // Format: dd-MMM-YYYY
+                    return formatDate(this.notes_created_at)
+
                 },
             },
             v_created_time: {
                 type: Sequelize.VIRTUAL,
                 get() {
-                    if (!this.notes_created_at) return null;
-                    return this.notes_created_at.toTimeString().split(" ")[0]; // Format: HH:MM:SS
+                    return formatTime(this.notes_created_at)
+
                 },
             },
 
             v_updated_date: {
                 type: Sequelize.VIRTUAL,
                 get() {
-                    if (!this.notes_updated_at) return null;
-                    const date = new Date(this.notes_updated_at);
-                    const day = String(date.getDate()).padStart(2, "0");
-                    const month = date.toLocaleString("en-US", {month: "short"});
-                    const year = date.getFullYear();
-                    return `${day}-${month}-${year}`; // Format: dd-MMM-YYYY
+                    return formatDate(this.notes_updated_at)
+
                 },
             },
             v_updated_time: {
                 type: Sequelize.VIRTUAL,
                 get() {
-                    if (!this.notes_updated_at) return null;
-                    return this.notes_updated_at.toTimeString().split(" ")[0]; // Format: HH:MM:SS
+                    return formatTime(this.notes_updated_at)
                 },
             },
         },
