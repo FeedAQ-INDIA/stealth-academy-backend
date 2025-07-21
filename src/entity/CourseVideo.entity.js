@@ -31,9 +31,6 @@ module.exports = (sequelize, Sequelize) => {
         courseVideoDescription: {
             type: Sequelize.TEXT,
             field: "course_video_description",
-            validate: {
-                len: [0, 2000]
-            }
         },
         courseVideoUrl: {
             type: Sequelize.STRING(500),

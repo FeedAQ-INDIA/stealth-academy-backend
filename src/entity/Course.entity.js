@@ -35,6 +35,11 @@ module.exports = (sequelize, Sequelize) => {
       type: Sequelize.STRING(500),
       field: "course_image_url",
     },
+    courseCompletionStatus: {
+      type: Sequelize.ENUM('NOT STARTED','IN PROGRESS','PAUSED', 'COMPLETED'),
+      field: "course_completion_status",
+      defaultValue: "NOT STARTED"
+    },
     courseDuration: {
       type: Sequelize.INTEGER,
       field: "course_duration",

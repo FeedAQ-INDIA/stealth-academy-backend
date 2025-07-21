@@ -32,7 +32,7 @@ router.post("/clearQuizResult", authMiddleware, genericController.clearQuizResul
 
 // router.post("/raiseCounsellingRequest", authMiddleware, genericController.raiseCounsellingRequest);
 
-router.get("/importPlaylistToDatabase", authMiddleware, youtubeService.importPlaylistToDatabase);
+router.post("/importPlaylistToDatabase", authMiddleware, youtubeService.importPlaylistToDatabase);
 
 
 module.exports = router;

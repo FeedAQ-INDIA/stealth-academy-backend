@@ -50,73 +50,105 @@ function parseISO8601Duration(duration) {
     const [, hours = 0, minutes = 0, seconds = 0] = match.map(x => parseInt(x) || 0);
     return hours * 3600 + minutes * 60 + seconds;
 }
-
 async function importPlaylistToDatabase(req, res) {
-    apiKey = 'AIzaSyB0e1y1sDQmdC3Cm4zjRZIFMh9gAMs02Gg';
-    playlistId = 'PLsyeobzWxl7qJSZcMaN18c5l-k2n1FWHx';
-    userId = req.user.userId
+    const apiKey = 'AIzaSyB0e1y1sDQmdC3Cm4zjRZIFMh9gAMs02Gg';
+    const { playlistId } = req.body;
+    const userId = req.user.userId;
 
-    const playlistMeta = await fetchPlaylistMetadata(playlistId, apiKey);
-    const playlistItems = await fetchPlaylistItems(playlistId, apiKey);
-    const videoIds = playlistItems.map(item => item.contentDetails.videoId);
-    const videoDetails = await fetchVideoDetails(videoIds, apiKey);
+    const t = await db.sequelize.transaction();
 
-    // Create Course
-    const course = await db.Course.create({
-        userId,
-        courseTitle: playlistMeta.snippet.title,
-        courseDescription: playlistMeta.snippet.description,
-        courseIsLocked: false,
-        courseImageUrl: JSON.stringify([playlistMeta.snippet.thumbnails?.high?.url]),
-        courseDuration: 0, // we'll compute it
-        courseSourceChannel: playlistMeta.snippet.channelTitle,
-        courseSourceMode: "YOUTUBE",
-        deliveryMode: "ONLINE",
-        status: "DRAFT",
-        metadata:playlistMeta
-    });
+    try {
+        const playlistMeta = await fetchPlaylistMetadata(playlistId, apiKey);
+        const playlistItems = await fetchPlaylistItems(playlistId, apiKey);
+        const videoIds = playlistItems.map(item => item.contentDetails.videoId);
+        const videoDetails = await fetchVideoDetails(videoIds, apiKey);
 
-    let totalDuration = 0;
-
-    for (let i = 0; i < playlistItems.length; i++) {
-        const item = playlistItems[i];
-        const videoId = item.contentDetails.videoId;
-        const snippet = item.snippet;
-
-        const videoMeta = videoDetails.find(v => v.id === videoId);
-        const durationSeconds = parseISO8601Duration(videoMeta.contentDetails.duration);
-        totalDuration += durationSeconds;
-
-        const content = await db.CourseContent.create({
+        const course = await db.Course.create({
             userId,
-            courseId: course.courseId,
-            courseContentTitle: snippet.title,
-            courseContentType: "CourseVideo",
+            courseTitle: playlistMeta.snippet.title,
+            courseDescription: playlistMeta.snippet.description,
+            courseIsLocked: false,
+            courseImageUrl: playlistMeta.snippet.thumbnails?.high?.url,
+            courseDuration: 0, // temporary
+            courseSourceChannel: playlistMeta.snippet.channelTitle,
             courseSourceMode: "YOUTUBE",
-            courseContentSequence: i + 1,
-            coursecontentIsLicensed: false,
-            courseContentDuration: durationSeconds,
-            isActive: true,
-            metadata:item
+            deliveryMode: "ONLINE",
+            status: "DRAFT",
+            metadata: playlistMeta
+        }, { transaction: t });
+
+        let totalDuration = 0;
+        const contentList = [];
+        const videoList = [];
+
+        for (let i = 0; i < playlistItems.length; i++) {
+            const item = playlistItems[i];
+            const videoId = item.contentDetails.videoId;
+            const snippet = item.snippet;
+            const videoMeta = videoDetails.find(v => v.id === videoId);
+            const durationSeconds = parseISO8601Duration(videoMeta.contentDetails.duration);
+            totalDuration += durationSeconds;
+
+            const courseContent = {
+                userId,
+                courseId: course.courseId,
+                courseContentTitle: snippet.title,
+                courseContentType: "CourseVideo",
+                courseSourceMode: "YOUTUBE",
+                courseContentSequence: i + 1,
+                coursecontentIsLicensed: false,
+                courseContentDuration: durationSeconds,
+                isActive: true,
+                metadata: item
+            };
+
+            contentList.push(courseContent);
+        }
+
+        // Bulk insert course content
+        const createdContents = await db.CourseContent.bulkCreate(contentList, {
+            transaction: t,
+            returning: true
         });
 
-        await db.CourseVideo.create({
-             courseId: course.courseId,
-            courseContentId: content.courseContentId,
-            userId,
-            courseVideoTitle: snippet.title,
-            courseVideoDescription: snippet.description,
-            courseVideoUrl: `https://www.youtube.com/watch?v=${videoId}`,
-            duration: durationSeconds,
-            thumbnailUrl: snippet.thumbnails?.high?.url,
-            isPreview: false,
-            status: "READY"
-        });
+        // Prepare course videos
+        for (let i = 0; i < createdContents.length; i++) {
+            const content = createdContents[i];
+            const item = playlistItems[i];
+            const videoId = item.contentDetails.videoId;
+            const snippet = item.snippet;
+            const videoMeta = videoDetails.find(v => v.id === videoId);
+            const durationSeconds = parseISO8601Duration(videoMeta.contentDetails.duration);
+
+            videoList.push({
+                courseId: course.courseId,
+                courseContentId: content.courseContentId,
+                userId,
+                courseVideoTitle: snippet.title,
+                courseVideoDescription: snippet.description,
+                courseVideoUrl: `https://www.youtube.com/watch?v=${videoId}`,
+                duration: durationSeconds,
+                thumbnailUrl: snippet.thumbnails?.high?.url,
+                isPreview: false,
+                status: "READY"
+            });
+        }
+
+        // Bulk insert course videos
+        await db.CourseVideo.bulkCreate(videoList, { transaction: t });
+
+        // Update course duration
+        await course.update({ courseDuration: totalDuration }, { transaction: t });
+
+        await t.commit();
+
+        res.json({ course });
+
+    } catch (error) {
+        await t.rollback();
+        console.error("Error importing playlist:", error);
+        res.status(500).json({ error: "Failed to import playlist" });
     }
-
-    await course.update({ courseDuration: totalDuration });
-
-    res.json({course}) ;
 }
 
 
