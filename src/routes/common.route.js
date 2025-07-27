@@ -2,9 +2,10 @@ const express = require("express");
 const router = express.Router();
 const genericController = require("../controller/Generic.controller.js");
 const youtubeService = require("../service/YoutubeService.service.js");
- const authMiddleware = require("../middleware/authMiddleware");
+const geminiController = require("../controller/Gemini.controller");
+const authMiddleware = require("../middleware/authMiddleware");
 const publicauthenticationMiddleware = require("../middleware/publicMiddleware");
- const logger = require('../config/winston.config.js')
+const logger = require('../config/winston.config.js')
 
 router.get("/ping", function (req, res) {
     res.status(200).send({message: "Ping Successful"});
@@ -34,5 +35,6 @@ router.post("/clearQuizResult", authMiddleware, genericController.clearQuizResul
 
 router.post("/importPlaylistToDatabase", authMiddleware, youtubeService.importPlaylistToDatabase);
 
+router.post("/buildPrompt", publicauthenticationMiddleware, geminiController.buildPrompt);
 
 module.exports = router;

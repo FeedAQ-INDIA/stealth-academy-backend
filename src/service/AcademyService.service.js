@@ -382,17 +382,18 @@ const saveUserEnrollmentData = async (
 ) => {
           const [enrollmentObj, created] = await db.UserActivityLog.findOrCreate({
             where: {
-                userActivityId,
                 courseId,
                 courseContentId,
-             },
+            },
             defaults: {
                 userId,
                 enrollmentStatus,
+                courseContentId,
+                courseId
             }
         });
 
-        const isCourseComplted = await validateCourseCompletion(userId, userActivityId, courseId);
+        const isCourseComplted = await validateCourseCompletion(userId, courseId);
         console.log("Is course Completed : ", isCourseComplted == true ? "TRUE": "FALSE");
         const obj = await db.Course.findByPk(courseId);
         obj.enrollmentStatus = isCourseComplted.possibleStatus
@@ -411,7 +412,7 @@ const deleteUserEnrollmentData = async (
 
         const  userActivityObj = await db.UserActivityLog.destroy({
             where: {
-                userActivityId ,
+                // userActivityId ,
                 userId,
                 courseId ,
                 courseContentId,
@@ -428,10 +429,11 @@ const deleteUserEnrollmentData = async (
 };
 
 const validateCourseCompletion = async (userId ,
-                                  userActivityId, courseId) => {
+                                  courseId) => {
      const userActivityLog = await db.UserActivityLog.findAll({
         where: {
-            userActivityId ,
+            courseId ,
+            userId,
             enrollmentStatus: 'COMPLETED'
         },
         attributes:["courseContentId"],
@@ -458,6 +460,8 @@ const validateCourseCompletion = async (userId ,
     }
 
 }
+
+
 
 function haveSameElements(arr1, arr2) {
     if (arr1.length !== arr2.length) return false;
