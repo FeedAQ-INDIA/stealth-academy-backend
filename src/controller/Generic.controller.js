@@ -20,356 +20,44 @@ async function getUser(req, res, next) {
         });
         next(err);
     }
-}
-
-async function fetchScheduledCourseMeet(req, res, next) {
-    const {page, limit} = req.body;
+    
+}  
+async function saveWritingSubmission(req, res) {
     try {
-        let val = await AcademyService.fetchScheduledCourseMeet(req.user.userId, page, limit);
-        res.status(200).send({
-            status: 200, message: "Success", data: val != null ? val : [],
-        });
-    } catch (err) {
-        console.error(`Error occured`, err.message);
-        res.status(500).send({
-            status: 500, message: err.message || "Some error occurred while creating the Tutorial.",
-        });
-        next(err);
+        const { userId, promptId, submissionText } = req.body;
+        console.log('Controller received:', { userId, promptId, submissionText }); // Debug log
+        if (!userId || !Number.isInteger(userId)) {
+            return res.status(400).json({ message: 'Invalid or missing userId' });
+        }
+        const response = await AcademyService.saveWritingSubmission(userId, promptId, submissionText);
+        res.status(200).json({ status: 200, message: "Success", data: response });
+    } catch (error) {
+        logger.error(error);
+        res.status(500).json({ message: error.message });
     }
 }
 
-
-async function enrollStatus(req, res, next) {
-    const {courseId, webinarId} = req.body;
+async function getWritingSubmission(req, res) {
     try {
-        let val = await AcademyService.enrollStatus(req.user.userId, courseId, webinarId);
-        res.status(200).send({
-            status: 200, message: "Success", data: val != null ? val : [],
-        });
-    } catch (err) {
-        console.error(`Error occured`, err.message);
-        res.status(500).send({
-            status: 500, message: err.message || "Some error occurred while creating the Tutorial.",
-        });
-        next(err);
+        const { userId, submissionId } = req.body;
+        console.log('Controller received:', { userId, submissionId }); // Debug log
+        if (!userId || !Number.isInteger(userId)) {
+            return res.status(400).json({ message: 'Invalid or missing userId' });
+        }
+        if (!submissionId || !Number.isInteger(submissionId)) {
+            return res.status(400).json({ message: 'Invalid or missing submissionId' });
+        }
+        const response = await AcademyService.getWritingSubmission(userId, submissionId);
+        res.status(200).json({ status: 200, message: "Success", data: response });
+    } catch (error) {
+        logger.error(error);
+        res.status(500).json({ message: error.message });
     }
 }
-
-
-async function enrollUserCourse(req, res, next) {
-    const {courseId,webinarId} = req.body;
-    try {
-        let val = await AcademyService.enrollUserCourse(req.user.userId, courseId, webinarId);
-        res.status(200).send({
-            status: 200, message: "Success", data: val != null ? val : [],
-        });
-    } catch (err) {
-        console.error(`Error occured`, err.message);
-        res.status(500).send({
-            status: 500, message: err.message || "Some error occurred while creating the Tutorial.",
-        });
-        next(err);
-    }
-}
-
-async function disrollUserCourse(req, res, next) {
-    const {courseId, webinarId} = req.body;
-    try {
-        let val = await AcademyService.disrollUserCourse(req.user.userId, courseId, webinarId);
-        res.status(200).send({
-            status: 200, message: "Success", data: val != null ? val : [],
-        });
-    } catch (err) {
-        console.error(`Error occured`, err.message);
-        res.status(500).send({
-            status: 500, message: err.message || "Some error occurred while creating the Tutorial.",
-        });
-        next(err);
-    }
-}
-
-async function getCourseDetail(req, res, next) {
-    const {courseId} = req.body;
-    try {
-        let val = await AcademyService.getCourseDetail(req.user.userId, courseId);
-        res.status(200).send({
-            status: 200, message: "Success", data: val != null ? val : [],
-        });
-    } catch (err) {
-        console.error(`Error occured`, err.message);
-        res.status(500).send({
-            status: 500, message: err.message || "Some error occurred while creating the Tutorial.",
-        });
-        next(err);
-    }
-}
-
-
-async function saveUserEnrollmentData(req, res, next) {
-    const {
-        userEnrollmentId ,
-        courseId ,
-        courseTopicContentId,
-        courseTopicId ,
-        enrollmentStatus  } = req.body;
-    try {
-        let val = await AcademyService.saveUserEnrollmentData(req.user.userId,
-            userEnrollmentId ,
-            courseId ,
-            courseTopicContentId,
-            courseTopicId ,
-            enrollmentStatus );
-        res.status(200).send({
-            status: 200, message: "Success", data: val != null ? val : [],
-        });
-    } catch (err) {
-        console.error(`Error occured`, err.message);
-        res.status(500).send({
-            status: 500, message: err.message || "Some error occurred while creating the Tutorial.",
-        });
-        next(err);
-    }
-}
-
-
-async function deleteUserEnrollmentData(req, res, next) {
-    const {
-        userEnrollmentId ,
-        courseId ,
-        courseTopicContentId,
-        courseTopicId ,  } = req.body;
-    try {
-        let val = await AcademyService.deleteUserEnrollmentData(req.user.userId,
-            userEnrollmentId ,
-            courseId ,
-            courseTopicContentId,
-            courseTopicId , );
-        res.status(200).send({
-            status: 200, message: "Success", data: val != null ? val : [],
-        });
-    } catch (err) {
-        console.error(`Error occured`, err.message);
-        res.status(500).send({
-            status: 500, message: err.message || "Some error occurred while creating the Tutorial.",
-        });
-        next(err);
-    }
-}
-
-async function raiseInterviewRequest(req, res, next) {
-    const {
-        interviewReqId,
-        isCancel,
-        date ,
-        time ,
-        duration ,
-        resumeLink ,
-        attachmentLink ,
-        note ,
-    } = req.body;
-    try {
-        let val = await AcademyService.raiseInterviewRequest(req.user.userId, interviewReqId,
-            isCancel, date ,
-            time ,
-            duration ,
-            resumeLink ,
-            attachmentLink ,
-            note ,);
-        res.status(200).send({
-            status: 200, message: "Success", data: val != null ? val : [],
-        });
-    } catch (err) {
-        console.error(`Error occured`, err.message);
-        res.status(500).send({
-            status: 500, message: err.message || "Some error occurred while creating the Tutorial.",
-        });
-        next(err);
-    }
-}
-
-async function raiseCounsellingRequest(req, res, next) {
-    const {
-        counsellingId  ,
-         counsellingDate   ,
-        counsellingTime ,
-        counsellingStatus   ,
-    counsellingMode ,
-    counsellingUrl ,
-    counsellingLanguage  ,
-    counsellingBackground ,
-    counsellingTopic ,
-    counsellingNote  ,
-        isCancel,
-        counsellingCancelReason
-    } = req.body;
-    try {
-        let val = await AcademyService.raiseCounsellingRequest(req.user.userId, counsellingId  ,
-            counsellingDate   ,
-            counsellingTime ,
-            counsellingStatus   ,
-            counsellingMode ,
-            counsellingUrl ,
-            counsellingLanguage  ,
-            counsellingBackground ,
-            counsellingTopic ,
-            counsellingNote  ,
-            isCancel,
-            counsellingCancelReason);
-        res.status(200).send({
-            status: 200, message: "Success", data: val != null ? val : [],
-        });
-    } catch (err) {
-        console.error(`Error occured`, err.message);
-        res.status(500).send({
-            status: 500, message: err.message || "Some error occurred while scheduling counselling.",
-        });
-        next(err);
-    }
-}
-
-
-
-async function saveNote(req, res, next) {
-    const {notesId,
-        courseTopicId,
-        courseId,
-        courseTopicContentId,
-        notesText} = req.body;
-    try {
-        let val = await AcademyService.saveNote(req.user.userId, notesId,
-            courseTopicId,
-            courseId,
-            courseTopicContentId,
-            notesText,);
-        res.status(200).send({
-            status: 200, message: "Success", data: val != null ? val : [],
-        });
-    } catch (err) {
-        console.error(`Error occured`, err.message);
-        res.status(500).send({
-            status: 500, message: err.message || "Some error occurred while creating the Tutorial.",
-        });
-        next(err);
-    }
-}
-
-
-async function deleteNote(req, res, next) {
-    const {notesId,
-        } = req.body;
-    try {
-        let val = await AcademyService.deleteNote(req.user.userId, notesId);
-        res.status(200).send({
-            status: 200, message: "Success", data: val != null ? val : [],
-        });
-    } catch (err) {
-        console.error(`Error occured`, err.message);
-        res.status(500).send({
-            status: 500, message: err.message || "Some error occurred while creating the Tutorial.",
-        });
-        next(err);
-    }
-}
-
-
-async function searchRecord(req, res, next) {
-    const {
-        searchValue, searchKey, attributes, limit, offset, sortBy, sortOrder, filters, associate,
-    } = req.body;
-    try {
-        let val = await AcademyService.searchRecord(req, res);
-        res.status(200).send({
-            status: 200, message: "Success", data: val != null ? val : [],
-        });
-    } catch (err) {
-        console.error(`Error occured`, err.message);
-        res.status(500).send({
-            status: 500, message: err.message || "Some error occurred while creating the Tutorial.",
-        });
-        next(err);
-    }
-}
-
-async function saveUserDetail(req, res, next) {
-    const {
-        firstName ,
-        lastName ,
-        number ,
-        profilePic
-    } = req.body;
-    try {
-        let val = await AcademyService.saveUserDetail(req.user.userId, firstName ,
-            lastName ,
-            number ,
-            profilePic );
-        res.status(200).send({
-            status: 200, message: "Success", data: val != null ? val : [],
-        });
-    } catch (err) {
-        console.error(`Error occured`, err.message);
-        res.status(500).send({
-            status: 500, message: err.message || "Some error occurred while creating the Tutorial.",
-        });
-        next(err);
-    }
-}
-
-
-
-async function submitQuiz(req, res, next) {
-    const {
-        courseId, courseQuizId, submissionList
-          } = req.body;
-    try {
-        let val = await AcademyService.submitQuiz(req.user.userId,
-            courseId, courseQuizId, submissionList);
-        res.status(200).send({
-            status: 200, message: "Success", data: val != null ? val : [],
-        });
-    } catch (err) {
-        console.error(`Error occured`, err.message);
-        res.status(500).send({
-            status: 500, message: err.message || "Some error occurred while creating the Tutorial.",
-        });
-        next(err);
-    }
-}
-
-
-
-async function clearQuizResult(req, res, next) {
-    const {
-        courseId, courseQuizId
-    } = req.body;
-    try {
-        let val = await AcademyService.clearQuizResult(req.user.userId,
-            courseId, courseQuizId );
-        res.status(200).send({
-            status: 200, message: "Success", data: val != null ? val : [],
-        });
-    } catch (err) {
-        console.error(`Error occured`, err.message);
-        res.status(500).send({
-            status: 500, message: err.message || "Some error occurred while creating the Tutorial.",
-        });
-        next(err);
-    }
-}
-
-
 
 module.exports = {
-    getCourseDetail,
     getUser,
-    searchRecord,
-    enrollUserCourse,
-    disrollUserCourse,
-    enrollStatus,
-    saveUserDetail,
-    saveNote,
-    deleteNote,saveUserEnrollmentData,
-    deleteUserEnrollmentData,submitQuiz,clearQuizResult,
-    raiseInterviewRequest,
-    raiseCounsellingRequest,
-    fetchScheduledCourseMeet
+    saveWritingSubmission,
+    getWritingSubmission
 };
+
