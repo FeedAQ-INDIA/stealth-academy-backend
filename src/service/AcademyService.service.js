@@ -201,7 +201,7 @@ const saveNote = async (
         await db.Notes.create({
             userId: userId,
             courseId: courseId,
-            courseTopicContentId: courseTopicContentId,
+            courseContentId: courseContentId,
             notesText: notesText
         })
         return {message: 'Notes created successfully'};
@@ -418,7 +418,7 @@ const deleteUserEnrollmentData = async (
                 courseContentId,
              },
         });
-        const isCourseComplted = await validateCourseCompletion(userId, userEnrollmentId, courseId);
+        const isCourseComplted = await validateCourseCompletion(userId, courseId);
         console.log("Is course Completed : ", isCourseComplted == true ? "TRUE": "FALSE");
         const obj = await db.Course.findByPk(courseId);
         obj.enrollmentStatus = isCourseComplted.possibleStatus

@@ -5,7 +5,6 @@ const accessTokenSecret = process.env.ACCESS_TOKEN_SECRET;
 const logger = require("../config/winston.config");
 const GeminiService = require("../service/GeminiService.service.js");
 
-
 const buildPrompt = async (req, res) => {
     const {
         items  } = req.body;

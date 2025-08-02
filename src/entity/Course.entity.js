@@ -17,6 +17,21 @@ module.exports = (sequelize, Sequelize) => {
         key: "user_id",
       },
     },
+    createdByType: {
+      type: Sequelize.ENUM("USER", "ORGANIZATION", "SELF"),
+      field: "created_by_type",
+      allowNull: false,
+    },
+    createdById: {
+      type: Sequelize.INTEGER,
+      field: "created_by_id",
+      allowNull: true,
+    },
+    visibility: {
+      type: Sequelize.ENUM("PRIVATE", "ASSIGNED", "MARKETPLACE"),
+      field: "course_visibility",
+      defaultValue: "PRIVATE",
+    },
     courseTitle: {
       type: Sequelize.STRING(100),
       field: "course_title",
