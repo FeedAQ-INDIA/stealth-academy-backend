@@ -25,15 +25,19 @@ db.sequelize = sequelize;
 
 // Entities
 db.User = require("./User.entity.js")(sequelize, Sequelize);
+db.CourseAccess = require("./CourseAccess.entity.js")(sequelize, Sequelize);
+db.CourseUserEnrollment = require("./CourseUserEnrollment.entity.js")(sequelize, Sequelize);
 db.Course = require("./Course.entity.js")(sequelize, Sequelize);
 db.CourseContent = require("./CourseContent.entity.js")(sequelize, Sequelize);
 db.CourseVideo = require("./CourseVideo.entity.js")(sequelize, Sequelize);
 db.CourseWritten = require("./CourseWritten.entity.js")(sequelize, Sequelize);
 db.Notes = require("./Notes.entity.js")(sequelize, Sequelize);
-db.UserActivityLog = require("./UserActivityLog.entity.js")(sequelize, Sequelize);
+db.UserActivityLog = require("./CourseUserEnrollmentLog.entity.js")(sequelize, Sequelize);
 db.QuizResultLog = require("./QuizResultLog.entity.js")(sequelize, Sequelize);
 db.CourseQuiz = require("./CourseQuiz.entity.js")(sequelize, Sequelize);
 db.QuizQuestion = require("./QuizQuestion.entity.js")(sequelize, Sequelize);
+db.Organization = require("./Organization.entity.js")(sequelize, Sequelize);
+db.OrganizationUser = require("./OrganizationUser.entity.js")(sequelize, Sequelize);
 
 
 

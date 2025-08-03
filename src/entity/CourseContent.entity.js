@@ -8,15 +8,6 @@ module.exports = (sequelize, Sequelize) => {
             autoIncrement: true,
             field: "course_content_id",
         },
-        userId: {
-            type: Sequelize.INTEGER,
-            field: "course_content_user_id",
-            allowNull: false,
-            references: {
-                model: "user",
-                key: "user_id",
-            },
-        },
         courseId: {
             type: Sequelize.INTEGER,
             field: "course_content_course_id",
@@ -39,9 +30,6 @@ module.exports = (sequelize, Sequelize) => {
             ),
             field: "course_content_type",
             allowNull: false,
-            validate: {
-                notEmpty: true
-            }
         },
         courseSourceMode: {
             type: Sequelize.ENUM("YOUTUBE", "COMPANY"),

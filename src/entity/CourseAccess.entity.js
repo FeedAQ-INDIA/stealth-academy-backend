@@ -14,7 +14,9 @@ module.exports = (sequelize, Sequelize) => {
             references: {
                 model: "course",
                 key: "course_id",
-            }
+            },
+            field: "course_access_course_id",
+
         },
         userId: {
             type: Sequelize.INTEGER,
@@ -22,19 +24,22 @@ module.exports = (sequelize, Sequelize) => {
             references: {
                 model: "user",
                 key: "user_id",
-            }
+            },
+            field: "course_access_user_id",
         },
         organizationId: {
             type: Sequelize.INTEGER,
             allowNull: true,
             references: {
                 model: "organization",
-                key: "organization_id",
-            }
+                key: "org_id",
+            },
+            field: "course_access_org_id",
         },
         accessLevel: {
-            type: Sequelize.ENUM("VIEW", "EDIT", "OWN"),
-            defaultValue: "VIEW"
+            type: Sequelize.ENUM("OWN", "SHARED"),
+            defaultValue: "OWN",
+            field: "course_access_level",
         },
         v_created_date: {
             type: Sequelize.VIRTUAL,
@@ -70,13 +75,13 @@ module.exports = (sequelize, Sequelize) => {
                 fields: ['course_access_course_id']
             },
             {
-                fields: ['course_access_type']
+                fields: ['course_access_level']
             },
             {
-                fields: ['course_access_seq']
+                fields: ['course_access_user_id']
             },
             {
-                fields: ['course_access_is_active']
+                fields: ['course_access_org_id']
             }
         ], 
     });

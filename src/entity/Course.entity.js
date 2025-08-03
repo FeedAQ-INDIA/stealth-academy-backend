@@ -11,26 +11,23 @@ module.exports = (sequelize, Sequelize) => {
     userId: {
       type: Sequelize.INTEGER,
       field: "course_user_id",
-      allowNull: false,
       references: {
         model: "user",
         key: "user_id",
       },
     },
-    createdByType: {
-      type: Sequelize.ENUM("USER", "ORGANIZATION", "SELF"),
-      field: "created_by_type",
-      allowNull: false,
-    },
-    createdById: {
+    orgId: {
       type: Sequelize.INTEGER,
-      field: "created_by_id",
-      allowNull: true,
+      field: "course_org_id",
+      references: {
+        model: "organization",
+        key: "org_id",
+      },
     },
-    visibility: {
-      type: Sequelize.ENUM("PRIVATE", "ASSIGNED", "MARKETPLACE"),
-      field: "course_visibility",
-      defaultValue: "PRIVATE",
+    isMarketplaceFlag: {
+      type: Sequelize.BOOLEAN,
+      field: "is_marketplace_flag",
+      defaultValue: false,
     },
     courseTitle: {
       type: Sequelize.STRING(100),
@@ -41,19 +38,14 @@ module.exports = (sequelize, Sequelize) => {
       type: Sequelize.TEXT,
       field: "course_description",
     },
-    courseIsLocked: {
-      type: Sequelize.BOOLEAN,
-      field: "course_is_locked",
+    courseState: {
+      type: Sequelize.ENUM("ACTIVE", "INACTIVE", "TRASHED"),
+      field: "course_status",
       defaultValue: true,
     },
     courseImageUrl: {
       type: Sequelize.STRING(500),
       field: "course_image_url",
-    },
-    courseCompletionStatus: {
-      type: Sequelize.ENUM('NOT STARTED','IN PROGRESS','PAUSED', 'COMPLETED'),
-      field: "course_completion_status",
-      defaultValue: "NOT STARTED"
     },
     courseDuration: {
       type: Sequelize.INTEGER,
