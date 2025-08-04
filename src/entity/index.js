@@ -5,7 +5,7 @@ const sequelize = new Sequelize(dbConfig.DB, dbConfig.USER, dbConfig.PASSWORD, {
     host: dbConfig.HOST, 
     dialect: dbConfig.dialect, 
     // operatorsAliases: false, // Removed - deprecated in v5+
-    logging: false,
+    logging: true,
     port: dbConfig.port,
     dialectOptions: dbConfig.dialectOptions,
     pool: {
