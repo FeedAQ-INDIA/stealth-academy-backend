@@ -6,55 +6,7 @@ module.exports = (sequelize, Sequelize) => {
             type: Sequelize.INTEGER,
             primaryKey: true,
             autoIncrement: true,
-            field: "course_quiz_id",
-        },
-        quizQuestionTitle: {
-            type: Sequelize.TEXT,
-            field: "course_quiz_title",
-        },
-        quizQuestionNote: {
-            type: Sequelize.STRING(100),
-            field: "course_quiz_note",
-        },
-        quizQuestionOption: {
-            type: Sequelize.ARRAY(Sequelize.STRING),
-            field: "course_quiz_option",
-        },
-        quizQuestionCorrectAnswer: {
-            type: Sequelize.ARRAY(Sequelize.STRING),
-            field: "course_quiz_answer",
-        },
-        quizQuestionPosPoint: {
-            type: Sequelize.INTEGER,
-            field: "course_quiz_pos_point",
-        },
-        quizQuestionNegPoint: {
-            type: Sequelize.INTEGER,
-            field: "course_quiz_neg_point",
-        },
-        isQuestionTimed: {
-            type: Sequelize.BOOLEAN,
-            field: "course_quiz_is_timed",
-        },
-        quizQuestionTimer: {
-            type: Sequelize.INTEGER,
-            field: "course_quiz_timer",
-        },
-        courseContentId: {
-            type: Sequelize.INTEGER,
-            references: {
-                model: "course_content",
-                key: "course_content_id",
-            },
-            field: "course_quiz_content_id",
-        },
-        courseId: {
-            type: Sequelize.INTEGER,
-            references: {
-                model: "course",
-                key: "course_id",
-            },
-            field: "course_quiz_course_id",
+            field: "quiz_question_id",
         },
         courseQuizId: {
             type: Sequelize.INTEGER,
@@ -62,42 +14,142 @@ module.exports = (sequelize, Sequelize) => {
                 model: "course_quiz",
                 key: "course_quiz_id",
             },
-            field: "course_quiz_quiz_id",
+            field: "course_quiz_id",
+            allowNull: false,
+        },
+        courseId: {
+            type: Sequelize.INTEGER,
+            references: {
+                model: "course",
+                key: "course_id",
+            },
+            field: "course_id",
+            allowNull: false,
+        },
+        courseContentId: {
+            type: Sequelize.INTEGER,
+            references: {
+                model: "course_content",
+                key: "course_content_id",
+            },
+            field: "course_content_id",
+            allowNull: false,
+        },
+        quizQuestionTitle: {
+            type: Sequelize.TEXT,
+            field: "quiz_question_title",
+            allowNull: false,
+        },
+        quizQuestionNote: {
+            type: Sequelize.TEXT,
+            field: "quiz_question_note",
+        },
+        quizQuestionType: {
+            type: Sequelize.ENUM('MULTIPLE_CHOICE', 'SINGLE_CHOICE', 'TRUE_FALSE', 'FILL_BLANK', 'ESSAY'),
+            field: "quiz_question_type",
+            allowNull: false,
+            defaultValue: 'SINGLE_CHOICE'
+        },
+        quizQuestionOption: {
+            type: Sequelize.JSONB,
+            field: "quiz_question_options",
+            allowNull: false,
+        },
+        quizQuestionCorrectAnswer: {
+            type: Sequelize.JSONB,
+            field: "quiz_question_correct_answer",
+            allowNull: false,
+        },
+        quizQuestionPosPoint: {
+            type: Sequelize.INTEGER,
+            field: "quiz_question_pos_points",
+            defaultValue: 1
+        },
+        quizQuestionNegPoint: {
+            type: Sequelize.INTEGER,
+            field: "quiz_question_neg_points",
+            defaultValue: 0
+        },
+        isQuestionTimed: {
+            type: Sequelize.BOOLEAN,
+            field: "quiz_question_is_timed",
+            defaultValue: false,
+        },
+        quizQuestionTimer: {
+            type: Sequelize.INTEGER,
+            field: "quiz_question_timer_seconds"
+        },
+        questionSequence: {
+            type: Sequelize.INTEGER,
+            field: "quiz_question_sequence",
+            allowNull: false
+        },
+        isActive: {
+            type: Sequelize.BOOLEAN,
+            field: "quiz_question_is_active",
+            defaultValue: true,
+        },
+        difficultyLevel: {
+            type: Sequelize.ENUM('EASY', 'MEDIUM', 'HARD'),
+            field: "quiz_question_difficulty",
+            defaultValue: 'MEDIUM'
+        },
+        explanation: {
+            type: Sequelize.TEXT,
+            field: "quiz_question_explanation",
+        },
+        metadata: {
+            type: Sequelize.JSONB,
+            field: "quiz_question_metadata",
+            defaultValue: {}
         },
         v_created_date: {
             type: Sequelize.VIRTUAL,
             get() {
-                return formatTime(this.course_quiz_created_at)
-
+                return formatDate(this.quiz_question_created_at);
             },
         },
         v_created_time: {
             type: Sequelize.VIRTUAL,
             get() {
-                return formatTime(this.course_quiz_created_at)
-
+                return formatTime(this.quiz_question_created_at);
             },
         },
-
         v_updated_date: {
             type: Sequelize.VIRTUAL,
             get() {
-                return formatDate(this.course_quiz_updated_at)
-
+                return formatDate(this.quiz_question_updated_at);
             },
         },
         v_updated_time: {
             type: Sequelize.VIRTUAL,
             get() {
-                return formatTime(this.course_quiz_updated_at)
-
+                return formatTime(this.quiz_question_updated_at);
             },
         },
-    } , {
+    }, {
         timestamps: true,
-        createdAt: "course_quiz_created_at",
-        updatedAt: "course_quiz_updated_at",
+        createdAt: "quiz_question_created_at",
+        updatedAt: "quiz_question_updated_at",
+        deletedAt: "quiz_question_deleted_at",
+        paranoid: true,
+        indexes: [
+            {
+                fields: ['course_quiz_id']
+            },
+            {
+                fields: ['course_id']
+            },
+            {
+                fields: ['quiz_question_sequence']
+            },
+            {
+                unique: true,
+                fields: ['course_quiz_id', 'quiz_question_sequence']
+            }
+        ]
     });
+    
     return QuizQuestion;
 };
 

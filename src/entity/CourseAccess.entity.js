@@ -37,9 +37,38 @@ module.exports = (sequelize, Sequelize) => {
             field: "course_access_org_id",
         },
         accessLevel: {
-            type: Sequelize.ENUM("OWN", "SHARED"),
-            defaultValue: "OWN",
+            type: Sequelize.ENUM("OWN", "SHARED", "READ", "WRITE", "ADMIN"),
+            defaultValue: "READ",
             field: "course_access_level",
+            allowNull: false,
+        },
+        accessType: {
+            type: Sequelize.ENUM("USER", "ORGANIZATION", "PUBLIC"),
+            defaultValue: "USER",
+            field: "course_access_type",
+            allowNull: false,
+        },
+        isActive: {
+            type: Sequelize.BOOLEAN,
+            field: "course_access_is_active",
+            defaultValue: true,
+        },
+        expiresAt: {
+            type: Sequelize.DATE,
+            field: "course_access_expires_at",
+        },
+        grantedBy: {
+            type: Sequelize.INTEGER,
+            references: {
+                model: "user",
+                key: "user_id",
+            },
+            field: "course_access_granted_by",
+        },
+        metadata: {
+            type: Sequelize.JSONB,
+            field: "course_access_metadata",
+            defaultValue: {}
         },
         v_created_date: {
             type: Sequelize.VIRTUAL,
@@ -69,24 +98,28 @@ module.exports = (sequelize, Sequelize) => {
         timestamps: true,
         createdAt: "course_access_created_at",
         updatedAt: "course_access_updated_at",
+        deletedAt: "course_access_deleted_at",
         paranoid: true, // Enable soft deletes
         indexes: [
             {
                 fields: ['course_access_course_id']
             },
             {
-                fields: ['course_access_level']
-            },
-            {
                 fields: ['course_access_user_id']
             },
             {
                 fields: ['course_access_org_id']
+            },
+            {
+                fields: ['course_access_is_active']
+            },
+            {
+                unique: true,
+                fields: ['course_access_course_id', 'course_access_user_id', 'course_access_org_id']
             }
-        ], 
+        ]
     });
  
-
     return CourseAccess;
 };
 

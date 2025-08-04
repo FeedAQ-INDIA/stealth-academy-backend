@@ -38,11 +38,6 @@ module.exports = (sequelize, Sequelize) => {
       type: Sequelize.TEXT,
       field: "course_description",
     },
-    courseState: {
-      type: Sequelize.ENUM("ACTIVE", "INACTIVE", "TRASHED"),
-      field: "course_status",
-      defaultValue: true,
-    },
     courseImageUrl: {
       type: Sequelize.STRING(500),
       field: "course_image_url",
@@ -50,18 +45,18 @@ module.exports = (sequelize, Sequelize) => {
     courseDuration: {
       type: Sequelize.INTEGER,
       field: "course_duration",
-      allowNull: false,
+      allowNull: false
     },
     courseValidity: {
       type: Sequelize.INTEGER,
-      field: "course_validity",
+      field: "course_validity"
     },
     courseSourceChannel: {
       type: Sequelize.STRING(100),
       field: "course_source_channel",
     },
     courseSourceMode: {
-      type: Sequelize.ENUM("YOUTUBE"),
+      type: Sequelize.ENUM("YOUTUBE", "VIMEO", "CUSTOM"),
       field: "course_source_mode",
       allowNull: false,
     },
@@ -75,6 +70,11 @@ module.exports = (sequelize, Sequelize) => {
       type: Sequelize.ENUM("DRAFT", "PUBLISHED", "ARCHIVED"),
       field: "course_status",
       defaultValue: "DRAFT",
+    },
+    courseState: {
+      type: Sequelize.ENUM("ACTIVE", "INACTIVE", "TRASHED"),
+      field: "course_state",
+      defaultValue: "ACTIVE",
     },
     metadata: {
       type: Sequelize.JSONB,
@@ -110,21 +110,22 @@ module.exports = (sequelize, Sequelize) => {
     timestamps: true,
     createdAt: "course_created_at",
     updatedAt: "course_updated_at",
+    deletedAt: "course_deleted_at",
     paranoid: true, // Enable soft deletes
     indexes: [
       {
         fields: ['course_user_id']
       },
       {
-        fields: ['course_title']
+        fields: ['course_org_id']
       },
       {
         fields: ['course_status']
       },
       {
-        fields: ['course_delivery_mode']
+        fields: ['course_state']
       }
-    ], 
+    ],
   });
 
  

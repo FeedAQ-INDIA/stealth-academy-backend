@@ -109,9 +109,6 @@ module.exports = (sequelize, Sequelize) => {
             },
             {
                 fields: ['course_video_status']
-            },
-            {
-                fields: ['course_video_is_preview']
             }
         ],
 

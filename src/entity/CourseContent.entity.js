@@ -39,7 +39,7 @@ module.exports = (sequelize, Sequelize) => {
         courseContentSequence: {
             type: Sequelize.INTEGER,
             field: "course_content_seq",
-            allowNull: false,
+            allowNull: false
         },
         coursecontentIsLicensed: {
             type: Sequelize.BOOLEAN,
@@ -50,7 +50,7 @@ module.exports = (sequelize, Sequelize) => {
         courseContentDuration: {
             type: Sequelize.INTEGER,
             field: "course_content_duration",
-            allowNull: false,
+            allowNull: false
         },
         isActive: {
             type: Sequelize.BOOLEAN,
@@ -92,21 +92,20 @@ module.exports = (sequelize, Sequelize) => {
         timestamps: true,
         createdAt: "course_content_created_at",
         updatedAt: "course_content_updated_at",
+        deletedAt: "course_content_deleted_at",
         paranoid: true, // Enable soft deletes
         indexes: [
             {
                 fields: ['course_content_course_id']
             },
             {
-                fields: ['course_content_type']
-            },
-            {
                 fields: ['course_content_seq']
             },
             {
-                fields: ['course_content_is_active']
+                unique: true,
+                fields: ['course_content_course_id', 'course_content_seq']
             }
-        ], 
+        ]
     });
  
 
