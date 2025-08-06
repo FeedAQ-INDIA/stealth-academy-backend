@@ -27,13 +27,13 @@ db.sequelize = sequelize;
 // Entities
 db.User = require("./User.entity.js")(sequelize, Sequelize);
 db.CourseAccess = require("./CourseAccess.entity.js")(sequelize, Sequelize);
-db.CourseUserEnrollment = require("./CourseUserEnrollment.entity.js")(sequelize, Sequelize);
+db.UserCourseEnrollment = require("./UserCourseEnrollment.entity.js")(sequelize, Sequelize);
 db.Course = require("./Course.entity.js")(sequelize, Sequelize);
 db.CourseContent = require("./CourseContent.entity.js")(sequelize, Sequelize);
 db.CourseVideo = require("./CourseVideo.entity.js")(sequelize, Sequelize);
 db.CourseWritten = require("./CourseWritten.entity.js")(sequelize, Sequelize);
 db.Notes = require("./Notes.entity.js")(sequelize, Sequelize);
-db.CourseUserEnrollmentLog = require("./CourseUserEnrollmentLog.entity.js")(sequelize, Sequelize);
+db.UserCourseContentLog = require("./UserCourseContentLog.entity.js")(sequelize, Sequelize);
 db.QuizResultLog = require("./QuizResultLog.entity.js")(sequelize, Sequelize);
 db.CourseQuiz = require("./CourseQuiz.entity.js")(sequelize, Sequelize);
 db.QuizQuestion = require("./QuizQuestion.entity.js")(sequelize, Sequelize);
@@ -46,9 +46,9 @@ db.OrganizationUser = require("./OrganizationUser.entity.js")(sequelize, Sequeli
 
 // User associations
 db.User.hasMany(db.Course, {foreignKey: 'userId', as: 'courses'});
-db.User.hasMany(db.CourseUserEnrollment, {foreignKey: 'userId', as: 'enrollments'});
+db.User.hasMany(db.UserCourseEnrollment, {foreignKey: 'userId', as: 'enrollments'});
 db.User.hasMany(db.Notes, {foreignKey: 'userId', as: 'notes'});
-db.User.hasMany(db.CourseUserEnrollmentLog, {foreignKey: 'userId', as: 'activityLogs'});
+db.User.hasMany(db.UserCourseContentLog, {foreignKey: 'userId', as: 'activityLogs'});
 db.User.hasMany(db.QuizResultLog, {foreignKey: 'userId', as: 'quizResults'});
 db.User.hasMany(db.OrganizationUser, {foreignKey: 'userId', as: 'organizationMemberships'});
 
@@ -56,10 +56,10 @@ db.User.hasMany(db.OrganizationUser, {foreignKey: 'userId', as: 'organizationMem
 db.Course.belongsTo(db.User, {foreignKey: 'userId', as: 'instructor'});
 db.Course.belongsTo(db.Organization, {foreignKey: 'orgId', as: 'organization'});
 db.Course.hasMany(db.CourseContent, {foreignKey: 'courseId', as: 'courseContent'});
-db.Course.hasMany(db.CourseUserEnrollment, {foreignKey: 'courseId', as: 'enrollments'});
+db.Course.hasMany(db.UserCourseEnrollment, {foreignKey: 'courseId', as: 'enrollments'});
 db.Course.hasMany(db.CourseAccess, {foreignKey: 'courseId', as: 'accessControls'});
 db.Course.hasMany(db.Notes, {foreignKey: 'courseId', as: 'notes'});
-db.Course.hasMany(db.CourseUserEnrollmentLog, {foreignKey: 'courseId', as: 'activityLogs'});
+db.Course.hasMany(db.UserCourseContentLog, {foreignKey: 'courseId', as: 'activityLogs'});
 db.Course.hasMany(db.QuizResultLog, {foreignKey: 'courseId', as: 'quizResults'});
 
 // Organization associations
@@ -77,7 +77,7 @@ db.CourseContent.hasMany(db.CourseVideo, {foreignKey: 'courseContentId', as: 'vi
 db.CourseContent.hasMany(db.CourseWritten, {foreignKey: 'courseContentId', as: 'writtenContent'});
 db.CourseContent.hasMany(db.CourseQuiz, {foreignKey: 'courseContentId', as: 'quizzes'});
 db.CourseContent.hasMany(db.Notes, {foreignKey: 'courseContentId', as: 'notes'});
-db.CourseContent.hasMany(db.CourseUserEnrollmentLog, {foreignKey: 'courseContentId', as: 'activityLogs'});
+db.CourseContent.hasMany(db.UserCourseContentLog, {foreignKey: 'courseContentId', as: 'activityLogs'});
 
 // CourseVideo associations
 db.CourseVideo.belongsTo(db.Course, {foreignKey: 'courseId', as: 'course'});
@@ -98,14 +98,14 @@ db.QuizQuestion.belongsTo(db.Course, {foreignKey: 'courseId', as: 'course'});
 db.QuizQuestion.belongsTo(db.CourseContent, {foreignKey: 'courseContentId', as: 'courseContent'});
 db.QuizQuestion.belongsTo(db.CourseQuiz, {foreignKey: 'courseQuizId', as: 'courseQuiz'});
 
-// CourseUserEnrollment associations
-db.CourseUserEnrollment.belongsTo(db.User, {foreignKey: 'userId', as: 'user'});
-db.CourseUserEnrollment.belongsTo(db.Course, {foreignKey: 'courseId', as: 'course'});
+// UserCourseEnrollment associations
+db.UserCourseEnrollment.belongsTo(db.User, {foreignKey: 'userId', as: 'user'});
+db.UserCourseEnrollment.belongsTo(db.Course, {foreignKey: 'courseId', as: 'course'});
 
-// CourseUserEnrollmentLog associations
-db.CourseUserEnrollmentLog.belongsTo(db.Course, {foreignKey: 'courseId', as: 'course'});
-db.CourseUserEnrollmentLog.belongsTo(db.User, {foreignKey: 'userId', as: 'user'});
-db.CourseUserEnrollmentLog.belongsTo(db.CourseContent, {foreignKey: 'courseContentId', as: 'courseContent'});
+// UserCourseContentLog associations
+db.UserCourseContentLog.belongsTo(db.Course, {foreignKey: 'courseId', as: 'course'});
+db.UserCourseContentLog.belongsTo(db.User, {foreignKey: 'userId', as: 'user'});
+db.UserCourseContentLog.belongsTo(db.CourseContent, {foreignKey: 'courseContentId', as: 'courseContent'});
 
 // QuizResultLog associations
 db.QuizResultLog.belongsTo(db.Course, {foreignKey: 'courseId', as: 'course'});

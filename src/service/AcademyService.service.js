@@ -314,80 +314,77 @@ const getCourseDetail = async (userId, courseId) => {
 };
 
 
+ 
 
-const enrollUserCourse = async (userId, courseId, webinarId) => {
-    const enrollUserCourseData = await enrollStatus(userId, courseId, webinarId);
-    let enrollmentObj;
-    if (enrollUserCourseData && !enrollUserCourseData.isUserEnrolled) {
-        enrollmentObj = await db.UserEnrollment.create({
-            userId: userId,
-            ...(courseId && {courseId: courseId}),
-            ...(webinarId && {webinarId: webinarId}),
-            enrollmentStatus: "ENROLLED"
-        })
-    }
-    return enrollmentObj ? {message: 'Enrollment is successfully'} : {message: 'Enrollment failed'};
-
-};
-
-const enrollStatus = async (userId, courseId, webinarId=null) => {
+const isUserCourseEnrolled = async (userId, courseId) => {
     let enrollUserCourseData
-    if(courseId){
-         enrollUserCourseData = await db.UserEnrollment.findAll({
+          enrollUserCourseData = await db.UserCourseEnrollment.findAll({
             where: {
                 courseId: courseId, userId: userId
             }
         });
-    } else  if(webinarId){
-        enrollUserCourseData = await db.UserEnrollment.findAll({
-            where: {
-                webinarId: webinarId, userId: userId
-            }
-        });
-    }
 
 
     if (enrollUserCourseData && enrollUserCourseData.length > 0) {
-        return {isUserEnrolled: true, enrollmentData:enrollUserCourseData}
+        return {isUserCourseEnrolledFlag: true, data:enrollUserCourseData}
     } else {
-        return {isUserEnrolled: false}
+        return {isUserCourseEnrolledFlag: false}
     }
 };
 
-const disrollUserCourse = async (userId, courseId, webinarId) => {
-    const enrollUserCourseData = await enrollStatus(userId, courseId, webinarId);
+const userCourseEnrollment = async (userId, courseId) => {
+    if(!userId || !courseId){
+        throw new Error("User id & Course id must be provided");
+    }
+    const enrollUserCourseData = await isUserCourseEnrolled(userId, courseId);
+    let enrollmentObj;
+    if (enrollUserCourseData && !enrollUserCourseData.isUserCourseEnrolledFlag) {
+        enrollmentObj = await db.UserCourseEnrollment.create({
+            userId: userId,
+            ...(courseId && {courseId: courseId}),
+            enrollmentStatus: "ENROLLED"
+        })
+    }
+    return enrollmentObj ? {message: 'Enrollment is successfull'} : {message: 'Enrollment failed'};
+
+};
+
+
+const userCourseDisrollment = async (userId, courseId) => {
+    if(!userId || !courseId){
+        throw new Error("User id & Course id must be provided");
+    }
+    const enrollUserCourseData = await isUserCourseEnrolled(userId, courseId);
     let disrollmentObj;
-    if (enrollUserCourseData && enrollUserCourseData.isUserEnrolled) {
-        await db.UserEnrollmentLog.destroy({where: { userId,
-            ...(courseId && {courseId: courseId}), ...(webinarId && {webinarId: webinarId}),}})
-        disrollmentObj = await db.UserEnrollment.destroy({where: { ...(courseId && {courseId: courseId}), ...(webinarId && {webinarId: webinarId}), userId: userId}});
-       if(courseId){
-           await db.Notes.destroy({where: {courseId: courseId, userId: userId}});
-       }
-
+    if (enrollUserCourseData && enrollUserCourseData.isUserCourseEnrolledFlag) {
+        await db.UserCourseContentLog.destroy({where: { userId,
+            ...(courseId && {courseId: courseId})}})
+        disrollmentObj = await db.UserCourseEnrollment.destroy({where: { ...(courseId && {courseId: courseId}), userId: userId}});
+            await db.Notes.destroy({where: {courseId: courseId, userId: userId}});
     }
 
 
-    return disrollmentObj ? {message: 'Disrollment is successfully'} : {message: 'Disrollment failed'};
+    return disrollmentObj ? {message: 'Disrollment is successfull'} : {message: 'Disrollment failed'};
 };
 
 
-const saveUserEnrollmentData = async (
+const saveUserCourseContentLog = async (
     userId ,
-    userActivityId ,
+    logId ,
+    userCourseEnrollmentId,
     courseId ,
     courseContentId,
-     enrollmentStatus ,
+    logStatus
 
 ) => {
-          const [enrollmentObj, created] = await db.UserActivityLog.findOrCreate({
+          const [enrollmentObj, created] = await db.UserCourseEnrollment.findOrCreate({
             where: {
                 courseId,
                 courseContentId,
             },
             defaults: {
                 userId,
-                enrollmentStatus,
+                logStatus,
                 courseContentId,
                 courseId
             }
@@ -403,7 +400,7 @@ const saveUserEnrollmentData = async (
 
 };
 
-const deleteUserEnrollmentData = async (
+const deleteUserCourseContentLog = async (
     userId ,
     userActivityId ,
     courseId ,
@@ -599,14 +596,14 @@ const parseIncludes = (data) => {
 module.exports = {
     getUser,
     searchRecord,
-    enrollUserCourse,
-    disrollUserCourse, enrollStatus,
+    userCourseEnrollment,
+    userCourseDisrollment, isUserCourseEnrolled,
     getCourseDetail,
     saveUserDetail,
     saveNote,
     deleteNote,
-    saveUserEnrollmentData,
-    deleteUserEnrollmentData,
+    deleteUserCourseContentLog,
+    saveUserCourseContentLog,
     submitQuiz,
     clearQuizResult,
     raiseInterviewRequest,

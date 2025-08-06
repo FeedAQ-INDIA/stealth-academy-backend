@@ -39,10 +39,10 @@ async function fetchScheduledCourseMeet(req, res, next) {
 }
 
 
-async function enrollStatus(req, res, next) {
-    const {courseId, webinarId} = req.body;
+async function isUserCourseEnrolled(req, res, next) {
+    const {courseId} = req.body;
     try {
-        let val = await AcademyService.enrollStatus(req.user.userId, courseId, webinarId);
+        let val = await AcademyService.isUserCourseEnrolled(req.user.userId, courseId);
         res.status(200).send({
             status: 200, message: "Success", data: val != null ? val : [],
         });
@@ -56,10 +56,10 @@ async function enrollStatus(req, res, next) {
 }
 
 
-async function enrollUserCourse(req, res, next) {
-    const {courseId,webinarId} = req.body;
+async function userCourseEnrollment(req, res, next) {
+    const {courseId} = req.body;
     try {
-        let val = await AcademyService.enrollUserCourse(req.user.userId, courseId, webinarId);
+        let val = await AcademyService.userCourseEnrollment(req.user.userId, courseId);
         res.status(200).send({
             status: 200, message: "Success", data: val != null ? val : [],
         });
@@ -72,10 +72,10 @@ async function enrollUserCourse(req, res, next) {
     }
 }
 
-async function disrollUserCourse(req, res, next) {
+async function userCourseDisrollment(req, res, next) {
     const {courseId, webinarId} = req.body;
     try {
-        let val = await AcademyService.disrollUserCourse(req.user.userId, courseId, webinarId);
+        let val = await AcademyService.userCourseDisrollment(req.user.userId, courseId, webinarId);
         res.status(200).send({
             status: 200, message: "Success", data: val != null ? val : [],
         });
@@ -105,18 +105,20 @@ async function getCourseDetail(req, res, next) {
 }
 
 
-async function saveUserEnrollmentData(req, res, next) {
+async function saveUserCourseContentLog(req, res, next) {
     const {
-        userActivityId ,
+        logId ,
+        userCourseEnrollmentId,
         courseId ,
         courseContentId,
-         enrollmentStatus  } = req.body;
+        logStatus  } = req.body;
     try {
-        let val = await AcademyService.saveUserEnrollmentData(req.user.userId,
-            userActivityId ,
+        let val = await AcademyService.saveUserCourseContentLog(req.user.userId,
+            logId ,
+            userCourseEnrollmentId,
             courseId ,
             courseContentId,
-             enrollmentStatus );
+            logStatus  );
         res.status(200).send({
             status: 200, message: "Success", data: val != null ? val : [],
         });
@@ -130,14 +132,14 @@ async function saveUserEnrollmentData(req, res, next) {
 }
 
 
-async function deleteUserEnrollmentData(req, res, next) {
+async function deleteUserCourseContentLog(req, res, next) {
     const {
         userActivityId ,
         courseId ,
         courseContentId,
     } = req.body;
     try {
-        let val = await AcademyService.deleteUserEnrollmentData(req.user.userId,
+        let val = await AcademyService.deleteUserCourseContentLog(req.user.userId,
             userActivityId ,
             courseId ,
             courseContentId,
@@ -358,13 +360,13 @@ module.exports = {
     getCourseDetail,
     getUser,
     searchRecord,
-    enrollUserCourse,
-    disrollUserCourse,
-    enrollStatus,
+    userCourseEnrollment,
+    userCourseDisrollment,
+    isUserCourseEnrolled,
     saveUserDetail,
     saveNote,
-    deleteNote,saveUserEnrollmentData,
-    deleteUserEnrollmentData,submitQuiz,clearQuizResult,
+    deleteNote,saveUserCourseContentLog,
+    deleteUserCourseContentLog,submitQuiz,clearQuizResult,
     raiseInterviewRequest,
     raiseCounsellingRequest,
     fetchScheduledCourseMeet

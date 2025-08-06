@@ -1,7 +1,7 @@
 const { formatDate, formatTime } = require("../utils/dateFormatters");
 
 module.exports = (sequelize, Sequelize) => {
-    const CourseUserEnrollment = sequelize.define("course_user_enrollment", {
+    const UserCourseEnrollment = sequelize.define("user_course_enrollment", {
         enrollmentId: {
             type: Sequelize.INTEGER,
             primaryKey: true,
@@ -95,5 +95,5 @@ module.exports = (sequelize, Sequelize) => {
         ]
     });
     
-    return CourseUserEnrollment;
+    return UserCourseEnrollment;
 };

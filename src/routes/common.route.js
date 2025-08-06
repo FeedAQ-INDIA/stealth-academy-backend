@@ -17,15 +17,15 @@ router.get("/ping", function (req, res) {
 
 router.post("/browseCourse", publicauthenticationMiddleware, genericController.searchRecord);
 router.post("/searchCourse", publicauthenticationMiddleware, genericController.searchRecord);
-// router.post("/enrollStatus", authMiddleware, genericController.enrollStatus);
-// router.post("/enroll", authMiddleware, genericController.enrollUserCourse);
-// router.post("/disroll", authMiddleware, genericController.disrollUserCourse);
+router.post("/isUserCourseEnrolled", authMiddleware, genericController.isUserCourseEnrolled);
+router.post("/userCourseEnrollment", authMiddleware, genericController.userCourseEnrollment);
+router.post("/userCourseDisrollment", authMiddleware, genericController.userCourseDisrollment);
 router.post("/saveUserDetail", authMiddleware, genericController.saveUserDetail);
 router.post("/getCourseDetail", authMiddleware, genericController.getCourseDetail);
 router.post("/saveNote", authMiddleware, genericController.saveNote);
 router.post("/deleteNote", authMiddleware, genericController.deleteNote);
-router.post("/saveUserEnrollmentData", authMiddleware, genericController.saveUserEnrollmentData);
-router.post("/deleteUserEnrollmentData", authMiddleware, genericController.deleteUserEnrollmentData);
+router.post("/saveUserEnrollmentData", authMiddleware, genericController.saveUserCourseContentLog);
+router.post("/deleteUserEnrollmentData", authMiddleware, genericController.deleteUserCourseContentLog);
 router.post("/submitQuiz", authMiddleware, genericController.submitQuiz);
 router.post("/clearQuizResult", authMiddleware, genericController.clearQuizResult);
 
