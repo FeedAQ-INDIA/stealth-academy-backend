@@ -16,7 +16,6 @@ module.exports = (sequelize, Sequelize) => {
                 key: "course_id",
             },
             field: "course_access_course_id",
-
         },
         userId: {
             type: Sequelize.INTEGER,
@@ -37,15 +36,9 @@ module.exports = (sequelize, Sequelize) => {
             field: "course_access_org_id",
         },
         accessLevel: {
-            type: Sequelize.ENUM("OWN", "SHARED", "READ", "WRITE", "ADMIN"),
+            type: Sequelize.ENUM("OWN", "SHARED",  "ADMIN"),
             defaultValue: "READ",
             field: "course_access_level",
-            allowNull: false,
-        },
-        accessType: {
-            type: Sequelize.ENUM("USER", "ORGANIZATION", "PUBLIC"),
-            defaultValue: "USER",
-            field: "course_access_type",
             allowNull: false,
         },
         isActive: {
@@ -57,13 +50,21 @@ module.exports = (sequelize, Sequelize) => {
             type: Sequelize.DATE,
             field: "course_access_expires_at",
         },
-        grantedBy: {
+        grantedByUserId: {
             type: Sequelize.INTEGER,
             references: {
                 model: "user",
                 key: "user_id",
             },
-            field: "course_access_granted_by",
+            field: "course_access_granted_by_user_id",
+        },
+        grantedByOrganizationId: {
+            type: Sequelize.INTEGER,
+            references: {
+                model: "organization",
+                key: "org_id",
+            },
+            field: "course_access_granted_by_org_id",
         },
         metadata: {
             type: Sequelize.JSONB,

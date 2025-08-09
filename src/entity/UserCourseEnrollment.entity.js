@@ -40,11 +40,6 @@ module.exports = (sequelize, Sequelize) => {
             type: Sequelize.DATE,
             field: "enrollment_completion_date",
         },
-        progressPercentage: {
-            type: Sequelize.DECIMAL(5,2),
-            field: "enrollment_progress_percentage",
-            defaultValue: 0.00
-        },
         certificateUrl: {
             type: Sequelize.STRING(500),
             field: "enrollment_certificate_url",
