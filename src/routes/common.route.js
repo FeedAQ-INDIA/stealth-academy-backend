@@ -24,8 +24,8 @@ router.post("/saveUserDetail", authMiddleware, genericController.saveUserDetail)
 router.post("/getCourseDetail", authMiddleware, genericController.getCourseDetail);
 router.post("/saveNote", authMiddleware, genericController.saveNote);
 router.post("/deleteNote", authMiddleware, genericController.deleteNote);
-router.post("/saveUserEnrollmentData", authMiddleware, genericController.saveUserCourseContentLog);
-router.post("/deleteUserEnrollmentData", authMiddleware, genericController.deleteUserCourseContentLog);
+router.post("/saveUserEnrollmentData", authMiddleware, genericController.saveUserCourseContentProgress);
+router.post("/deleteUserEnrollmentData", authMiddleware, genericController.deleteUserCourseContentProgress);
 router.post("/submitQuiz", authMiddleware, genericController.submitQuiz);
 router.post("/clearQuizResult", authMiddleware, genericController.clearQuizResult);
 

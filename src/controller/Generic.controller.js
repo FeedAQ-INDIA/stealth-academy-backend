@@ -4,6 +4,7 @@ const refreshTokenSecret = process.env.REFRESH_TOKEN_SECRET;
 const accessTokenSecret = process.env.ACCESS_TOKEN_SECRET;
 const logger = require("../config/winston.config");
 const AcademyService = require("../service/AcademyService.service.js");
+const DynamicService = require("../service/DynamicService.service.js");
 
 
 async function getUser(req, res, next) {
@@ -105,7 +106,7 @@ async function getCourseDetail(req, res, next) {
 }
 
 
-async function saveUserCourseContentLog(req, res, next) {
+async function saveUserCourseContentProgress(req, res, next) {
     const {
         logId ,
         userCourseEnrollmentId,
@@ -113,7 +114,7 @@ async function saveUserCourseContentLog(req, res, next) {
         courseContentId,
         logStatus  } = req.body;
     try {
-        let val = await AcademyService.saveUserCourseContentLog(req.user.userId,
+        let val = await AcademyService.saveUserCourseContentProgress(req.user.userId,
             logId ,
             userCourseEnrollmentId,
             courseId ,
@@ -132,14 +133,14 @@ async function saveUserCourseContentLog(req, res, next) {
 }
 
 
-async function deleteUserCourseContentLog(req, res, next) {
+async function deleteUserCourseContentProgress(req, res, next) {
     const {
         userActivityId ,
         courseId ,
         courseContentId,
     } = req.body;
     try {
-        let val = await AcademyService.deleteUserCourseContentLog(req.user.userId,
+        let val = await AcademyService.deleteUserCourseContentProgress(req.user.userId,
             userActivityId ,
             courseId ,
             courseContentId,
@@ -275,14 +276,14 @@ async function searchRecord(req, res, next) {
         searchValue, searchKey, attributes, limit, offset, sortBy, sortOrder, filters, associate,
     } = req.body;
     try {
-        let val = await AcademyService.searchRecord(req, res);
+        let val = await DynamicService.searchRecord(req, res);
         res.status(200).send({
             status: 200, message: "Success", data: val != null ? val : [],
         });
     } catch (err) {
         console.error(`Error occured`, err.message);
         res.status(500).send({
-            status: 500, message: err.message || "Some error occurred while creating the Tutorial.",
+            status: 500, message: err.message || "Some error occurred while searching records.",
         });
         next(err);
     }
@@ -365,8 +366,8 @@ module.exports = {
     isUserCourseEnrolled,
     saveUserDetail,
     saveNote,
-    deleteNote,saveUserCourseContentLog,
-    deleteUserCourseContentLog,submitQuiz,clearQuizResult,
+    deleteNote,saveUserCourseContentProgress,
+    deleteUserCourseContentProgress,submitQuiz,clearQuizResult,
     raiseInterviewRequest,
     raiseCounsellingRequest,
     fetchScheduledCourseMeet
