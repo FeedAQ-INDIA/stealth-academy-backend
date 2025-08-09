@@ -12,6 +12,7 @@ const authRoute = require("./src/routes/auth.route.js");
 const paymentRoute = require("./src/routes/payment.route.js");
 const organizationRoute = require("./src/routes/organization.route.js");
 const orgGroupRoute = require("./src/routes/orgGroup.route.js");
+const courseAccessRoute = require("./src/routes/courseAccess.route.js");
 const app = express();
 const port = process.env.PORT || 3000;
 const db = require("./src/entity");
@@ -90,6 +91,7 @@ app.use(paymentRoute);
 app.use(authRoute);
 app.use(organizationRoute);
 app.use(orgGroupRoute);
+app.use('/course-access', courseAccessRoute);
 
 app.listen(port, '0.0.0.0', () => {
     console.log(`Example app listening on port ${port}`);
