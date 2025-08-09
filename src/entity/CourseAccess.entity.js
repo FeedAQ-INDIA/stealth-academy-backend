@@ -103,18 +103,23 @@ module.exports = (sequelize, Sequelize) => {
         paranoid: true, // Enable soft deletes
         indexes: [
             {
+                name: 'idx_ca_course_id',
                 fields: ['course_access_course_id']
             },
             {
+                name: 'idx_ca_user_id',
                 fields: ['course_access_user_id']
             },
             {
+                name: 'idx_ca_org_id',
                 fields: ['course_access_org_id']
             },
             {
+                name: 'idx_ca_is_active',
                 fields: ['course_access_is_active']
             },
             {
+                name: 'idx_ca_unique_access',
                 unique: true,
                 fields: ['course_access_course_id', 'course_access_user_id', 'course_access_org_id']
             }

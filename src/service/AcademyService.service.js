@@ -89,99 +89,7 @@ const saveUserDetail = async (
     return {message: 'User saved successfully'};
 };
 
-
-
-const raiseInterviewRequest = async (
-    userId, interviewReqId,
-    isCancel, date ,
-    time ,
-    duration ,
-    resumeLink ,
-    attachmentLink ,
-    note,
-    cancelReason,
-) => {
-    if (interviewReqId && isCancel) {
-        const interviewReq = await db.InterviewReq.findByPk(interviewReqId);
-        if(interviewReq.interviewReqStatus != "COMPLETED") {
-            interviewReq.interviewReqStatus = "CANCELLED";
-            interviewReq.interviewReqCancelReason = cancelReason;
-            await interviewReq.save();
-
-            return {message: 'Interview request cancelled successfully', data:interviewReq};
-        }else{
-            return {message: 'Interview request is already completed', data:interviewReq};
-
-        }
-    } else {
-       const interviewReq = await db.InterviewReq.create({
-            userId,
-            interviewReqDate : date ,
-            interviewReqTime : time ,
-            interviewReqDuration : duration ,
-            interviewReqStatus: "REQUESTED",
-            interviewReqMedium : "ONLINE",
-            interviewReqCV : resumeLink ,
-            interviewReqAttach : attachmentLink ,
-             interviewReqNote : note
-        })
-        return {message: 'Interview request created successfully', data:interviewReq};
-
-    }
-
-};
-
-
-
-
-
-const raiseCounsellingRequest = async (
-    userId, counsellingId  ,
-    counsellingDate   ,
-    counsellingTime ,
-    counsellingStatus   ,
-    counsellingMode ,
-    counsellingUrl ,
-    counsellingLanguage  ,
-    counsellingBackground ,
-    counsellingTopic ,
-    counsellingNote  ,
-    isCancel,
-    counsellingCancelReason
-) => {
-    if (counsellingId && isCancel) {
-        const counsellingReq = await db.Counselling.findByPk(counsellingId);
-        if(counsellingReq.counsellingStatus != "COMPLETED") {
-            counsellingReq.counsellingStatus = "CANCELLED";
-            counsellingReq.counsellingCancelReason = counsellingCancelReason;
-            await counsellingReq.save();
-
-            return {message: 'Counselling request cancelled successfully', data: counsellingReq};
-        }else{
-            return {message: 'Counselling request is already completed', data: counsellingReq};
-
-        }
-    } else {
-       const  counsellingReq = await db.Counselling.create({
-            userId,
-            counsellingId  ,
-            counsellingDate   ,
-            counsellingTime ,
-            counsellingStatus : 'REQUESTED'   ,
-            counsellingMode : 'ONLINE',
-            counsellingUrl ,
-            counsellingLanguage  ,
-            counsellingBackground ,
-            counsellingTopic ,
-            counsellingNote  ,
-            counsellingCancelReason
-        })
-        return {message: 'Counselling request created successfully', data: counsellingReq};
-
-    }
-
-};
-
+ 
 
 
 const saveNote = async (
@@ -191,108 +99,107 @@ const saveNote = async (
     courseContentId,
     notesText,
 ) => {
-    if (notesId) {
-        const notesData = await db.Notes.findByPk(notesId);
-        notesData.notesText = notesText;
-        await notesData.save();
+    try {
+        // Input validation
+        if (!userId) throw new Error('User ID is required');
+        if (!courseId) throw new Error('Course ID is required');
+        if (!courseContentId) throw new Error('Course Content ID is required');
+        if (!notesText?.trim()) throw new Error('Notes text cannot be empty');
 
-        return {message: 'Notes updated successfully'};
+        if (notesId) {
+            const notesData = await db.Notes.findByPk(notesId);
+            if (!notesData) throw new Error('Notes not found');
 
-    } else {
-        await db.Notes.create({
-            userId: userId,
-            courseId: courseId,
-            courseContentId: courseContentId,
-            notesText: notesText
-        })
-        return {message: 'Notes created successfully'};
+            // Verify ownership
+            if (notesData.userId !== userId) {
+                throw new Error('Unauthorized to modify these notes');
+            }
 
+            notesData.notesText = notesText.trim();
+            await notesData.save();
+
+            return {
+                success: true,
+                message: 'Notes updated successfully',
+                noteId: notesData.id
+            };
+        } else {
+            const newNote = await db.Notes.create({
+                userId,
+                courseId,
+                courseContentId,
+                notesText: notesText.trim()
+            });
+
+            return {
+                success: true,
+                message: 'Notes created successfully',
+                noteId: newNote.id
+            };
+        }
+    } catch (error) {
+        logger.error('Error in saveNote:', error);
+        throw new Error(`Failed to save notes: ${error.message}`);
     }
-
-
 };
 
 
-const deleteNote = async (
-    userId, notesId,
-) => {
-    if (notesId) {
+const deleteNote = async (userId, notesId) => {
+    try {
+        // Input validation
+        if (!userId) throw new Error('User ID is required');
+        if (!notesId) throw new Error('Notes ID is required');
+
         const notesData = await db.Notes.findByPk(notesId);
-         await notesData.destroy();
+        if (!notesData) {
+            throw new Error('Notes not found');
+        }
 
-        return {message: 'Notes delete successfully'};
+        // Verify ownership
+        if (notesData.userId !== userId) {
+            throw new Error('Unauthorized to delete these notes');
+        }
 
-    } else {
-        throw new Error("Not found notes with that id");
+        await notesData.destroy();
 
+        return {
+            success: true,
+            message: 'Notes deleted successfully',
+            noteId: notesId
+        };
+    } catch (error) {
+        logger.error('Error in deleteNote:', error);
+        throw new Error(`Failed to delete notes: ${error.message}`);
     }
-
-
 };
 
 const getUser = async (userId) => {
-    const userData = await db.User.findByPk(userId);
+    try {
+        // Input validation
+        if (!userId) throw new Error('User ID is required');
 
-    if (!userData) throw new Error("User not found"); // Handle case where user is not found
+        const userData = await db.User.findByPk(userId);
 
-    return userData.toJSON();
+        if (!userData) {
+            logger.warn(`User not found with ID: ${userId}`);
+            throw new Error('User not found');
+        }
+
+        // Convert to plain object and remove any sensitive information
+        const userJson = userData.toJSON();
+        
+        return {
+            success: true,
+            data: userJson
+        };
+    } catch (error) {
+        logger.error('Error in getUser:', error);
+        throw new Error(`Failed to fetch user: ${error.message}`);
+    }
 };
 
 
-const fetchScheduledCourseMeet = async (userId, page1, limit1) => {
-    const page = parseInt(page1) || 1;
-    const limit = parseInt(limit1) || 5;
-    // const offset = (page - 1) * limit;
-    const offset = page1
-
-// Total count query
-    const totalCountResult = await db.sequelize.query(
-        `SELECT cs.*, c.course_title
-         FROM user_enrollment ue
-                  INNER JOIN course_schedule cs
-                             ON ue.user_enrollment_course_id = cs.course_schedule_course_id
-                                 AND ue.user_enrollment_course_batch = cs.course_schedule_batch
-                  INNER JOIN course c
-                             ON cs.course_schedule_course_id = c.course_id
-         WHERE ue.user_enrollment_user_id = :userId `,
-        {
-            type: db.Sequelize.QueryTypes.SELECT,
-            replacements: { userId }
-        }
-    );
-
-    // const totalCount = totalCountResult?.[0]?.totalCount;
-
-// Paginated data query
-    const meetData = await db.sequelize.query(
-        ` SELECT cs.*, c.course_title
-          FROM user_enrollment ue
-                   INNER JOIN course_schedule cs
-                              ON ue.user_enrollment_course_id = cs.course_schedule_course_id
-                                  AND ue.user_enrollment_course_batch = cs.course_schedule_batch
-                   INNER JOIN course c
-                              ON cs.course_schedule_course_id = c.course_id
-          WHERE ue.user_enrollment_user_id = :userId
-          ORDER BY cs.course_schedule_start_date ASC
-              LIMIT :limit OFFSET :offset`,
-        {
-            model: db.CourseSchedule,
-            mapToModel: true,
-            replacements: { userId, limit, offset }
-        }
-    );
-
-// Response in your desired format
-    return ({
-        results: meetData,
-        totalCount : parseInt(totalCountResult?.[0]?.["totalcount"]) || 0,
-        limit,
-        offset
-    });
-
-};
-
-
+ 
 const getCourseDetail = async (userId, courseId) => {
 
     const courseDetailsRaw = await db.Course.findOne({
@@ -370,93 +277,183 @@ const userCourseDisrollment = async (userId, courseId) => {
 
 
 const saveUserCourseContentProgress = async (
-    userId ,
-    logId ,
+    userId,
+    logId,
     userCourseEnrollmentId,
-    courseId ,
+    courseId,
     courseContentId,
-    logStatus
-
+    logStatus,
+    activityDuration = 0,
+    progressPercent = 0,
+    metadata = {}
 ) => {
-          const [enrollmentObj, created] = await db.UserCourseEnrollment.findOrCreate({
+    try {
+        // First ensure the user is enrolled in the course
+        const [courseEnrollment, wasCreated] = await db.UserCourseEnrollment.findOrCreate({
             where: {
-                courseId,
-                courseContentId,
+                userId,
+                courseId
             },
             defaults: {
-                userId,
-                logStatus,
-                courseContentId,
-                courseId
+                enrollmentStatus: 'ENROLLED'
             }
         });
 
-        const isCourseComplted = await validateCourseCompletion(userId, courseId);
-        console.log("Is course Completed : ", isCourseComplted == true ? "TRUE": "FALSE");
-        const obj = await db.Course.findByPk(courseId);
-        obj.enrollmentStatus = isCourseComplted.possibleStatus
-        await obj.save();
+        // Track the content progress
+        const [progressObj, progressCreated] = await db.UserCourseContentProgress.findOrCreate({
+            where: {
+                userId,
+                courseId,
+                courseContentId
+            },
+            defaults: {
+                progressStatus: logStatus || 'IN_PROGRESS',
+                activityDuration,
+                progressPercent,
+                metadata
+            }
+        });
 
-    return enrollmentObj ? {message: 'Enrollment is updated'} : {message: 'Enrollment is updated'};
+        if (!progressCreated) {
+            // Update existing progress
+            progressObj.progressStatus = logStatus || progressObj.progressStatus;
+            progressObj.activityDuration += activityDuration;
+            progressObj.progressPercent = Math.min(100, progressObj.progressPercent + progressPercent);
+            progressObj.metadata = { ...progressObj.metadata, ...metadata };
+            await progressObj.save();
+        }
 
+        // Check overall course completion status
+        const courseCompletionStatus = await validateCourseCompletion(userId, courseId);
+        
+        // Update course enrollment status
+        await courseEnrollment.update({
+            enrollmentStatus: courseCompletionStatus.possibleStatus
+        });
+
+        return {
+            success: true,
+            message: progressCreated ? 'Course progress created successfully' : 'Course progress updated successfully',
+            data: {
+                progressId: progressObj.progressId,
+                courseStatus: courseCompletionStatus.possibleStatus,
+                isCompleted: courseCompletionStatus.isCourseCompleted,
+                progressPercent: progressObj.progressPercent,
+                activityDuration: progressObj.activityDuration
+            }
+        };
+
+    } catch (error) {
+        logger.error('Error in saveUserCourseContentProgress:', error);
+        throw new Error('Failed to save course content progress: ' + error.message);
+    }
 };
 
 const deleteUserCourseContentProgress = async (
-    userId ,
-    userActivityId ,
-    courseId ,
+    userId,
+    progressId,
+    courseId,
     courseContentId,
- ) => {
-
-        const  userActivityObj = await db.UserActivityLog.destroy({
+) => {
+    try {
+        const deleteResult = await db.UserCourseContentProgress.destroy({
             where: {
-                // userActivityId ,
+                ...(progressId && { progressId }),
                 userId,
-                courseId ,
-                courseContentId,
-             },
+                courseId,
+                ...(courseContentId && { courseContentId }),
+            },
         });
-        const isCourseComplted = await validateCourseCompletion(userId, courseId);
-        console.log("Is course Completed : ", isCourseComplted == true ? "TRUE": "FALSE");
-        const obj = await db.Course.findByPk(courseId);
-        obj.enrollmentStatus = isCourseComplted.possibleStatus
-        await obj.save();
 
-    return userActivityObj ? {message: 'Enrollment is updated'} : {message: 'Enrollment is updated'};
+        if (!deleteResult) {
+            return {
+                success: false,
+                message: 'No progress records found to delete'
+            };
+        }
 
+        const courseCompletionStatus = await validateCourseCompletion(userId, courseId);
+        
+        // Update course enrollment status
+        await db.UserCourseEnrollment.update(
+            { enrollmentStatus: courseCompletionStatus.possibleStatus },
+            { 
+                where: {
+                    userId,
+                    courseId
+                }
+            }
+        );
+
+        return {
+            success: true,
+            message: 'Course progress deleted successfully',
+            data: {
+                courseStatus: courseCompletionStatus.possibleStatus,
+                isCompleted: courseCompletionStatus.isCourseCompleted
+            }
+        };
+
+    } catch (error) {
+        logger.error('Error in deleteUserCourseContentProgress:', error);
+        throw new Error('Failed to delete course content progress: ' + error.message);
+    }
 };
 
-const validateCourseCompletion = async (userId ,
-                                  courseId) => {
-     const userActivityLog = await db.UserActivityLog.findAll({
-        where: {
-            courseId ,
-            userId,
-            enrollmentStatus: 'COMPLETED'
-        },
-        attributes:["courseContentId"],
-    });
+const validateCourseCompletion = async (userId, courseId) => {
+    try {
+        // Get all required course content
+        const courseContent = await db.CourseContent.findAll({
+            where: { courseId },
+            attributes: ["courseContentId"]
+        });
 
-    const courseTopicContent = await db.CourseContent.findAll({
-        where :{
-            courseId: courseId
-        },
-        attributes:["courseContentId"],
-    })
+        // Get user's completed content
+        const userProgress = await db.UserCourseContentProgress.findAll({
+            where: {
+                courseId,
+                userId,
+                progressStatus: 'COMPLETED'
+            },
+            attributes: [
+                "courseContentId",
+                [db.sequelize.fn('AVG', db.sequelize.col('user_course_content_progress_percent')), 'avgProgress']
+            ],
+            group: ['courseContentId']
+        });
 
-    console.log(userActivityLog?.map(a => a.courseContentId), courseTopicContent?.map(a => a.courseContentId))
-    let isCourseCompleted = DynamicService.haveSameElements(userActivityLog?.map(a => a.courseContentId), courseTopicContent?.map(a => a.courseContentId));
-    let possibleStatus;
-    if(isCourseCompleted){
-        possibleStatus = 'COMPLETED'
-    }else if(!isCourseCompleted && userActivityLog?.length > 0 ){
-        possibleStatus = 'IN PROGRESS';
+        // Calculate overall course progress
+        const totalContent = courseContent.length;
+        const completedContent = userProgress.length;
+        const overallProgress = totalContent > 0 ? (completedContent / totalContent) * 100 : 0;
+        
+        // Check if all required content is completed
+        const completedContentIds = new Set(userProgress.map(p => p.courseContentId));
+        const requiredContentIds = new Set(courseContent.map(c => c.courseContentId));
+        const isCourseCompleted = [...requiredContentIds].every(id => completedContentIds.has(id));
+
+        // Determine course status
+        let possibleStatus;
+        if (isCourseCompleted) {
+            possibleStatus = 'COMPLETED';
+        } else if (completedContent > 0) {
+            possibleStatus = 'IN_PROGRESS';
+        } else {
+            possibleStatus = 'ENROLLED';
+        }
+
+        return {
+            isCourseCompleted,
+            possibleStatus,
+            totalContent,
+            completedContent,
+            overallProgress: Math.round(overallProgress * 100) / 100
+        };
+
+    } catch (error) {
+        logger.error('Error in validateCourseCompletion:', error);
+        throw new Error('Failed to validate course completion: ' + error.message);
     }
-    return {
-        isCourseCompleted : isCourseCompleted,
-        possibleStatus: possibleStatus,
-    }
-
 }
 
 
@@ -473,8 +470,6 @@ module.exports = {
     saveUserCourseContentProgress,
     submitQuiz,
     clearQuizResult,
-    raiseInterviewRequest,
-    raiseCounsellingRequest,
-    fetchScheduledCourseMeet
-};
+ 
+ };
 

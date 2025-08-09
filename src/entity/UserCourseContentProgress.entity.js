@@ -85,18 +85,19 @@ module.exports = (sequelize, Sequelize) => {
         updatedAt: "user_course_content_progress_updated_at",
         indexes: [
             {
+                name: 'idx_ucp_user_id',
                 fields: ['user_course_content_progress_user_id']
             },
             {
+                name: 'idx_ucp_course_id',
                 fields: ['user_course_content_progress_course_id']
             },
             {
-                fields: ['user_course_content_progress_activity_type']
-            },
-            {
+                name: 'idx_ucp_created_at',
                 fields: ['user_course_content_progress_created_at']
             },
             {
+                name: 'idx_ucp_user_course',
                 fields: ['user_course_content_progress_user_id', 'user_course_content_progress_course_id']
             }
         ]

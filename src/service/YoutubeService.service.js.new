@@ -155,23 +155,13 @@ async function importPlaylistToDatabase(req, res) {
         });
     }
 
-    const { playlistIds, videoIds, courseTitle } = req.body;
+    const { playlistIds, videoIds, courseTitle, courseDescription } = req.body;
     const userId = req.user.userId;
     
     if (!playlistIds?.length && !videoIds?.length) {
         return res.status(400).json({
             error: "Invalid Request",
             message: "At least one playlist ID or video ID is required"
-        });
-    }
-
-    // Validate that only allowed fields are present in the request
-    const allowedFields = ['playlistIds', 'videoIds', 'courseTitle'];
-    const extraFields = Object.keys(req.body).filter(key => !allowedFields.includes(key));
-    if (extraFields.length > 0) {
-        return res.status(400).json({
-            error: "Invalid Request",
-            message: `Invalid fields in request: ${extraFields.join(', ')}. Only playlistIds, videoIds, and courseTitle are allowed.`
         });
     }
 
@@ -243,23 +233,10 @@ async function importPlaylistToDatabase(req, res) {
             throw new Error('No available videos found in the provided sources');
         }
 
-        // Get description from the first playlist or video
-        let courseDescription = 'A course created from YouTube content';
-        let courseTitle = this.courseTitle || '';
-        if (playlistIds?.length) {
-            const firstPlaylist = await fetchPlaylistMetadata(playlistIds[0], apiKey);
-            courseDescription = firstPlaylist.snippet.description;
-            courseTitle = firstPlaylist.snippet.title || courseTitle;
-        } else if (videoIds?.length) {
-            const firstVideo = await fetchSingleVideoMetadata(videoIds[0], apiKey);
-            courseDescription = firstVideo.snippet.description;
-            courseTitle = firstVideo.snippet.title || courseTitle;
-        }
-
         const course = await db.Course.create({
             userId,
             courseTitle: courseTitle || `YouTube Course ${new Date().toISOString().split('T')[0]}`,
-            courseDescription: courseDescription,
+            courseDescription: courseDescription || 'A course created from YouTube content',
             courseIsLocked: false,
             courseImageUrl: courseThumbnail,
             courseDuration: 0,

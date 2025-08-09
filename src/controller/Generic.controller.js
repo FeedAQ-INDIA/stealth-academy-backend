@@ -23,22 +23,7 @@ async function getUser(req, res, next) {
     }
 }
 
-async function fetchScheduledCourseMeet(req, res, next) {
-    const {page, limit} = req.body;
-    try {
-        let val = await AcademyService.fetchScheduledCourseMeet(req.user.userId, page, limit);
-        res.status(200).send({
-            status: 200, message: "Success", data: val != null ? val : [],
-        });
-    } catch (err) {
-        console.error(`Error occured`, err.message);
-        res.status(500).send({
-            status: 500, message: err.message || "Some error occurred while creating the Tutorial.",
-        });
-        next(err);
-    }
-}
-
+ 
 
 async function isUserCourseEnrolled(req, res, next) {
     const {courseId} = req.body;
@@ -156,78 +141,7 @@ async function deleteUserCourseContentProgress(req, res, next) {
         next(err);
     }
 }
-
-async function raiseInterviewRequest(req, res, next) {
-    const {
-        interviewReqId,
-        isCancel,
-        date ,
-        time ,
-        duration ,
-        resumeLink ,
-        attachmentLink ,
-        note ,
-    } = req.body;
-    try {
-        let val = await AcademyService.raiseInterviewRequest(req.user.userId, interviewReqId,
-            isCancel, date ,
-            time ,
-            duration ,
-            resumeLink ,
-            attachmentLink ,
-            note ,);
-        res.status(200).send({
-            status: 200, message: "Success", data: val != null ? val : [],
-        });
-    } catch (err) {
-        console.error(`Error occured`, err.message);
-        res.status(500).send({
-            status: 500, message: err.message || "Some error occurred while creating the Tutorial.",
-        });
-        next(err);
-    }
-}
-
-async function raiseCounsellingRequest(req, res, next) {
-    const {
-        counsellingId  ,
-         counsellingDate   ,
-        counsellingTime ,
-        counsellingStatus   ,
-    counsellingMode ,
-    counsellingUrl ,
-    counsellingLanguage  ,
-    counsellingBackground ,
-    counsellingTopic ,
-    counsellingNote  ,
-        isCancel,
-        counsellingCancelReason
-    } = req.body;
-    try {
-        let val = await AcademyService.raiseCounsellingRequest(req.user.userId, counsellingId  ,
-            counsellingDate   ,
-            counsellingTime ,
-            counsellingStatus   ,
-            counsellingMode ,
-            counsellingUrl ,
-            counsellingLanguage  ,
-            counsellingBackground ,
-            counsellingTopic ,
-            counsellingNote  ,
-            isCancel,
-            counsellingCancelReason);
-        res.status(200).send({
-            status: 200, message: "Success", data: val != null ? val : [],
-        });
-    } catch (err) {
-        console.error(`Error occured`, err.message);
-        res.status(500).send({
-            status: 500, message: err.message || "Some error occurred while scheduling counselling.",
-        });
-        next(err);
-    }
-}
-
+ 
 
 
 async function saveNote(req, res, next) {
@@ -368,7 +282,5 @@ module.exports = {
     saveNote,
     deleteNote,saveUserCourseContentProgress,
     deleteUserCourseContentProgress,submitQuiz,clearQuizResult,
-    raiseInterviewRequest,
-    raiseCounsellingRequest,
-    fetchScheduledCourseMeet
+ 
 };
