@@ -120,13 +120,13 @@ async function saveUserCourseContentProgress(req, res, next) {
 
 async function deleteUserCourseContentProgress(req, res, next) {
     const {
-        userActivityId ,
+        progressId ,
         courseId ,
         courseContentId,
     } = req.body;
     try {
         let val = await AcademyService.deleteUserCourseContentProgress(req.user.userId,
-            userActivityId ,
+            progressId ,
             courseId ,
             courseContentId,
               );
