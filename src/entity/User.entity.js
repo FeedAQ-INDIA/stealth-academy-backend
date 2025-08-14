@@ -56,6 +56,11 @@ module.exports = (sequelize, Sequelize) => {
         field: "user_metadata",
         defaultValue: {}
       },
+      creditBalance: {
+        type: Sequelize.DECIMAL(10, 2),
+        field: "user_credit_balance",
+        defaultValue: 0.00
+      },
       derivedUserName: {
         type: Sequelize.VIRTUAL,
         get() {

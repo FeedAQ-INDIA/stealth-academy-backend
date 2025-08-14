@@ -39,6 +39,7 @@ db.CourseQuiz = require("./CourseQuiz.entity.js")(sequelize, Sequelize);
 db.QuizQuestion = require("./QuizQuestion.entity.js")(sequelize, Sequelize);
 db.Organization = require("./Organization.entity.js")(sequelize, Sequelize);
 db.OrganizationUser = require("./OrganizationUser.entity.js")(sequelize, Sequelize);
+db.UserCreditTransaction = require("./UserCreditTransaction.entity.js")(sequelize, Sequelize);
 
 
 
@@ -51,6 +52,7 @@ db.User.hasMany(db.Notes, {foreignKey: 'userId', as: 'notes'});
 db.User.hasMany(db.UserCourseContentProgress, {foreignKey: 'userId', as: 'activityLogs'});
 db.User.hasMany(db.QuizResultLog, {foreignKey: 'userId', as: 'quizResults'});
 db.User.hasMany(db.OrganizationUser, {foreignKey: 'userId', as: 'organizationMemberships'});
+db.User.hasMany(db.UserCreditTransaction, {foreignKey: 'userId', as: 'creditTransactions'});
 
 // Course associations
 db.Course.belongsTo(db.User, {foreignKey: 'userId', as: 'instructor'});
@@ -122,5 +124,9 @@ db.CourseAccess.belongsTo(db.Course, {foreignKey: 'courseId', as: 'course'});
 db.CourseAccess.belongsTo(db.User, {foreignKey: 'userId', as: 'user'});
 db.CourseAccess.belongsTo(db.Organization, {foreignKey: 'organizationId', as: 'organization'});
 db.CourseAccess.belongsTo(db.User, {foreignKey: 'grantedBy', as: 'grantor'});
+
+// UserCreditTransaction associations
+db.UserCreditTransaction.belongsTo(db.User, {foreignKey: 'userId', as: 'user'});
+db.UserCreditTransaction.belongsTo(db.User, {foreignKey: 'processedBy', as: 'processor'});
 
 module.exports = db;
