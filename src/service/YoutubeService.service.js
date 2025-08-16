@@ -51,6 +51,118 @@ function validateVideoId(videoId) {
     }
 }
 
+function extractVideoIdFromUrl(url) {
+    if (!url || typeof url !== 'string') {
+        return null;
+    }
+    
+    // Handle various YouTube URL formats
+    const patterns = [
+        /(?:https?:\/\/)?(?:www\.)?youtube\.com\/watch\?v=([a-zA-Z0-9_-]{11})/,
+        /(?:https?:\/\/)?(?:www\.)?youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/,
+        /(?:https?:\/\/)?(?:www\.)?youtube\.com\/v\/([a-zA-Z0-9_-]{11})/,
+        /(?:https?:\/\/)?youtu\.be\/([a-zA-Z0-9_-]{11})/,
+        /(?:https?:\/\/)?(?:www\.)?youtube\.com\/watch\?.*v=([a-zA-Z0-9_-]{11})/
+    ];
+    
+    for (const pattern of patterns) {
+        const match = url.match(pattern);
+        if (match && match[1]) {
+            return match[1];
+        }
+    }
+    
+    // If it's already a video ID (11 characters)
+    if (/^[a-zA-Z0-9_-]{11}$/.test(url)) {
+        return url;
+    }
+    
+    return null;
+}
+
+function extractPlaylistIdFromUrl(url) {
+    if (!url || typeof url !== 'string') {
+        return null;
+    }
+    
+    // Handle YouTube playlist URL formats
+    const patterns = [
+        /(?:https?:\/\/)?(?:www\.)?youtube\.com\/playlist\?list=([a-zA-Z0-9_-]+)/,
+        /(?:https?:\/\/)?(?:www\.)?youtube\.com\/watch\?.*list=([a-zA-Z0-9_-]+)/
+    ];
+    
+    for (const pattern of patterns) {
+        const match = url.match(pattern);
+        if (match && match[1]) {
+            return match[1];
+        }
+    }
+    
+    // If it's already a playlist ID (starts with PL, UU, or FL)
+    if (/^(PL|UU|FL)[a-zA-Z0-9_-]{16,}$/.test(url)) {
+        return url;
+    }
+    
+    return null;
+}
+
+function parseContentUrls(contentUrls) {
+    const playlistIds = [];
+    const videoIds = [];
+    const errors = [];
+    
+    if (!Array.isArray(contentUrls)) {
+        throw new Error('contentUrls must be an array');
+    }
+    
+    for (let i = 0; i < contentUrls.length; i++) {
+        const url = contentUrls[i];
+        
+        if (!url || typeof url !== 'string') {
+            errors.push(`Invalid URL at index ${i}: must be a string`);
+            continue;
+        }
+        
+        // Try to extract playlist ID first
+        const playlistId = extractPlaylistIdFromUrl(url);
+        if (playlistId) {
+            try {
+                validatePlaylistId(playlistId);
+                if (!playlistIds.includes(playlistId)) {
+                    playlistIds.push(playlistId);
+                }
+                continue;
+            } catch (error) {
+                errors.push(`Invalid playlist ID at index ${i}: ${error.message}`);
+                continue;
+            }
+        }
+        
+        // Try to extract video ID
+        const videoId = extractVideoIdFromUrl(url);
+        if (videoId) {
+            try {
+                validateVideoId(videoId);
+                if (!videoIds.includes(videoId)) {
+                    videoIds.push(videoId);
+                }
+                continue;
+            } catch (error) {
+                errors.push(`Invalid video ID at index ${i}: ${error.message}`);
+                continue;
+            }
+        }
+        
+        errors.push(`Unrecognized URL format at index ${i}: ${url}`);
+    }
+    
+    if (errors.length > 0 && playlistIds.length === 0 && videoIds.length === 0) {
+        throw new Error(`All URLs failed to parse: ${errors.join('; ')}`);
+    }
+    
+    return { playlistIds, videoIds, errors };
+}
+
 async function fetchWithCache(url, ttl = CACHE_TTL) {
     if (cache.has(url)) {
         const cached = cache.get(url);
@@ -155,23 +267,42 @@ async function importPlaylistToDatabase(req, res) {
         });
     }
 
-    const { playlistIds, videoIds, courseTitle } = req.body;
+    const { playlistIds, videoIds, contentUrl, courseTitle, courseDescription } = req.body;
     const userId = req.user.userId;
     
-    if (!playlistIds?.length && !videoIds?.length) {
+    let finalPlaylistIds = playlistIds || [];
+    let finalVideoIds = videoIds || [];
+    let parseErrors = [];
+
+    // Handle contentUrl parameter - new flexible approach
+    if (contentUrl && Array.isArray(contentUrl) && contentUrl.length > 0) {
+        try {
+            const parseResult = parseContentUrls(contentUrl);
+            finalPlaylistIds = [...finalPlaylistIds, ...parseResult.playlistIds];
+            finalVideoIds = [...finalVideoIds, ...parseResult.videoIds];
+            parseErrors = parseResult.errors;
+        } catch (error) {
+            return res.status(400).json({
+                error: "Invalid Content URLs",
+                message: error.message
+            });
+        }
+    }
+    
+    if (!finalPlaylistIds?.length && !finalVideoIds?.length) {
         return res.status(400).json({
             error: "Invalid Request",
-            message: "At least one playlist ID or video ID is required"
+            message: "At least one playlist ID, video ID, or contentUrl is required"
         });
     }
 
     // Validate that only allowed fields are present in the request
-    const allowedFields = ['playlistIds', 'videoIds', 'courseTitle'];
+    const allowedFields = ['playlistIds', 'videoIds', 'contentUrl', 'courseTitle', 'courseDescription'];
     const extraFields = Object.keys(req.body).filter(key => !allowedFields.includes(key));
     if (extraFields.length > 0) {
         return res.status(400).json({
             error: "Invalid Request",
-            message: `Invalid fields in request: ${extraFields.join(', ')}. Only playlistIds, videoIds, and courseTitle are allowed.`
+            message: `Invalid fields in request: ${extraFields.join(', ')}. Only playlistIds, videoIds, contentUrl, courseTitle, and courseDescription are allowed.`
         });
     }
 
@@ -185,8 +316,8 @@ async function importPlaylistToDatabase(req, res) {
         let courseChannelTitle = '';
         
         // Handle playlists
-        if (playlistIds?.length) {
-            for (const playlistId of playlistIds) {
+        if (finalPlaylistIds?.length) {
+            for (const playlistId of finalPlaylistIds) {
                 validatePlaylistId(playlistId);
                 const playlistMeta = await fetchPlaylistMetadata(playlistId, apiKey);
                 const items = await fetchPlaylistItems(playlistId, apiKey);
@@ -203,8 +334,8 @@ async function importPlaylistToDatabase(req, res) {
 
         // Handle individual videos
         let individualVideos = [];
-        if (videoIds?.length) {
-            for (const videoId of videoIds) {
+        if (finalVideoIds?.length) {
+            for (const videoId of finalVideoIds) {
                 validateVideoId(videoId);
                 const videoMeta = await fetchSingleVideoMetadata(videoId, apiKey);
                 
@@ -244,22 +375,22 @@ async function importPlaylistToDatabase(req, res) {
         }
 
         // Get description from the first playlist or video
-        let courseDescription = 'A course created from YouTube content';
-        let courseTitle = this.courseTitle || '';
-        if (playlistIds?.length) {
-            const firstPlaylist = await fetchPlaylistMetadata(playlistIds[0], apiKey);
-            courseDescription = firstPlaylist.snippet.description;
-            courseTitle = firstPlaylist.snippet.title || courseTitle;
-        } else if (videoIds?.length) {
-            const firstVideo = await fetchSingleVideoMetadata(videoIds[0], apiKey);
-            courseDescription = firstVideo.snippet.description;
-            courseTitle = firstVideo.snippet.title || courseTitle;
+        let defaultCourseDescription = 'A course created from YouTube content';
+        let defaultCourseTitle = courseTitle || '';
+        if (finalPlaylistIds?.length) {
+            const firstPlaylist = await fetchPlaylistMetadata(finalPlaylistIds[0], apiKey);
+            defaultCourseDescription = firstPlaylist.snippet.description;
+            defaultCourseTitle = firstPlaylist.snippet.title || defaultCourseTitle;
+        } else if (finalVideoIds?.length) {
+            const firstVideo = await fetchSingleVideoMetadata(finalVideoIds[0], apiKey);
+            defaultCourseDescription = firstVideo.snippet.description;
+            defaultCourseTitle = firstVideo.snippet.title || defaultCourseTitle;
         }
 
         const course = await db.Course.create({
             userId,
-            courseTitle: courseTitle || `YouTube Course ${new Date().toISOString().split('T')[0]}`,
-            courseDescription: courseDescription,
+            courseTitle: courseTitle || defaultCourseTitle || `YouTube Course ${new Date().toISOString().split('T')[0]}`,
+            courseDescription: courseDescription || defaultCourseDescription,
             courseIsLocked: false,
             courseImageUrl: courseThumbnail,
             courseDuration: 0,
@@ -268,8 +399,10 @@ async function importPlaylistToDatabase(req, res) {
             deliveryMode: "ONLINE",
             status: "DRAFT",
             metadata: {
-                playlistIds,
-                videoIds,
+                playlistIds: finalPlaylistIds,
+                videoIds: finalVideoIds,
+                originalContentUrl: contentUrl,
+                parseErrors: parseErrors.length > 0 ? parseErrors : undefined,
                 importDate: new Date().toISOString()
             }
         }, { transaction });
@@ -344,24 +477,67 @@ async function importPlaylistToDatabase(req, res) {
         // Update course duration
         await course.update({ courseDuration: totalDuration }, { transaction });
 
+        // Create CourseAccess record for the course owner
+        try {
+            const courseAccess = await db.CourseAccess.create({
+                courseId: course.courseId,
+                userId: userId,
+                accessLevel: "OWN",
+                isActive: true,
+                grantedByUserId: userId,
+                metadata: {
+                    grantedAt: new Date().toISOString(),
+                    reason: "Course Owner - Auto-granted during course import",
+                    source: "importPlaylistToDatabase"
+                }
+            }, { transaction });
+
+            logger.info(`CourseAccess created for user ${userId} on course ${course.courseId} with OWN access level`);
+        } catch (accessError) {
+            logger.error(`Failed to create CourseAccess for user ${userId} on course ${course.courseId}:`, accessError);
+            throw new Error(`Failed to grant course access: ${accessError.message}`);
+        }
+
         // All operations successful, commit the transaction
         await transaction.commit();
 
-        const successMessage = playlistIds?.length 
-            ? `Successfully imported ${playlistIds.length} YouTube playlist(s)`
-            : `Successfully imported ${videoIds.length} YouTube video(s)`;
+        // Generate appropriate success message based on what was imported
+        let successMessage = 'Successfully imported YouTube content: ';
+        const messageParts = [];
+        if (finalPlaylistIds?.length) {
+            messageParts.push(`${finalPlaylistIds.length} playlist(s)`);
+        }
+        if (finalVideoIds?.length) {
+            messageParts.push(`${finalVideoIds.length} individual video(s)`);
+        }
+        if (contentUrl?.length) {
+            messageParts.push(`from ${contentUrl.length} URL(s)`);
+        }
+        successMessage += messageParts.join(' and ');
+        
+        if (parseErrors.length > 0) {
+            successMessage += `. Note: ${parseErrors.length} URL(s) had parsing issues but were skipped.`;
+        }
         
         logger.info(successMessage);
         
         return res.json({ 
             course,
+            courseAccess: {
+                message: "Course access granted to owner",
+                accessLevel: "OWN",
+                userId: userId
+            },
             stats: {
                 totalVideos: videoList.length,
                 totalDuration: totalDuration,
-                totalPlaylists: playlistIds?.length || 0,
-                totalIndividualVideos: videoIds?.length || 0,
+                totalPlaylists: finalPlaylistIds?.length || 0,
+                totalIndividualVideos: finalVideoIds?.length || 0,
+                totalContentUrls: contentUrl?.length || 0,
+                parseErrors: parseErrors.length,
                 skippedVideos: allVideos.length - videoList.length
-            }
+            },
+            warnings: parseErrors.length > 0 ? parseErrors : undefined
         });
 
     } catch (error) {
@@ -373,12 +549,17 @@ async function importPlaylistToDatabase(req, res) {
         return res.status(500).json({ 
             error: "Failed to import videos",
             message: error.message,
-            playlistIds,
-            videoIds
+            playlistIds: finalPlaylistIds,
+            videoIds: finalVideoIds,
+            contentUrl: contentUrl,
+            parseErrors: parseErrors.length > 0 ? parseErrors : undefined
         });
     }
 }
 
 module.exports = {
-    importPlaylistToDatabase
+    importPlaylistToDatabase,
+    parseContentUrls,
+    extractVideoIdFromUrl,
+    extractPlaylistIdFromUrl
 };
