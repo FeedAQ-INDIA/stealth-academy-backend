@@ -97,14 +97,14 @@ const saveNote = async (
     notesId,
     courseId,
     courseContentId,
-    notesText,
+    noteContent,
 ) => {
     try {
         // Input validation
         if (!userId) throw new Error('User ID is required');
         if (!courseId) throw new Error('Course ID is required');
         if (!courseContentId) throw new Error('Course Content ID is required');
-        if (!notesText?.trim()) throw new Error('Notes text cannot be empty');
+        if (!noteContent?.trim()) throw new Error('Notes text cannot be empty');
 
         if (notesId) {
             const notesData = await db.Notes.findByPk(notesId);
@@ -115,7 +115,7 @@ const saveNote = async (
                 throw new Error('Unauthorized to modify these notes');
             }
 
-            notesData.notesText = notesText.trim();
+            notesData.noteContent = noteContent.trim();
             await notesData.save();
 
             return {
@@ -128,7 +128,7 @@ const saveNote = async (
                 userId,
                 courseId,
                 courseContentId,
-                notesText: notesText.trim()
+                noteContent: noteContent.trim()
             });
 
             return {

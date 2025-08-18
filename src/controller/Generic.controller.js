@@ -148,12 +148,12 @@ async function saveNote(req, res, next) {
     const {notesId,
         courseId,
         courseContentId,
-        notesText} = req.body;
+        noteContent} = req.body;
     try {
         let val = await AcademyService.saveNote(req.user.userId, notesId,
             courseId,
             courseContentId,
-            notesText,);
+            noteContent,);
         res.status(200).send({
             status: 200, message: "Success", data: val != null ? val : [],
         });
