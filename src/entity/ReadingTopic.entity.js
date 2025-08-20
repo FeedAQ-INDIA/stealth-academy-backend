@@ -11,9 +11,14 @@ module.exports = (sequelize, Sequelize) => {
       allowNull: false,
       field: "reading_topic_level",
     },
+    topicType: {
+      type: Sequelize.ENUM("Art and music", "Biographies & Autobiography", "Science", "Short stories", "Drama / plays"),
+      allowNull: true,
+      field: "reading_topic_type",
+    },
     title: {
       type: Sequelize.STRING(255),
-      allowNull: false,
+      allowNull: true,
       field: "reading_topic_title",
     },
     contentText: {

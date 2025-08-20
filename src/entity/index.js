@@ -46,5 +46,6 @@ const dbConfig = require("../config/db.config.js");
    db.SpeakingSubmission.belongsTo(db.User, { foreignKey: 'userId', as: 'user' });
    db.SpeakingSubmission.belongsTo(db.SpeakingTopic, { foreignKey: 'topicId', as: 'speakingTopic' });
    db.UserFile.belongsTo(db.User, { foreignKey: 'userId', as: 'user' });
+   db.topicselect = require("./TopicSelect.entity.js")(sequelize, Sequelize);
 
    module.exports = db;

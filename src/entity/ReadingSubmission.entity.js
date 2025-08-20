@@ -39,6 +39,25 @@ module.exports = (sequelize, Sequelize) => {
       allowNull: true,
       field: "reading_submission_ai_report_json",
     },
+    recordingDuration: {
+      type: Sequelize.FLOAT,
+      allowNull: true,
+      field: "reading_submission_recording_duration",
+    },
+    attemptsCount: {
+      type: Sequelize.INTEGER,
+      allowNull: true,
+      defaultValue: 1,
+      field: "reading_submission_attempts_count",
+    },
+    
+    
+    
+    userNotes: {
+      type: Sequelize.TEXT,
+      allowNull: true,
+      field: "reading_submission_user_notes",
+    },
   }, {
     timestamps: true,
     createdAt: "reading_submission_created_at",

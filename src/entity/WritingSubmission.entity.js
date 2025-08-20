@@ -39,6 +39,46 @@ module.exports = (sequelize, Sequelize) => {
       allowNull: true,
       field: "writing_submission_ai_report_json",
     },
+    typingSpeed: {
+      type: Sequelize.FLOAT,
+      allowNull: true,
+      field: "writing_submission_typing_speed",
+    },
+    totalTime: {
+      type: Sequelize.INTEGER,
+      allowNull: true,
+      field: "writing_submission_total_time",
+    },
+    editHistory: {
+      type: Sequelize.JSON,
+      allowNull: true,
+      field: "writing_submission_edit_history",
+    },
+    lexicalDiversity: {
+      type: Sequelize.FLOAT,
+      allowNull: true,
+      field: "writing_submission_lexical_diversity",
+    },
+    wordCount: {
+      type: Sequelize.INTEGER,
+      allowNull: true,
+      field: "writing_submission_word_count",
+    },
+    avgSentenceLength: {
+      type: Sequelize.FLOAT,
+      allowNull: true,
+      field: "writing_submission_avg_sentence_length",
+    },
+    questionThinkingTime: {
+      type: Sequelize.INTEGER, // Time in milliseconds from page load to clicking 'Start'
+      allowNull: true,
+      field: "writing_submission_question_thinking_time",
+    },
+    answerThinkingTime: {
+      type: Sequelize.INTEGER, // Time in milliseconds from clicking 'Start' to first keystroke
+      allowNull: true,
+      field: "writing_submission_answer_thinking_time",
+    },
   }, {
     timestamps: true,
     createdAt: "writing_submission_created_at",

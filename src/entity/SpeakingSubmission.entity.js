@@ -34,6 +34,18 @@ module.exports = (sequelize, Sequelize) => {
       allowNull: false,
       field: "speaking_submission_submitted_at",
     },
+    // New metrics added as separate columns
+    audioDuration: {
+      type: Sequelize.FLOAT, // Storing in seconds, can be float for decimals
+      allowNull: true,
+      field: "speaking_submission_audio_duration",
+    },
+    
+    pauseCount: {
+      type: Sequelize.INTEGER,
+      allowNull: true,
+      field: "speaking_submission_pause_count",
+    },
     aiReportJson: {
       type: Sequelize.JSON,
       allowNull: true,
