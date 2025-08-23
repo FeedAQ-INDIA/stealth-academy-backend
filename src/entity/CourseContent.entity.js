@@ -30,7 +30,8 @@ module.exports = (sequelize, Sequelize) => {
             type: Sequelize.ENUM(
                 'CourseVideo', 
                 'CourseWritten', 
-                'CourseQuiz'
+                'CourseQuiz',
+                'CourseFlashcard'
             ),
             field: "course_content_type",
             allowNull: false,

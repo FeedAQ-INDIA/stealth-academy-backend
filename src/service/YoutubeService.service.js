@@ -1,280 +1,15 @@
 const {Op, fn, col, QueryTypes} = require("sequelize");
 const db = require("../entity/index.js");
 const lodash = require("lodash");
-const { GoogleGenerativeAI } = require("@google/generative-ai");
 const logger = require("../config/winston.config.js");
 const jwt = require("jsonwebtoken");
 const crypto = require('crypto');
 const {toJSON} = require("lodash/seq");
+const geminiAIService = require("./GeminiAI.service.js");
 
 // Cache for API responses
 const cache = new Map();
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
-
-// Gemini AI Configuration
-let genAI = null;
-
-function initializeGeminiAI() {
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) {
-    logger.warn("⚠️ GEMINI_API_KEY not configured - Gemini features will be disabled");
-    return null;
-  }
-
-  try {
-    genAI = new GoogleGenerativeAI(apiKey);
-    logger.info("✅ Google Generative AI SDK initialized successfully");
-    return genAI;
-  } catch (error) {
-    logger.error("❌ Failed to initialize Google Generative AI SDK:", error.message);
-    return null;
-  }
-}
-
-// Initialize on module load
-initializeGeminiAI();
-
-// Gemini AI Functions
-async function callGeminiAPI(prompt) {
-  if (!genAI) {
-    logger.error("❌ Google Generative AI SDK not initialized");
-    throw new Error("Google Generative AI SDK not initialized - check GEMINI_API_KEY");
-  }
-
-  logger.info("🤖 Calling Gemini API using SDK...");
-
-  try {
-    // Get the model with configuration
-    const model = genAI.getGenerativeModel({ 
-      model: "gemini-1.5-flash-latest",
-      generationConfig: {
-        temperature: 0.3,
-        topK: 20,
-        topP: 0.8,
-        maxOutputTokens: 4096,
-        responseMimeType: "application/json", // Force JSON response
-      },
-      safetySettings: [
-        {
-          category: "HARM_CATEGORY_HARASSMENT",
-          threshold: "BLOCK_ONLY_HIGH",
-        },
-        {
-          category: "HARM_CATEGORY_HATE_SPEECH", 
-          threshold: "BLOCK_ONLY_HIGH",
-        },
-        {
-          category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
-          threshold: "BLOCK_ONLY_HIGH",
-        },
-        {
-          category: "HARM_CATEGORY_DANGEROUS_CONTENT",
-          threshold: "BLOCK_ONLY_HIGH",
-        },
-      ],
-    });
-
-    logger.info("📤 Sending prompt to Gemini...");
-    
-    // Generate content using the SDK
-    const result = await model.generateContent(prompt);
-    const response = result.response;
-    
-    if (!response) {
-      logger.error("❌ No response received from Gemini API");
-      throw new Error("No response received from Gemini API");
-    }
-
-    const content = response.text();
-    
-    if (!content) {
-      logger.error("❌ Empty response content from Gemini API");
-      throw new Error("Empty response content from Gemini API");
-    }
-
-    logger.info(`📝 Received content length: ${content.length} characters`);
-    
-    return parseGeminiContent(content);
-    
-  } catch (error) {
-    // Handle specific Google AI errors
-    if (error.message?.includes('API_KEY')) {
-      logger.error(`🔑 API Key Error: ${error.message}`);
-      throw new Error(`API Key Error: ${error.message}`);
-    } else if (error.message?.includes('QUOTA_EXCEEDED') || error.message?.includes('quota')) {
-      logger.error(`📊 Quota Exceeded: ${error.message}`);
-      throw new Error(`Quota Exceeded: ${error.message}`);
-    } else if (error.message?.includes('RATE_LIMIT') || error.message?.includes('rate limit')) {
-      logger.error(`⏰ Rate Limited: ${error.message}`);
-      throw new Error(`Rate Limited: ${error.message}`);
-    } else if (error.message?.includes('SAFETY')) {
-      logger.error(`🛡️ Content Safety Error: ${error.message}`);
-      throw new Error(`Content Safety Error: ${error.message}`);
-    } else if (error.message?.includes('BLOCKED')) {
-      logger.error(`🚫 Content Blocked: ${error.message}`);
-      throw new Error(`Content Blocked: ${error.message}`);
-    } else {
-      logger.error("💥 Error calling Gemini API:", error.message);
-      throw error;
-    }
-  }
-}
-
-function parseGeminiContent(content) {
-  logger.info("🔧 Parsing Gemini content...");
-  
-  // Log the raw content for debugging (truncated for readability)
-  logger.info(`📝 Raw content preview: ${content.substring(0, 200)}...`);
-  
-  let cleanContent = content
-    // .replace(/```json\s*/gi, '')
-    // .replace(/```\s*/g, '')
-    // .replace(/^\s*[\r\n]+/gm, '') // Remove empty lines
-    .trim();
-
-  try {
-    const parsed = JSON.parse(cleanContent);
-    logger.info("✅ Successfully parsed content as JSON");
-    console.log(parsed)
-    return parsed;
-  } catch (firstError) {
-    logger.warn(`⚠️ Initial JSON parse failed: ${firstError.message}`);
-    logger.warn("🔍 Attempting JSON extraction...");
-    
-    // Try to find the JSON object more robustly
-    const jsonPatterns = [
-      /\{[\s\S]*\}/,  // Match any content between first { and last }
-      /\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}/,  // Nested braces pattern
-    ];
-    
-    for (const pattern of jsonPatterns) {
-      const match = content.match(pattern);
-      if (match) {
-        try {
-          const extracted = match[0];
-          logger.info(`🎯 Trying extracted JSON: ${extracted.substring(0, 100)}...`);
-          const parsed = JSON.parse(extracted);
-          logger.info("✅ Successfully parsed extracted JSON");
-          return parsed;
-        } catch (extractError) {
-          logger.warn(`❌ Pattern extraction failed: ${extractError.message}`);
-          continue;
-        }
-      }
-    }
-    
-    // Fallback to the original brace counting method
-    const startIndex = content.indexOf('{');
-    if (startIndex === -1) {
-      logger.error("❌ No JSON object found in Gemini response");
-      logger.error(`📋 Full content: ${content}`);
-      throw new Error("No JSON object found in Gemini response");
-    }
-    
-    let braceCount = 0;
-    let maxEnd = startIndex;
-    
-    for (let i = startIndex; i < content.length; i++) {
-      if (content[i] === '{') braceCount++;
-      else if (content[i] === '}') {
-        braceCount--;
-        if (braceCount === 0) {
-          maxEnd = i;
-          break;
-        }
-      }
-    }
-    
-    try {
-      const extracted = content.substring(startIndex, maxEnd + 1);
-      logger.info(`🔧 Final extraction attempt: ${extracted.substring(0, 100)}...`);
-      const parsed = JSON.parse(extracted);
-      logger.info("✅ Successfully parsed with brace counting");
-      return parsed;
-    } catch (finalError) {
-      logger.error(`❌ All parsing methods failed. Final error: ${finalError.message}`);
-      logger.error(`📋 Problematic content: ${content}`);
-      throw new Error(`Failed to parse Gemini response as JSON: ${finalError.message}`);
-    }
-  }
-}
-
-function buildPrompt(videoArray, courseInfo) {
-  const maxVideosPerRequest = 3;
-  const limitedVideoData = videoArray.slice(0, maxVideosPerRequest);
-
-  const prompt = `You are an expert educational content creator. Analyze these YouTube videos and create structured educational materials.
-
-COURSE DETAILS:
-Title: ${courseInfo.courseTitle}
-Description: ${courseInfo.courseDescription}
-Channel: ${courseInfo.courseSourceChannel}
-
-VIDEOS TO ANALYZE:
-${limitedVideoData.map((video, index) => `
-${index + 1}. "${video.videoTitle}"
-   Duration: ${Math.floor(video.duration / 60)}:${(video.duration % 60).toString().padStart(2, "0")}
-   Description: ${video.videoDescription ? video.videoDescription.substring(0, 300) + (video.videoDescription.length > 300 ? "..." : "") : "No description"}
-   Video ID: ${video.videoId}
-`).join("")}
-
-CRITICAL INSTRUCTIONS:
-- You MUST respond with ONLY valid JSON
-- Do NOT include any markdown formatting, code blocks, or explanatory text
-- Do NOT wrap the JSON in \`\`\`json or \`\`\` tags
-- Start your response directly with the opening { character
-- End your response directly with the closing } character
-
-Return ONLY valid JSON with this exact structure:
-
-{
-  "courseAnalysis": {
-    "overallTheme": "Main course topic",
-    "skillLevel": "BEGINNER",
-    "estimatedCompletionTime": "2 hours"
-  },
-  "videoContents": [
-    {
-      "videoId": "video_id_here",
-      "videoTitle": "video_title_here",
-      "contentSequence": 1,
-      "topicContent": {
-        "title": "Clear lesson title",
-        "summary": "Brief summary (100-200 words)",
-        "learningObjectives": ["Learn concept A", "Understand technique B"],
-        "detailedContent": "Detailed explanation with examples"
-      },
-      "flashcards": [
-        {
-          "question": "What is the main concept?",
-          "answer": "Clear, concise answer",
-          "explanation": "Why this answer is correct",
-          "difficulty": "EASY"
-        }
-      ],
-      "quizQuestions": [
-        {
-          "question": "Multiple choice question?",
-          "options": ["Option A", "Option B", "Option C", "Option D"],
-          "correctAnswer": 0,
-          "explanation": "Explanation of correct answer",
-          "difficulty": "MEDIUM"
-        }
-      ]
-    }
-  ]
-}
-
-REQUIREMENTS:
-- Create 4-6 flashcards per video
-- Create 4-6 quiz questions per video
-- Use difficulty levels: EASY, MEDIUM, HARD
-- Return ONLY the JSON object, no other text
-- Do NOT include any explanations, comments, or markdown formatting
-- Start directly with { and end directly with }`;
-
-  return prompt;
-}
 
 // Retry configuration
 const MAX_RETRIES = 3;
@@ -884,237 +619,6 @@ async function fetchAllVideoData(parsedUrls) {
   }));
 }
 
-async function generateAIEducationalContent(videoArray, courseInfo) {
-  logger.info("🤖 Generating AI educational content...");
-  
-  const prompt = buildPrompt(videoArray, courseInfo);
-  
-  // Check if Gemini AI is properly initialized
-  if (!genAI) {
-    logger.warn("⚠️ Gemini AI not initialized - skipping AI content generation");
-    return {
-      success: false,
-      error: "Gemini AI not initialized - check GEMINI_API_KEY configuration",
-      prompt: prompt
-    };
-  }
-  
-  try {
-    const aiResponse = await callGeminiAPI(prompt);
-    
-    // Validate the response structure
-    // validateAIContentStructure(aiResponse);
-    
-    logger.info("✅ AI content generated and validated successfully ",aiResponse);
-    return {
-      success: true,
-      data: aiResponse,
-      prompt: prompt
-    };
-  } catch (error) {
-    logger.error("❌ Error generating AI content:", error.message);
-    return {
-      success: false,
-      error: `Failed to generate AI educational content: ${error.message}`,
-      prompt: prompt
-    };
-  }
-}
-
-function validateAIContentStructure(aiContent) {
-  logger.info("🔍 Validating AI content structure...");
-  
-  if (!aiContent || typeof aiContent !== 'object') {
-    throw new Error("AI content must be an object");
-  }
-
-  if (!aiContent.courseAnalysis) {
-    throw new Error("Missing courseAnalysis in AI content");
-  }
-
-  if (!aiContent.videoContents || !Array.isArray(aiContent.videoContents)) {
-    throw new Error("Missing or invalid videoContents array in AI content");
-  }
-
-  if (aiContent.videoContents.length === 0) {
-    throw new Error("videoContents array is empty");
-  }
-
-  // Validate each video content
-  for (let i = 0; i < aiContent.videoContents.length; i++) {
-    const videoContent = aiContent.videoContents[i];
-    
-    if (!videoContent.videoId) {
-      throw new Error(`Video content at index ${i} missing videoId`);
-    }
-    
-    if (!videoContent.videoTitle) {
-      throw new Error(`Video content at index ${i} missing videoTitle`);
-    }
-    
-    if (!videoContent.topicContent) {
-      throw new Error(`Video content at index ${i} missing topicContent`);
-    }
-    
-    if (!videoContent.flashcards || !Array.isArray(videoContent.flashcards)) {
-      throw new Error(`Video content at index ${i} missing or invalid flashcards array`);
-    }
-    
-    if (!videoContent.quizQuestions || !Array.isArray(videoContent.quizQuestions)) {
-      throw new Error(`Video content at index ${i} missing or invalid quizQuestions array`);
-    }
-  }
-
-  logger.info("✅ AI content structure validation passed");
-  return true;
-}
-
-async function saveAIContentToDatabase(courseId, userId, aiContent, videoArray, transaction) {
-  const results = {
-    topicContent: 0,
-    flashcardSets: 0,
-    totalFlashcards: 0,
-    quizSets: 0,
-    totalQuizQuestions: 0,
-    errors: []
-  };
-
-  if (!aiContent.videoContents || !Array.isArray(aiContent.videoContents)) {
-    throw new Error("Invalid AI content structure - missing videoContents array");
-  }
-
-  const courseContents = await db.CourseContent.findAll({
-    where: { courseId },
-    transaction
-  });
-
-  for (const videoContent of aiContent.videoContents) {
-    try {
-      const matchingContent = courseContents.find(content => 
-        content.metadata?.videoId === videoContent.videoId ||
-        content.courseContentTitle === videoContent.videoTitle
-      );
-
-      if (!matchingContent) {
-        results.errors.push(`No matching course content found for video: ${videoContent.videoTitle}`);
-        continue;
-      }
-
-      const courseContentId = matchingContent.courseContentId;
-
-      // Create Topic Content (CourseWritten)
-      if (videoContent.topicContent) {
-        const htmlContent = `
-          <div class="lesson-content">
-            <h2>${videoContent.topicContent.title}</h2>
-            <div class="summary">
-              <h3>Summary</h3>
-              <p>${videoContent.topicContent.summary}</p>
-            </div>
-            <div class="objectives">
-              <h3>Learning Objectives</h3>
-              <ul>${videoContent.topicContent.learningObjectives
-                .map(obj => `<li>${obj}</li>`)
-                .join("")}</ul>
-            </div>
-            <div class="content">
-              <h3>Detailed Content</h3>
-              <div>${videoContent.topicContent.detailedContent}</div>
-            </div>
-          </div>
-        `;
-
-        await db.CourseWritten.create({
-          userId,
-          courseId,
-          courseContentId,
-          courseWrittenDescription: videoContent.topicContent.summary,
-          courseWrittenHtmlContent: htmlContent,
-          courseWrittenSource: "GEMINI_AI",
-          courseWrittenUrl: `https://www.youtube.com/watch?v=${videoContent.videoId}`
-        }, { transaction });
-
-        results.topicContent++;
-      }
-
-      // Create Flashcard Set
-      if (videoContent.flashcards && videoContent.flashcards.length > 0) {
-        const flashcardSet = await db.CourseFlashcard.create({
-          courseId,
-          courseContentId,
-          userId,
-          setTitle: `${videoContent.topicContent?.title || videoContent.videoTitle} - Flashcards`,
-          setDescription: `AI-generated flashcards for: ${videoContent.topicContent?.title || videoContent.videoTitle}`,
-          setDifficulty: "MIXED",
-          setTags: videoContent.flashcards.flatMap(card => card.tags || []),
-          setCategory: videoContent.flashcards[0]?.category || "General",
-          totalFlashcards: videoContent.flashcards.length,
-          isActive: true
-        }, { transaction });
-
-        const flashcardsToCreate = videoContent.flashcards.map(card => ({
-          courseFlashcardId: flashcardSet.courseFlashcardId,
-          question: card.question,
-          answer: card.answer,
-          explanation: card.explanation,
-          difficulty: card.difficulty || "MEDIUM",
-          cardType: card.cardType || "BASIC",
-          tags: card.tags || [],
-          isActive: true
-        }));
-
-        await db.Flashcard.bulkCreate(flashcardsToCreate, { transaction });
-
-        results.flashcardSets++;
-        results.totalFlashcards += videoContent.flashcards.length;
-      }
-
-      // Create Quiz
-      if (videoContent.quizQuestions && videoContent.quizQuestions.length > 0) {
-        try {
-          const courseQuiz = await db.CourseQuiz.create({
-            courseContentId,
-            courseId,
-            courseQuizDescription: `AI-generated quiz for: ${videoContent.topicContent?.title || videoContent.videoTitle}`,
-            courseQuizType: "KNOWLEDGE CHECK",
-            isQuizTimed: true,
-            courseQuizTimer: videoContent.quizQuestions.length * 45,
-            courseQuizPassPercent: 70
-          }, { transaction });
-
-          const questionsToCreate = videoContent.quizQuestions.map((question, index) => ({
-            courseQuizId: courseQuiz.courseQuizId,
-            courseId: courseId,
-            courseContentId: courseContentId,
-            quizQuestionTitle: question.question,
-            quizQuestionType: "MULTIPLE_CHOICE",
-            quizQuestionOption: question.options,
-            quizQuestionCorrectAnswer: question.correctAnswer,
-            questionSequence: index + 1,
-            isQuestionTimed: true,
-            quizQuestionTimer: question.timeLimit || 30
-          }));
-
-          await db.QuizQuestion.bulkCreate(questionsToCreate, { transaction });
-
-          results.quizSets++;
-          results.totalQuizQuestions += videoContent.quizQuestions.length;
-        } catch (quizError) {
-          logger.error(`❌ Error creating quiz for video ${videoContent.videoTitle}:`, quizError.message);
-          results.errors.push(`Quiz creation failed for ${videoContent.videoTitle}: ${quizError.message}`);
-          // Continue processing other content types
-        }
-      }
-
-    } catch (error) {
-      logger.error(`❌ Error processing AI content for video ${videoContent.videoTitle}:`, error);
-      results.errors.push(`Error processing ${videoContent.videoTitle}: ${error.message}`);
-    }
-  }
-
-  return results;
-}
-
 /**
  * Main API: Create structured course from content URLs
  * @param {Array<string>} contentUrlList - Array of YouTube video/playlist URLs
@@ -1144,8 +648,8 @@ async function createStructuredCourse(contentUrlList, contentTitle, contentDescr
       throw new Error("contentDescription is required and must be a non-empty string");
     }
 
-    // Parse content URLs and fetch video data BEFORE starting transaction
-    logger.info("🔍 Parsing content URLs...");
+    // STEP 1: PULL DATA FROM YOUTUBE (All external API calls first)
+    logger.info("🔍 STEP 1: Parsing content URLs...");
     const parsedUrls = parseContentUrls(contentUrlList);
     logger.info(`📊 Found ${parsedUrls.playlistIds.length} playlists and ${parsedUrls.videoIds.length} videos`);
 
@@ -1157,15 +661,10 @@ async function createStructuredCourse(contentUrlList, contentTitle, contentDescr
       throw new Error("No valid videos found in the provided URLs");
     }
 
-    logger.info(`✅ Retrieved ${videoArray.length} videos`);
+    logger.info(`✅ Retrieved ${videoArray.length} videos from YouTube`);
 
-    // Validate that we have at least some videos before proceeding
-    if (videoArray.length === 0) {
-      throw new Error("No valid videos found in the provided URLs");
-    }
-
-    // Generate AI educational content BEFORE starting transaction
-    logger.info("🤖 Attempting to generate AI educational content...");
+    // STEP 2: TRIGGER AI CONTENT GENERATION (Independent of database operations)
+    logger.info("🤖 STEP 2: Attempting to generate AI educational content...");
     const courseInfo = {
       courseTitle: contentTitle,
       courseDescription: contentDescription,
@@ -1177,7 +676,7 @@ async function createStructuredCourse(contentUrlList, contentTitle, contentDescr
     let aiPrompt = null;
     
     try {
-      const aiResult = await generateAIEducationalContent(videoArray, courseInfo);
+      const aiResult = await geminiAIService.generateAIEducationalContent(videoArray, courseInfo);
       aiPrompt = aiResult.prompt; // Always capture the prompt
       
       if (aiResult.success) {
@@ -1185,17 +684,21 @@ async function createStructuredCourse(contentUrlList, contentTitle, contentDescr
         logger.info("✅ AI educational content generated successfully");
       } else {
         aiGenerationError = aiResult.error;
-        logger.warn("⚠️ AI content generation failed, continuing with basic course creation:", aiResult.error);
+        logger.warn("⚠️ AI content generation failed, continuing with course creation:", aiResult.error);
       }
     } catch (aiError) {
-      // Fallback for any unexpected errors
       logger.warn("⚠️ Unexpected error in AI content generation:", aiError.message);
       aiGenerationError = aiError.message;
-      aiPrompt = buildPrompt(videoArray, courseInfo); // Ensure we have the prompt
+      try {
+        aiPrompt = geminiAIService.buildPrompt(videoArray, courseInfo);
+      } catch (promptError) {
+        logger.warn("⚠️ Could not build AI prompt:", promptError.message);
+        aiPrompt = "Failed to generate prompt";
+      }
     }
 
-    // NOW start database transaction after all external API calls are complete
-    logger.info("🔄 Starting database transaction...");
+    // STEP 3: ARRANGE EVERYTHING AND START DATABASE PERSISTENCE
+    logger.info("🔄 STEP 3: Starting database transaction for data persistence...");
     transaction = await db.sequelize.transaction();
 
     // Calculate total duration and select thumbnail
@@ -1203,7 +706,7 @@ async function createStructuredCourse(contentUrlList, contentTitle, contentDescr
     const courseImageUrl = videoArray[0]?.thumbnailUrl || null;
     const courseSourceChannel = videoArray[0]?.channelTitle || "Mixed Sources";
 
-    // Create course record
+    // Create course record (ALWAYS persist course regardless of AI status)
     logger.info("💾 Creating course record...");
     let course;
     try {
@@ -1243,7 +746,10 @@ async function createStructuredCourse(contentUrlList, contentTitle, contentDescr
           courseType: "VIDEO_SERIES", 
           courseDifficulty: "BEGINNER",
           isPublic: false,
-          createdAt: new Date().toISOString()
+          createdAt: new Date().toISOString(),
+          aiGenerationAttempted: aiContent !== null,
+          aiGenerationSuccess: aiContent !== null,
+          aiGenerationError: aiGenerationError || null
         }
       }, { transaction });
       logger.info(`✅ Course created with ID: ${course.courseId}`);
@@ -1252,122 +758,123 @@ async function createStructuredCourse(contentUrlList, contentTitle, contentDescr
       throw new Error(`Failed to create course: ${courseError.message}`);
     }
 
-    // Create course content and videos
-    logger.info("📝 Creating course content and videos...");
-    const createdContentAndVideos = [];
-    const videoProcessingErrors = [];
-
+    // STEP 4: CREATE UNIFIED COURSE CONTENT (Videos, AI Content, and proper sequencing)
+    logger.info("📝 Creating unified course content with proper sequencing...");
+    let createdContentResult = null;
+    
     try {
-      for (let index = 0; index < videoArray.length; index++) {
-        const video = videoArray[index];
-        logger.info(`📹 Processing video ${index + 1}/${videoArray.length}: ${video.videoTitle}`);
-        
-        try {
-          // Create course content first to get the auto-generated ID
-          const courseContent = await db.CourseContent.create({
-            courseId: course.courseId,
-            courseContentTitle: video.videoTitle,
-            courseContentType: "CourseVideo",
-            courseContentSequence: index + 1,
-            courseContentDuration: video.duration,
-            courseSourceMode: "YOUTUBE",
-            metadata: {
-              videoId: video.videoId,
-              originalUrl: video.videoUrl,
-              channelTitle: video.channelTitle,
-              publishedAt: video.publishedAt
-            }
-          }, { transaction });
-
-          // Create course video with the courseContentId
-          const courseVideo = await db.CourseVideo.create({
-            courseContentId: courseContent.courseContentId,
-            courseId: course.courseId,
-            userId,
-            courseVideoTitle: video.videoTitle,
-            courseVideoDescription: video.videoDescription,
-            courseVideoUrl: video.videoUrl,
-            duration: video.duration,
-            thumbnailUrl: video.thumbnailUrl,
-            isPreview: false,
-            status: "READY"
-          }, { transaction });
-
-          createdContentAndVideos.push({
-            content: courseContent,
-            video: courseVideo
-          });
-        } catch (videoError) {
-          logger.warn(`⚠️ Error processing video ${video.videoTitle}:`, videoError.message);
-          videoProcessingErrors.push(`${video.videoTitle}: ${videoError.message}`);
-          // Continue with next video instead of failing completely
-        }
+      // Use the new unified content creation method
+      createdContentResult = await geminiAIService.createUnifiedCourseContent(
+        course.courseId,
+        userId,
+        videoArray,
+        aiContent, // This includes all AI-generated content (videos, flashcards, quizzes, written)
+        transaction
+      );
+      
+      logger.info(`✅ Successfully created unified course content:`);
+      logger.info(`   - Videos: ${createdContentResult.videoContent.length}`);
+      logger.info(`   - Written Content: ${createdContentResult.writtenContent.length}`);
+      logger.info(`   - Flashcard Sets: ${createdContentResult.flashcardContent.length}`);
+      logger.info(`   - Quiz Sets: ${createdContentResult.quizContent.length}`);
+      logger.info(`   - Total Content Items: ${createdContentResult.totalContentItems}`);
+      
+      if (createdContentResult.errors.length > 0) {
+        logger.warn(`⚠️ ${createdContentResult.errors.length} content creation errors occurred`);
+        createdContentResult.errors.forEach(error => logger.warn(`   - ${error}`));
       }
       
-      if (createdContentAndVideos.length === 0) {
-        throw new Error("Failed to process any videos successfully");
-      }
-      
-      logger.info(`✅ Created ${createdContentAndVideos.length} course contents and videos`);
-      if (videoProcessingErrors.length > 0) {
-        logger.warn(`⚠️ ${videoProcessingErrors.length} videos failed to process`);
-      }
     } catch (contentError) {
-      logger.error("❌ Error creating course content/videos:", contentError.message);
+      logger.error("❌ Error creating unified course content:", contentError.message);
       throw new Error(`Failed to create course content: ${contentError.message}`);
     }
 
-    // Save AI-generated content to database (only if AI content was generated)
-    let savedContent = null;
-    if (aiContent) {
-      logger.info("💾 Saving AI-generated content...");
-      try {
-        savedContent = await saveAIContentToDatabase(
-          course.courseId, 
-          userId, 
-          aiContent, 
-          videoArray, 
-          transaction
-        );
-        logger.info("✅ AI-generated content saved successfully");
-      } catch (aiContentError) {
-        logger.warn("⚠️ Error saving AI-generated content, continuing without it:", aiContentError.message);
-        // Don't throw error - continue with course creation
-      }
-    } else {
-      logger.info("⚠️ Skipping AI content generation due to previous error");
-    }
+    // Create legacy format for backward compatibility
+    const createdContentAndVideos = createdContentResult.videoContent.map(item => ({
+      content: item.content,
+      video: item.video
+    }));
 
-    // Create course access for the owner
+    // Create course access for the owner (ALWAYS create access)
     logger.info("🔐 Creating course access for owner...");
+    
     try {
-      await db.CourseAccess.create({
-        courseId: course.courseId,
-        userId: userId,
-        accessLevel: "OWN",
-        isActive: true,
-        grantedByUserId: userId,
-        metadata: {
-          grantedAt: new Date().toISOString(),
-          reason: "Course Owner - Auto-granted during course creation",
-          source: "createStructuredCourse"
+      // Check if course access already exists to avoid unique constraint violation
+      const existingAccess = await db.CourseAccess.findOne({
+        where: {
+          courseId: course.courseId,
+          userId: userId,
+          organizationId: null // Assuming individual user access, not organization
+        },
+        transaction
+      });
+
+      if (existingAccess) {
+        logger.info("✅ Course access already exists for owner, updating if needed");
+        if (!existingAccess.isActive || existingAccess.accessLevel !== "OWN") {
+          await existingAccess.update({
+            accessLevel: "OWN",
+            isActive: true,
+            grantedByUserId: userId,
+            metadata: {
+              grantedAt: new Date().toISOString(),
+              reason: "Course Owner - Auto-granted during course creation",
+              source: "createStructuredCourse",
+              updated: true
+            }
+          }, { transaction });
+          logger.info("✅ Course access updated for owner");
         }
-      }, { transaction });
-      logger.info("✅ Course access created for owner");
+      } else {
+        await db.CourseAccess.create({
+          courseId: course.courseId,
+          userId: userId,
+          accessLevel: "OWN",
+          isActive: true,
+          grantedByUserId: userId,
+          metadata: {
+            grantedAt: new Date().toISOString(),
+            reason: "Course Owner - Auto-granted during course creation",
+            source: "createStructuredCourse"
+          }
+        }, { transaction });
+        logger.info("✅ Course access created for owner");
+      }
     } catch (accessError) {
       logger.error("❌ Error creating course access:", accessError.message);
       throw new Error(`Failed to create course access: ${accessError.message}`);
     }
 
-    // Commit transaction
-    logger.info("✅ Committing transaction...");
+    // STEP 5: COMMIT TRANSACTION
+    logger.info("✅ Committing transaction - All course data will be persisted...");
     await transaction.commit();
     transaction = null; // Set to null to prevent rollback in catch block
 
-    logger.info("🎉 Course created successfully!");
+    // Determine final status message
+    let statusMessage = "🎉 Course created successfully!";
+    let courseCreationSuccess = true;
+
+    if (createdContentResult.errors.length > 0) {
+      statusMessage += ` (with ${createdContentResult.errors.length} content creation warnings)`;
+    }
+
+    logger.info(statusMessage);
+
+    // Prepare comprehensive content summary for return
+    const contentSummary = {
+      totalContentItems: createdContentResult.totalContentItems,
+      videoContent: createdContentResult.videoContent.length,
+      writtenContent: createdContentResult.writtenContent.length,
+      flashcardSets: createdContentResult.flashcardContent.length,
+      quizSets: createdContentResult.quizContent.length,
+      totalFlashcards: createdContentResult.flashcardContent.reduce((sum, item) => sum + (item.totalFlashcards || 0), 0),
+      totalQuizQuestions: createdContentResult.quizContent.reduce((sum, item) => sum + (item.totalQuestions || 0), 0),
+      errors: createdContentResult.errors
+    };
 
     return {
-      success: true,
+      success: courseCreationSuccess,
+      message: statusMessage,
       course: {
         courseId: course.courseId,
         courseTitle: course.courseTitle,
@@ -1388,21 +895,24 @@ async function createStructuredCourse(contentUrlList, contentTitle, contentDescr
           videoUrl: item.video.courseVideoUrl
         }))
       },
+      contentCreated: contentSummary,
       aiGeneratedContent: aiContent ? {
+        generationSuccessful: true,
         courseAnalysis: aiContent.courseAnalysis,
         totalVideoContents: aiContent.videoContents?.length || 0,
-        contentSaved: savedContent,
-        prompt: aiPrompt // Use the captured prompt
+        contentSaved: contentSummary,
+        prompt: aiPrompt
       } : {
+        generationSuccessful: false,
         error: aiGenerationError,
         message: "AI content generation failed - course created with video content only",
-        contentSaved: null,
-        prompt: aiPrompt // Include the prompt even when AI generation fails
+        contentSaved: contentSummary,
+        prompt: aiPrompt
       },
       warnings: [
         ...(parsedUrls.errors || []), 
         ...(aiGenerationError ? [`AI Generation: ${aiGenerationError}`] : []),
-        ...(videoProcessingErrors || [])
+        ...(createdContentResult.errors || [])
       ].filter(Boolean)
     };
 
@@ -1438,6 +948,9 @@ async function generateEducationalContent(courseId, userId) {
   try {
     logger.info(`🤖 Generating educational content for course ${courseId} by user ${userId}`);
 
+    // STEP 1: VALIDATE ACCESS AND PULL EXISTING DATA
+    logger.info("🔍 STEP 1: Validating course access and pulling existing data...");
+    
     // Validate that the course exists and user has access
     const course = await db.Course.findOne({
       where: { courseId },
@@ -1485,21 +998,22 @@ async function generateEducationalContent(courseId, userId) {
       channelTitle: courseVideo.CourseContent?.metadata?.channelTitle || course.courseSourceChannel
     }));
 
-    // Generate AI educational content
-    logger.info("🤖 Generating AI educational content...");
+    logger.info(`✅ Found ${videoArray.length} videos in course`);
+
+    // STEP 2: TRIGGER AI CONTENT GENERATION
+    logger.info("🤖 STEP 2: Generating AI educational content...");
     const courseInfo = {
       courseTitle: course.courseTitle,
       courseDescription: course.courseDescription,
       courseSourceChannel: course.courseSourceChannel
     };
     
-    // Build the prompt that will be sent to AI
     let aiContent = null;
     let aiGenerationError = null;
     let aiPrompt = null;
     
     try {
-      const aiResult = await generateAIEducationalContent(videoArray, courseInfo);
+      const aiResult = await geminiAIService.generateAIEducationalContent(videoArray, courseInfo);
       aiPrompt = aiResult.prompt; // Always capture the prompt
       
       if (aiResult.success) {
@@ -1510,21 +1024,25 @@ async function generateEducationalContent(courseId, userId) {
         logger.warn("⚠️ AI content generation failed:", aiResult.error);
       }
     } catch (aiError) {
-      // Fallback for any unexpected errors
       logger.warn("⚠️ Unexpected error in AI content generation:", aiError.message);
       aiGenerationError = aiError.message;
-      aiPrompt = buildPrompt(videoArray, courseInfo); // Ensure we have the prompt
+      try {
+        aiPrompt = geminiAIService.buildPrompt(videoArray, courseInfo);
+      } catch (promptError) {
+        logger.warn("⚠️ Could not build AI prompt:", promptError.message);
+        aiPrompt = "Failed to generate prompt";
+      }
     }
 
-    // Only proceed with database operations if AI content was generated
+    // If AI content generation failed, return early with error info but don't fail the operation
     if (!aiContent) {
-      logger.info("⚠️ Returning without saving AI content due to generation failure");
+      logger.info("⚠️ Returning without database operations due to AI generation failure");
       return {
         success: false,
         error: aiGenerationError,
         message: "AI content generation failed - no educational content was created",
         courseId,
-        prompt: aiPrompt, // Include the captured prompt
+        prompt: aiPrompt,
         videoProcessed: {
           totalVideos: videoArray.length,
           videos: videoArray.map(video => ({
@@ -1536,33 +1054,50 @@ async function generateEducationalContent(courseId, userId) {
       };
     }
 
-    // Start database transaction
+    // STEP 3: START DATABASE TRANSACTION FOR AI CONTENT PERSISTENCE
+    logger.info("🔄 STEP 3: Starting database transaction for AI content persistence...");
     transaction = await db.sequelize.transaction();
 
-    // Save AI-generated content to database
-    logger.info("💾 Saving AI-generated content...");
-    const savedContent = await saveAIContentToDatabase(
-      courseId, 
-      userId, 
-      aiContent, 
-      videoArray, 
-      transaction
-    );
+    // STEP 4: SAVE AI-GENERATED CONTENT TO DATABASE
+    logger.info("💾 STEP 4: Saving AI-generated content...");
+    let savedContent;
+    try {
+      savedContent = await geminiAIService.saveAIContentToDatabase(
+        courseId, 
+        userId, 
+        aiContent, 
+        videoArray, 
+        transaction
+      );
+      logger.info("✅ AI-generated content saved successfully");
+    } catch (aiContentError) {
+      logger.warn("⚠️ Error saving AI-generated content:", aiContentError.message);
+      savedContent = {
+        errors: [`Failed to save AI content: ${aiContentError.message}`],
+        topicContent: 0,
+        flashcardSets: 0,
+        totalFlashcards: 0,
+        quizSets: 0,
+        totalQuizQuestions: 0
+      };
+      // Don't throw error - we want to return the generated content even if saving failed
+    }
 
     // Commit transaction
     await transaction.commit();
     transaction = null;
 
-    logger.info("✅ Educational content generated and saved successfully");
+    logger.info("✅ Educational content generated and processed successfully");
 
     return {
       success: true,
       courseId,
       aiGeneratedContent: {
+        generationSuccessful: true,
         courseAnalysis: aiContent.courseAnalysis,
         totalVideoContents: aiContent.videoContents?.length || 0,
         contentSaved: savedContent,
-        prompt: generatedPrompt // Include the prompt that was sent to AI
+        prompt: aiPrompt
       },
       videoProcessed: {
         totalVideos: videoArray.length,
