@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const genericController = require("../controller/Generic.controller.js");
 const youtubeService = require("../service/YoutubeService.service.js");
+const youtubeController = require("../controller/Youtube.controller.js");
 const geminiController = require("../controller/Gemini.controller");
 const authMiddleware = require("../middleware/authMiddleware");
 const publicauthenticationMiddleware = require("../middleware/publicMiddleware");
@@ -33,8 +34,10 @@ router.post("/clearQuizResult", authMiddleware, genericController.clearQuizResul
 
 // router.post("/raiseCounsellingRequest", authMiddleware, genericController.raiseCounsellingRequest);
 
-router.post("/importPlaylistToDatabase", authMiddleware, youtubeService.importPlaylistToDatabase);
+// YouTube API Routes - Single API endpoint
+router.post("/createCourseFromUrls", authMiddleware, youtubeController.createCourseFromUrls);
 
+// Gemini AI Routes
 router.post("/buildPrompt", publicauthenticationMiddleware, geminiController.buildPrompt);
 
 module.exports = router;

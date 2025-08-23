@@ -22,6 +22,10 @@ module.exports = (sequelize, Sequelize) => {
             field: "course_content_title",
             allowNull: false,
         },
+        courseContentCategory: {
+            type: Sequelize.STRING(200),
+            field: "course_content_category",
+        },
         courseContentType: {
             type: Sequelize.ENUM(
                 'CourseVideo', 

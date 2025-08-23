@@ -37,6 +37,8 @@ db.Notes = require("./Notes.entity.js")(sequelize, Sequelize);
 db.QuizResultLog = require("./QuizResultLog.entity.js")(sequelize, Sequelize);
 db.CourseQuiz = require("./CourseQuiz.entity.js")(sequelize, Sequelize);
 db.QuizQuestion = require("./QuizQuestion.entity.js")(sequelize, Sequelize);
+db.CourseFlashcard = require("./CourseFlashcard.entity.js")(sequelize, Sequelize);
+db.Flashcard = require("./Flashcard.entity.js")(sequelize, Sequelize);
 db.Organization = require("./Organization.entity.js")(sequelize, Sequelize);
 db.OrganizationUser = require("./OrganizationUser.entity.js")(sequelize, Sequelize);
 db.UserCreditTransaction = require("./UserCreditTransaction.entity.js")(sequelize, Sequelize);
@@ -53,6 +55,7 @@ db.User.hasMany(db.UserCourseContentProgress, {foreignKey: 'userId', as: 'activi
 db.User.hasMany(db.QuizResultLog, {foreignKey: 'userId', as: 'quizResults'});
 db.User.hasMany(db.OrganizationUser, {foreignKey: 'userId', as: 'organizationMemberships'});
 db.User.hasMany(db.UserCreditTransaction, {foreignKey: 'userId', as: 'creditTransactions'});
+db.User.hasMany(db.CourseFlashcard, {foreignKey: 'userId', as: 'flashcardSets'});
 
 // Course associations
 db.Course.belongsTo(db.User, {foreignKey: 'userId', as: 'instructor'});
@@ -63,6 +66,7 @@ db.Course.hasMany(db.CourseAccess, {foreignKey: 'courseId', as: 'accessControls'
 db.Course.hasMany(db.Notes, {foreignKey: 'courseId', as: 'notes'});
 db.Course.hasMany(db.UserCourseContentProgress, {foreignKey: 'courseId', as: 'activityLogs'});
 db.Course.hasMany(db.QuizResultLog, {foreignKey: 'courseId', as: 'quizResults'});
+db.Course.hasMany(db.CourseFlashcard, {foreignKey: 'courseId', as: 'flashcardSets'});
 
 // Organization associations
 db.Organization.hasMany(db.Course, {foreignKey: 'orgId', as: 'courses'});
@@ -80,6 +84,7 @@ db.CourseContent.hasMany(db.CourseWritten, {foreignKey: 'courseContentId', as: '
 db.CourseContent.hasMany(db.CourseQuiz, {foreignKey: 'courseContentId', as: 'quizzes'});
 db.CourseContent.hasMany(db.Notes, {foreignKey: 'courseContentId', as: 'notes'});
 db.CourseContent.hasMany(db.UserCourseContentProgress, {foreignKey: 'courseContentId', as: 'activityLogs'});
+db.CourseContent.hasMany(db.CourseFlashcard, {foreignKey: 'courseContentId', as: 'flashcardSets'});
 
 // CourseVideo associations
 db.CourseVideo.belongsTo(db.Course, {foreignKey: 'courseId', as: 'course'});
@@ -128,5 +133,14 @@ db.CourseAccess.belongsTo(db.User, {foreignKey: 'grantedBy', as: 'grantor'});
 // UserCreditTransaction associations
 db.UserCreditTransaction.belongsTo(db.User, {foreignKey: 'userId', as: 'user'});
 db.UserCreditTransaction.belongsTo(db.User, {foreignKey: 'processedBy', as: 'processor'});
+
+// CourseFlashcard associations
+db.CourseFlashcard.belongsTo(db.Course, {foreignKey: 'courseId', as: 'course'});
+db.CourseFlashcard.belongsTo(db.CourseContent, {foreignKey: 'courseContentId', as: 'courseContent'});
+db.CourseFlashcard.belongsTo(db.User, {foreignKey: 'userId', as: 'user'});
+db.CourseFlashcard.hasMany(db.Flashcard, {foreignKey: 'courseFlashcardId', as: 'flashcards'});
+
+// Flashcard associations
+db.Flashcard.belongsTo(db.CourseFlashcard, {foreignKey: 'courseFlashcardId', as: 'courseFlashcard'});
 
 module.exports = db;
