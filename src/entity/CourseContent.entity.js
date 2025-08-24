@@ -31,7 +31,8 @@ module.exports = (sequelize, Sequelize) => {
                 'CourseVideo', 
                 'CourseWritten', 
                 'CourseQuiz',
-                'CourseFlashcard'
+                'CourseFlashcard',
+                'CourseCertificate'
             ),
             field: "course_content_type",
             allowNull: false,

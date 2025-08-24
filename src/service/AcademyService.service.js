@@ -289,14 +289,11 @@ const saveUserCourseContentProgress = async (
 ) => {
     try {
         // First ensure the user is enrolled in the course
-        const [courseEnrollment, wasCreated] = await db.UserCourseEnrollment.findOrCreate({
+        const [courseEnrollment, wasCreated] = await db.UserCourseEnrollment.findAll({
             where: {
                 userId,
                 courseId
-            },
-            defaults: {
-                enrollmentStatus: 'ENROLLED'
-            }
+            }, 
         });
 
         // Track the content progress
@@ -325,7 +322,31 @@ const saveUserCourseContentProgress = async (
 
         // Check overall course completion status
         const courseCompletionStatus = await validateCourseCompletion(userId, courseId);
-        
+
+        // If course is completed, add CourseCertificate entry in CourseContent
+        if (courseCompletionStatus.isCourseCompleted) {
+            // Check if a CourseCertificate already exists for this course
+            const existingCertificate = await db.CourseContent.findOne({
+                where: {
+                    courseId,
+                    courseContentType: 'CourseCertificate'
+                }
+            });
+            if (!existingCertificate) {
+                await db.CourseContent.create({
+                    courseId,
+                    courseContentType: 'CourseCertificate',
+                    courseContentTitle: 'Course Certificate',
+                    courseSourceMode: 'COMPANY',
+                    courseContentSequence: 9999, // or some logic to place it at the end
+                    courseContentDuration: 0, // Certificates have no duration
+                    isActive: true,
+                    coursecontentIsLicensed: false,
+                    metadata: {}
+                });
+            }
+        }
+
         // Update course enrollment status
         await courseEnrollment.update({
             enrollmentStatus: courseCompletionStatus.possibleStatus
