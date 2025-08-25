@@ -9,47 +9,76 @@ const DynamicService = require("./DynamicService.service");
 
 
 const submitQuiz = async (userId, courseId, courseQuizId, submissionList) => {
+    try {
+        const courseQuiz = await db.CourseQuiz.findByPk(courseQuizId);
+        if (!courseQuiz) throw new Error('Quiz not found');
+        const quesList = await db.QuizQuestion.findAll({
+            where: {
+                courseQuizId: courseQuizId,
+            }
+        });
+        if (!quesList || quesList.length === 0) throw new Error('Quiz questions not found');
 
-    const courseQuiz = await db.CourseQuiz.findByPk(courseQuizId);
-    const quesList = await db.QuizQuestion.findAll({
-        where: {
-            courseId: courseQuizId,
-        }
-    });
+        const totalPoints = quesList.reduce((acc, curr) => acc + (curr.quizQuestionPosPoint || 0), 0);
+        let points = 0;
+        submissionList.forEach(a => {
+            const itemQues = quesList.find(b => b.quizQuestionId == a.quizQuestionId);
+            if (!itemQues) {
+                a['isAnswerCorrect'] = false;
+                return; // skip if question not found
+            }
+            let isAnswerSame = DynamicService.haveSameElements(a.answerList, itemQues.quizQuestionCorrectAnswer);
+            if (isAnswerSame) {
+                points += itemQues.quizQuestionPosPoint || 0;
+            } else {
+                points -= itemQues.quizQuestionNegPoint || 0;
+            }
+            a['isAnswerCorrect'] = isAnswerSame;
+        });
 
-    const totalPoints = quesList.reduce((accumulator, currentValue) => accumulator + currentValue.quizQuestionPosPoint, 0);
+        // Optionally clamp points to zero if negative points are not allowed
+        // points = Math.max(0, points);
 
-    let points = 0;
-    submissionList.map(a => {
-        const itemQues = quesList.find(b => b.quizQuestionId == a.quizQuestionId);
-        let isAnswerSame = DynamicService.haveSameElements(a.answerList, itemQues.quizQuestionCorrectAnswer);
-        if (isAnswerSame) {
-            points += itemQues.quizQuestionPosPoint
-        }else{
-            points -= itemQues.quizQuestionNegPoint
-        }
-        a['isAnswerCorrect']=isAnswerSame
-    });
+        await db.QuizResultLog.destroy({
+            where: {
+                userId,
+                courseQuizId
+            }
+        });
 
+        // Calculate percent scored
+        const percentScored = totalPoints > 0 ? (points / totalPoints) * 100 : 0;
+        const passPercent = courseQuiz.courseQuizPassPercent || 0;
+        const isPassed = percentScored >= passPercent;
 
-    await db.QuizResultLog.destroy({
-        where:{
+        const result = await db.QuizResultLog.create({
             userId,
-            courseQuizId
-        }
-    })
+            resultScore: points,
+            totalQuestions: quesList.length,
+            totalPoints: totalPoints,
+            isPassed: isPassed,
+            answers : submissionList,
+            courseId,
+            courseQuizId,
+        });
 
-    const result = await db.QuizResultLog.create({
-        userId,
-        quizResultSnapshot: submissionList,
-        quizResultPoint: points,
-        totalPoints :totalPoints,
-        isPassed : points >= courseQuiz?.courseQuizPassPercent ?  true:false,
-        courseId,
-        courseQuizId,
-    });
-
-    return result  ;
+        return {
+            success: true,
+            message: 'Quiz submitted successfully',
+            data: {
+                quizResultId: result.id,
+                points,
+                totalPoints,
+                percentScored: Math.round(percentScored * 100) / 100,
+                isPassed,
+                passPercent,
+                quizResultSnapshot: submissionList
+            }
+        };
+    } catch (error) {
+        logger.error('Error in submitQuiz:', error);
+        throw new Error('Failed to submit quiz: ' + error.message);
+    }
 };
 
 
@@ -103,7 +132,7 @@ const saveNote = async (
         // Input validation
         if (!userId) throw new Error('User ID is required');
         if (!courseId) throw new Error('Course ID is required');
-        if (!courseContentId) throw new Error('Course Content ID is required');
+        if (!notesId && !courseContentId) throw new Error('Course Content ID is required');
         if (!noteContent?.trim()) throw new Error('Notes text cannot be empty');
 
         if (notesId) {
