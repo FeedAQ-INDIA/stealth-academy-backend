@@ -59,6 +59,10 @@ module.exports = (sequelize, Sequelize) => {
             field: "transaction_date",
             defaultValue: Sequelize.NOW,
         },
+        amountValidityDate: {
+            type: Sequelize.DATE,
+            field: "amount_validity_date",
+         },
         metadata: {
             type: Sequelize.JSON,
             field: "metadata",

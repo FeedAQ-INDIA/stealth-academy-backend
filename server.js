@@ -70,12 +70,13 @@ app.use(bodyParser.json());
         // await db.sequelize.query('DROP INDEX IF EXISTS idx_ucp_user_course');
         
         // Then sync with alter
-        await db.sequelize.sync({ alter: true });
+        // await db.sequelize.sync({ alter: true });
         console.log("Database synchronized successfully");
     } catch (error) {
         console.error("Error during sync:", error);
     }
 })();
+
 
 
 // app.use(function (req, res, next) {
