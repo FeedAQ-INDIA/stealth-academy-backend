@@ -10,7 +10,8 @@ router.post("/getUserCreditTransactions", authMiddleware, creditController.getUs
 router.post("/getUserCreditBalance", authMiddleware, creditController.getUserCreditBalance);
 router.post("/getCreditTransactionById", authMiddleware, creditController.getCreditTransactionById);
  router.post("/getUserCreditSummary", authMiddleware, creditController.getUserCreditSummary);
- 
+ router.post("/getUserCreditStats", authMiddleware, creditController.getUserCreditStats);
+
 
 // Admin Routes (additional authentication could be added)
 router.post("/getAllUserBalances", authMiddleware, creditController.getAllUserBalances);

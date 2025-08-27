@@ -165,6 +165,25 @@ async function syncUserBalance(req, res, next) {
     }
 }
 
+async function getUserCreditStats(req, res, next) {
+    const { userId } = req.body;
+    try {
+        let val = await CreditService.getUserCreditStats(userId || req.user.userId);
+        res.status(200).send({
+            status: 200, 
+            message: "User credit statistics fetched successfully", 
+            data: val
+        });
+    } catch (err) {
+        console.error(`Error occurred`, err.message);
+        res.status(500).send({
+            status: 500, 
+            message: err.message || "Some error occurred while synchronizing user balance.",
+        });
+        next(err);
+    }
+}
+
 module.exports = {
     addCreditTransaction,
     getUserCreditTransactions,
@@ -173,5 +192,6 @@ module.exports = {
  
     getUserCreditSummary,
     getAllUserBalances,
-    syncUserBalance
+    syncUserBalance,
+    getUserCreditStats
 };
