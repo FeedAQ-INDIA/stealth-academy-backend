@@ -292,16 +292,19 @@ const userCourseDisrollment = async (userId, courseId) => {
         throw new Error("User id & Course id must be provided");
     }
     const enrollUserCourseData = await isUserCourseEnrolled(userId, courseId);
-    let disrollmentObj;
+    let enrollmentDeleted = 0, progressDeleted = 0, notesDeleted = 0;
     if (enrollUserCourseData && enrollUserCourseData.isUserCourseEnrolledFlag) {
-        await db.UserCourseContentProgress.destroy({where: { userId,
-            ...(courseId && {courseId: courseId})}})
-        disrollmentObj = await db.UserCourseEnrollment.destroy({where: { ...(courseId && {courseId: courseId}), userId: userId}});
-            await db.Notes.destroy({where: {courseId: courseId, userId: userId}});
+        progressDeleted = await db.UserCourseContentProgress.destroy({where: { userId, ...(courseId && {courseId: courseId})}});
+        enrollmentDeleted = await db.UserCourseEnrollment.destroy({where: { ...(courseId && {courseId: courseId}), userId: userId}});
+        notesDeleted = await db.Notes.destroy({where: {courseId: courseId, userId: userId}});
     }
 
-
-    return disrollmentObj ? {message: 'Disrollment is successfull'} : {message: 'Disrollment failed'};
+    if (enrollmentDeleted > 0 && progressDeleted >= 0 && notesDeleted >= 0) {
+        // At least enrollment deleted, others may be zero if not present
+        return {message: 'Disrollment is successfull', deleted: {enrollmentDeleted, progressDeleted, notesDeleted}};
+    } else {
+        return {message: 'Disrollment failed', deleted: {enrollmentDeleted, progressDeleted, notesDeleted}};
+    }
 };
 
 

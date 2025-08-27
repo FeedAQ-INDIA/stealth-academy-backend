@@ -77,8 +77,6 @@ module.exports = (sequelize, Sequelize) => {
         timestamps: true,
         createdAt: "enrollment_created_at",
         updatedAt: "enrollment_updated_at",
-        deletedAt: "enrollment_deleted_at",
-        paranoid: true,
         indexes: [
             {
                 unique: true,

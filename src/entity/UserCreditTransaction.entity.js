@@ -26,11 +26,13 @@ module.exports = (sequelize, Sequelize) => {
         balanceBefore: {
             type: Sequelize.DECIMAL(10, 2),
             allowNull: false,
+            defaultValue: 0.00,
             field: "balance_before",
         },
         balanceAfter: {
             type: Sequelize.DECIMAL(10, 2),
             allowNull: false,
+            defaultValue: 0.00,
             field: "balance_after",
         },
         description: {
@@ -38,7 +40,7 @@ module.exports = (sequelize, Sequelize) => {
             field: "description",
         },
         referenceType: {
-            type: Sequelize.ENUM('COURSE_ENROLLMENT', 'COURSE_COMPLETION', 'MANUAL_ADJUSTMENT', 'QUIZ_COMPLETION', 'REFUND', 'PURCHASE'),
+            type: Sequelize.ENUM('BYOC_COURSE_CREATION', 'COURSE_ENROLLMENT', 'COURSE_COMPLETION', 'MANUAL_ADJUSTMENT', 'QUIZ_COMPLETION', 'REFUND', 'PURCHASE', 'SIGN_UP_BONUS'),
             field: "reference_type",
         },
         referenceId: {

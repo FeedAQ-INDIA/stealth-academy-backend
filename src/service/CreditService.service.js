@@ -38,6 +38,7 @@ const addCreditTransaction = async (transactionData) => {
                 transactionType,
                 amount: parseFloat(amount),
                 balanceAfter: newBalance,
+                balanceBefore: currentBalance,
                 description,
                 referenceType,
                 referenceId,
