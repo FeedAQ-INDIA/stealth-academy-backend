@@ -50,7 +50,7 @@ async function userCourseEnrollment(req, res, next) {
             status: 200, message: "Success", data: val != null ? val : [],
         });
     } catch (err) {
-        console.error(`Error occured`, err.message);
+        console.error(`Error occured`, err);
         res.status(500).send({
             status: 500, message: err.message || "Some error occurred while creating the Tutorial.",
         });
@@ -59,9 +59,9 @@ async function userCourseEnrollment(req, res, next) {
 }
 
 async function userCourseDisrollment(req, res, next) {
-    const {courseId, webinarId} = req.body;
+    const {courseId} = req.body;
     try {
-        let val = await AcademyService.userCourseDisrollment(req.user.userId, courseId, webinarId);
+        let val = await AcademyService.userCourseDisrollment(req.user.userId, courseId);
         res.status(200).send({
             status: 200, message: "Success", data: val != null ? val : [],
         });
