@@ -152,24 +152,24 @@ const getCreditTransactionById = async (transactionId) => {
     }
 };
 
-const updateCreditTransactionStatus = async (transactionId, status, processedBy) => {
-    try {
-        const transaction = await db.UserCreditTransaction.findByPk(transactionId);
+// const updateCreditTransactionStatus = async (transactionId, status, processedBy) => {
+//     try {
+//         const transaction = await db.UserCreditTransaction.findByPk(transactionId);
         
-        if (!transaction) {
-            throw new Error("Transaction not found");
-        }
+//         if (!transaction) {
+//             throw new Error("Transaction not found");
+//         }
 
-        transaction.transactionStatus = status;
-        transaction.processedBy = processedBy;
-        await transaction.save();
+//         transaction.transactionStatus = status;
+//         transaction.processedBy = processedBy;
+//         await transaction.save();
 
-        return transaction;
-    } catch (error) {
-        logger.error('Error in updateCreditTransactionStatus:', error);
-        throw error;
-    }
-};
+//         return transaction;
+//     } catch (error) {
+//         logger.error('Error in updateCreditTransactionStatus:', error);
+//         throw error;
+//     }
+// };
 
 const getCreditTransactionsByReference = async (referenceType, referenceId) => {
     try {
@@ -318,73 +318,16 @@ const syncUserBalance = async (userId) => {
         throw error;
     }
 };
-
-// Helper methods for common credit operations
-const awardCourseCompletionCredits = async (userId, courseId, amount = 50, processedBy = null) => {
-    return await addCreditTransaction({
-        userId,
-        transactionType: 'CREDIT',
-        amount,
-        description: `Course completion reward for course ID: ${courseId}`,
-        referenceType: 'COURSE_COMPLETION',
-        referenceId: courseId,
-        processedBy: processedBy || userId,
-        metadata: { automated: true, courseId }
-    });
-};
-
-const awardQuizCompletionCredits = async (userId, quizId, amount = 10, processedBy = null) => {
-    return await addCreditTransaction({
-        userId,
-        transactionType: 'CREDIT',
-        amount,
-        description: `Quiz completion reward for quiz ID: ${quizId}`,
-        referenceType: 'QUIZ_COMPLETION',
-        referenceId: quizId,
-        processedBy: processedBy || userId,
-        metadata: { automated: true, quizId }
-    });
-};
-
-const deductEnrollmentCredits = async (userId, courseId, amount, processedBy = null) => {
-    return await addCreditTransaction({
-        userId,
-        transactionType: 'DEBIT',
-        amount,
-        description: `Course enrollment fee for course ID: ${courseId}`,
-        referenceType: 'COURSE_ENROLLMENT',
-        referenceId: courseId,
-        processedBy: processedBy || userId,
-        metadata: { automated: true, courseId }
-    });
-};
-
-const addManualAdjustment = async (userId, amount, transactionType, description, processedBy) => {
-    return await addCreditTransaction({
-        userId,
-        transactionType,
-        amount,
-        description: description || `Manual ${transactionType.toLowerCase()} adjustment`,
-        referenceType: 'MANUAL_ADJUSTMENT',
-        referenceId: null,
-        processedBy,
-        metadata: { manual: true }
-    });
-};
+ 
 
 module.exports = {
     addCreditTransaction,
     getUserCreditTransactions,
     getUserCreditBalance,
     getCreditTransactionById,
-    updateCreditTransactionStatus,
-    getCreditTransactionsByReference,
+     getCreditTransactionsByReference,
     getUserCreditSummary,
     getAllUserBalances,
     syncUserBalance,
-    // Helper methods
-    awardCourseCompletionCredits,
-    awardQuizCompletionCredits,
-    deductEnrollmentCredits,
-    addManualAdjustment
+  
 };

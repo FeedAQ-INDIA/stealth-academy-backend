@@ -127,6 +127,7 @@ const saveNote = async (
     courseId,
     courseContentId,
     noteContent,
+    noteRefTimestamp
 ) => {
     try {
         // Input validation
@@ -157,7 +158,8 @@ const saveNote = async (
                 userId,
                 courseId,
                 courseContentId,
-                noteContent: noteContent.trim()
+                noteContent: noteContent.trim(),
+                noteRefTimestamp: noteRefTimestamp
             });
 
             return {

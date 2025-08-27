@@ -676,7 +676,8 @@ async function createStructuredCourse(contentUrlList, contentTitle, contentDescr
     let aiPrompt = null;
     
     try {
-      const aiResult = await geminiAIService.generateAIEducationalContent(videoArray, courseInfo);
+      // const aiResult = await geminiAIService.generateAIEducationalContent(videoArray, courseInfo);
+      const aiResult=null;
       aiPrompt = aiResult.prompt; // Always capture the prompt
       
       if (aiResult.success) {

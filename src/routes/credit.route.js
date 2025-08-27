@@ -9,14 +9,8 @@ router.post("/addCreditTransaction", authMiddleware, creditController.addCreditT
 router.post("/getUserCreditTransactions", authMiddleware, creditController.getUserCreditTransactions);
 router.post("/getUserCreditBalance", authMiddleware, creditController.getUserCreditBalance);
 router.post("/getCreditTransactionById", authMiddleware, creditController.getCreditTransactionById);
-router.post("/updateCreditTransactionStatus", authMiddleware, creditController.updateCreditTransactionStatus);
-router.post("/getUserCreditSummary", authMiddleware, creditController.getUserCreditSummary);
-
-// Credit Helper Routes
-router.post("/awardCourseCompletionCredits", authMiddleware, creditController.awardCourseCompletionCredits);
-router.post("/awardQuizCompletionCredits", authMiddleware, creditController.awardQuizCompletionCredits);
-router.post("/deductEnrollmentCredits", authMiddleware, creditController.deductEnrollmentCredits);
-router.post("/addManualAdjustment", authMiddleware, creditController.addManualAdjustment);
+ router.post("/getUserCreditSummary", authMiddleware, creditController.getUserCreditSummary);
+ 
 
 // Admin Routes (additional authentication could be added)
 router.post("/getAllUserBalances", authMiddleware, creditController.getAllUserBalances);
