@@ -76,22 +76,23 @@ const getUserCreditTransactions = async (params) => {
 
         const transactions = await db.UserCreditTransaction.findAndCountAll({
             where: whereClause,
-            include: [
-                {
-                    model: db.User,
-                    as: 'user',
-                    attributes: ['userId', 'firstName', 'lastName', 'email']
-                },
-                {
-                    model: db.User,
-                    as: 'processor',
-                    attributes: ['userId', 'firstName', 'lastName', 'email'],
-                    required: false
-                }
-            ],
+            // include: [
+            //     {
+            //         model: db.User,
+            //         as: 'user',
+            //         attributes: ['userId', 'firstName', 'lastName', 'email']
+            //     },
+            //     {
+            //         model: db.User,
+            //         as: 'processor',
+            //         attributes: ['userId', 'firstName', 'lastName', 'email'],
+            //         required: false
+            //     }
+            // ],
             limit: parseInt(limit),
             offset: parseInt(offset),
-            order: [['transactionDate', 'DESC']]
+            order: [['transactionDate', 'DESC']],
+            
         });
 
         return {
@@ -151,25 +152,6 @@ const getCreditTransactionById = async (transactionId) => {
         throw error;
     }
 };
-
-// const updateCreditTransactionStatus = async (transactionId, status, processedBy) => {
-//     try {
-//         const transaction = await db.UserCreditTransaction.findByPk(transactionId);
-        
-//         if (!transaction) {
-//             throw new Error("Transaction not found");
-//         }
-
-//         transaction.transactionStatus = status;
-//         transaction.processedBy = processedBy;
-//         await transaction.save();
-
-//         return transaction;
-//     } catch (error) {
-//         logger.error('Error in updateCreditTransactionStatus:', error);
-//         throw error;
-//     }
-// };
 
 const getCreditTransactionsByReference = async (referenceType, referenceId) => {
     try {
@@ -319,15 +301,105 @@ const syncUserBalance = async (userId) => {
     }
 };
  
+ 
+async function getUserCreditStats(userId) {
+    try {
+        // 1. Credits used this month (DEBIT transactions in current month)
+        // Columns: user_id, transaction_type, transaction_status, transaction_date, amount
+        const startOfMonth = new Date();
+        startOfMonth.setDate(1);
+        startOfMonth.setHours(0, 0, 0, 0);
+        const endOfMonth = new Date(startOfMonth);
+        endOfMonth.setMonth(endOfMonth.getMonth() + 1);
+
+        // Total used this month
+        const usedThisMonthResult = await db.UserCreditTransaction.findOne({
+            where: {
+                userId,
+                transactionType: 'DEBIT',
+                transactionStatus: 'COMPLETED',
+                transactionDate: {
+                    [Op.gte]: startOfMonth,
+                    [Op.lt]: endOfMonth
+                }
+            },
+            attributes: [[db.sequelize.fn('SUM', db.sequelize.col('amount')), 'totalUsed']],
+            raw: true
+        });
+        const usedThisMonth = parseFloat(usedThisMonthResult.totalUsed) || 0;
+
+        // 2. Credits expiring this month (CREDIT transactions with amount_validity_date in the future, but before end of this month)
+        // Columns: user_id, transaction_type, transaction_status, amount_validity_date, amount
+        const now = new Date();
+        const expiringResult = await db.UserCreditTransaction.findOne({
+            where: {
+                userId,
+                transactionType: 'CREDIT',
+                transactionStatus: 'COMPLETED',
+                amountValidityDate: {
+                    [Op.gt]: now,
+                    [Op.lte]: endOfMonth
+                }
+            },
+            attributes: [[db.sequelize.fn('SUM', db.sequelize.col('amount')), 'expiring']],
+            raw: true
+        });
+        const expiring = parseFloat(expiringResult.expiring) || 0;
+
+        // 3. Available credits (from user table, column: credit_balance)
+        const available = await getUserCreditBalance(userId);
+
+        // 4. Daily expense and transaction count for current month (for graph)
+        // Group by day of month
+        const dailyExpenseRows = await db.UserCreditTransaction.findAll({
+            where: {
+                userId,
+                transactionType: 'DEBIT',
+                transactionStatus: 'COMPLETED',
+                transactionDate: {
+                    [Op.gte]: startOfMonth,
+                    [Op.lt]: endOfMonth
+                }
+            },
+            attributes: [
+                [db.sequelize.literal('EXTRACT(DAY FROM "transaction_date")'), 'day'],
+                [db.sequelize.fn('SUM', db.sequelize.col('amount')), 'totalExpense'],
+                [db.sequelize.fn('COUNT', db.sequelize.col('transaction_id')), 'transactionCount']
+            ],
+            group: [db.sequelize.literal('EXTRACT(DAY FROM "transaction_date")')],
+            order: [[db.sequelize.literal('EXTRACT(DAY FROM "transaction_date")'), 'ASC']],
+            raw: true
+        });
+
+        // Format: [{ day: 1, totalExpense: 100, transactionCount: 2 }, ...]
+        const dailyExpense = dailyExpenseRows.map(row => ({
+            day: parseInt(row.day),
+            totalExpense: parseFloat(row.totalExpense) || 0,
+            transactionCount: parseInt(row.transactionCount) || 0
+        }));
+
+        return {
+            usedThisMonth, // Total DEBIT amount this month
+            expiring,      // Total CREDIT amount expiring this month
+            available,     // Current available credits
+            dailyExpense   // Array of { day, totalExpense, transactionCount }
+        };
+    } catch (error) {
+        logger.error('Error in getUserCreditStats:', error);
+        throw error;
+    }
+}
+
 
 module.exports = {
     addCreditTransaction,
     getUserCreditTransactions,
     getUserCreditBalance,
     getCreditTransactionById,
-     getCreditTransactionsByReference,
+    getCreditTransactionsByReference,
     getUserCreditSummary,
     getAllUserBalances,
     syncUserBalance,
-  
+    getUserCreditStats,
 };
+
