@@ -64,11 +64,29 @@ module.exports = (sequelize, Sequelize) => {
         amountValidityDate: {
             type: Sequelize.DATE,
             field: "amount_validity_date",
-         },
+        },
+        
         metadata: {
             type: Sequelize.JSON,
             field: "metadata",
-        }
+        },
+
+        //order attributes
+        orderItemType: {
+            type: Sequelize.ENUM('COURSE'),
+            allowNull: true,
+            field: "order_item_type",
+        },
+        orderItemId: {
+            type: Sequelize.INTEGER,
+            allowNull: true,
+            field: "order_item_id",
+        },
+        orderItemData: {
+            type: Sequelize.JSONB,
+            allowNull: true,
+            field: "order_item_data",
+        },
     }, {
         tableName: "user_credit_transaction",
         timestamps: true,
