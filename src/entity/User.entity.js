@@ -61,6 +61,20 @@ module.exports = (sequelize, Sequelize) => {
         field: "user_credit_balance",
         defaultValue: 0.00
       },
+      studyStreak:{
+        type: Sequelize.INTEGER,
+        field: "user_study_streak",
+        defaultValue: 0
+      },
+      studyStreakDays:{
+        type: Sequelize.JSONB,
+        field: "user_study_streak_days",
+      }, 
+      learningHours:{
+        type: Sequelize.INTEGER,
+        field: "user_learning_hours",
+        defaultValue: 0
+      },
       derivedUserName: {
         type: Sequelize.VIRTUAL,
         get() {

@@ -218,6 +218,9 @@ const getUser = async (userId) => {
 
         // Convert to plain object and remove any sensitive information
         const userJson = userData.toJSON();
+
+        getStudyStreak(userId);
+        calculateLearningHours(userId);
         
         return {
             success: true,
@@ -230,6 +233,195 @@ const getUser = async (userId) => {
 };
 
 
+const getStudyStreak = async (userId) => {
+  try {
+    logger.info(`Calculating study streak for user ID: ${userId}`);
+    if (!userId) throw new Error("User ID is required");
+
+    // Get all unique dates where user made progress, sorted ascending
+    const progressDates = await db.UserCourseContentProgress.findAll({
+      where: { userId },
+      attributes: [
+        [
+          db.sequelize.fn(
+            "DATE",
+            db.sequelize.col("user_course_content_progress_created_at")
+          ),
+          "progressDate",
+        ],
+      ],
+      group: [
+        db.sequelize.fn(
+          "DATE",
+          db.sequelize.col("user_course_content_progress_created_at")
+        ),
+      ],
+      order: [
+        [
+          db.sequelize.fn(
+            "DATE",
+            db.sequelize.col("user_course_content_progress_created_at")
+          ),
+          "ASC",
+        ],
+      ],
+    });
+
+    logger.info(
+      `Found ${progressDates.length} unique progress dates for user ID: ${userId}`
+    );
+
+    // Extract and sort dates (ascending)
+    const dateList = progressDates
+      .map((row) => row.get("progressDate"))
+      .filter(Boolean)
+      .map((dateStr) => {
+        const d = new Date(dateStr);
+        d.setHours(0, 0, 0, 0);
+        return d;
+      })
+      .sort((a, b) => a - b);
+
+    // Backtrack from the most recent date to calculate streak
+    let streak = 0;
+    if (dateList.length > 0) {
+      let today = new Date();
+      today.setHours(0, 0, 0, 0);
+      let idx = dateList.length - 1;
+      let streakDates = [];
+      while (idx >= 0) {
+        const date = dateList[idx];
+        if (streak === 0) {
+          // First check: must be today or yesterday (if user hasn't studied today)
+          if (date.getTime() === today.getTime()) {
+            streak++;
+            streakDates.push(new Date(date));
+            today.setDate(today.getDate() - 1);
+          } else if (date.getTime() === today.getTime() - 86400000) {
+            // If user hasn't studied today, but did yesterday, streak starts from yesterday
+            streak++;
+            streakDates.push(new Date(date));
+            today.setDate(today.getDate() - 1);
+          } else {
+            break;
+          }
+        } else {
+          if (date.getTime() === today.getTime()) {
+            streak++;
+            streakDates.push(new Date(date));
+            today.setDate(today.getDate() - 1);
+          } else {
+            break;
+          }
+        }
+        idx--;
+      }
+      // Reverse streakDates to have most recent first
+      streakDates = streakDates
+        .reverse()
+        .map((d) => d.toISOString().slice(0, 10));
+
+      // Check if already updated for today
+      const user = await db.User.findByPk(userId);
+      if (user) {
+        const lastStreakDates = Array.isArray(user.studyStreakDays)
+          ? user.studyStreakDays
+          : [];
+        const lastStreakDate =
+          lastStreakDates.length > 0 ? new Date(lastStreakDates[0]) : null;
+        const todayCheck = new Date();
+        todayCheck.setHours(0, 0, 0, 0);
+        if (
+          lastStreakDate &&
+          lastStreakDate.getTime() === todayCheck.getTime() &&
+          user.studyStreak === streak
+        ) {
+          logger.info(
+            `Study streak for user ID: ${userId} already up-to-date for today.`
+          );
+          return {
+            success: true,
+            data: {
+              studyStreak: user.studyStreak,
+              streakDates: user.studyStreakDays,
+            },
+          };
+        }
+      }
+
+      // Update user table with new streak and streak days
+      await db.User.update(
+        { studyStreak: streak, studyStreakDays: streakDates },
+        { where: { userId } }
+      );
+      logger.info(`Updated study streak for user ID: ${userId}`);
+      logger.info(
+        `User ID: ${userId}, Study Streak: ${streak}, Streak Dates: ${streakDates}`
+      );
+      return {
+        success: true,
+        data: {
+          studyStreak: streak,
+          streakDates: streakDates,
+        },
+      };
+    } else {
+      // No progress dates
+      await db.User.update(
+        { studyStreak: 0, studyStreakDays: [] },
+        { where: { userId } }
+      );
+      return {
+        success: true,
+        data: {
+          studyStreak: 0,
+          streakDates: [],
+        },
+      };
+    }
+  } catch (error) {
+    logger.error("Error in getStudyStreak:", error);
+    throw new Error(`Failed to fetch study streak: ${error.message}`);
+  }
+};
+
+const calculateLearningHours = async (userId) => {
+    try {
+        logger.info(`Calculating learning hours for user ID: ${userId}`);
+        if (!userId) throw new Error("User ID is required");
+
+        // Get all progress records for the user, join to CourseContent for duration
+        const result = await db.UserCourseContentProgress.findAll({
+            where: { userId },
+            include: [
+                {
+                    model: db.CourseContent,
+                    as: "courseContent",
+                    attributes: [],
+                },
+            ],
+            attributes: [
+                [db.sequelize.fn("SUM", db.sequelize.col("courseContent.course_content_duration")), "totalDuration"],
+            ],
+            raw: true,
+        });
+
+        const totalSeconds = parseInt(result[0]?.totalDuration || 0, 10);
+        logger.info(`User ID: ${userId} total learning seconds: ${totalSeconds}`);
+
+        // Update user table with new learning hours
+        await db.User.update({ learningHours: totalSeconds }, { where: { userId } });
+        logger.info(`Updated learningHours for user ID: ${userId} to ${totalSeconds} seconds`);
+
+        const hours = totalSeconds / 3600;
+        const roundedHours = Math.round(hours * 100) / 100;
+        logger.info(`Returning learning hours for user ID: ${userId}: ${roundedHours} hours`);
+        return roundedHours;
+    } catch (error) {
+        logger.error(`Error in calculateLearningHours for user ID: ${userId}:`, error);
+        throw new Error(`Failed to calculate learning hours: ${error.message}`);
+    }
+};
  
 const getCourseDetail = async (userId, courseId) => {
 
