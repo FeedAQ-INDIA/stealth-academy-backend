@@ -71,7 +71,7 @@ app.use(bodyParser.json());
         // await db.sequelize.query('DROP INDEX IF EXISTS idx_ucp_user_course');
         
         // Then sync with alter
-        // await db.sequelize.sync({ alter: true });
+        await db.sequelize.sync({ alter: true });
         console.log("Database synchronized successfully");
     } catch (error) {
         console.error("Error during sync:", error);
@@ -97,7 +97,7 @@ app.use(organizationRoute);
 app.use(orgGroupRoute);
 app.use('/course-access', courseAccessRoute);
 app.use('/credit', creditRoute);
-app.use( userLearningScheduleRoute);
+app.use(userLearningScheduleRoute);
 
 app.listen(port, '0.0.0.0', () => {
     console.log(`Example app listening on port ${port}`);

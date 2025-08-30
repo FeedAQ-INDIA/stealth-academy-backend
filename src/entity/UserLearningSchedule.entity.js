@@ -17,8 +17,8 @@ const UserLearningSchedule = sequelize.define("user_learning_schedule", {
     field: "learning_schedule_user_id",
     allowNull: false,
     references: {
-      model: "Users",
-      key: "id",
+      model: "user",
+      key: "user_id",
     },
   },
   learningItemId: {
@@ -28,6 +28,7 @@ const UserLearningSchedule = sequelize.define("user_learning_schedule", {
   learningItemType: {
     type: Sequelize.ENUM('BYOC_COURSE'),
     field: "learning_schedule_item_type",
+    allowNull: true,
   },
   title: {
     type: Sequelize.STRING(200),
@@ -45,12 +46,12 @@ const UserLearningSchedule = sequelize.define("user_learning_schedule", {
     allowNull: true,
   },
   scheduledStartDate: {
-    type: Sequelize.DATEONLY,
+    type: Sequelize.DATE,
     field: "learning_schedule_start_date",
     allowNull: false,
   },
   scheduledEndDate: {
-    type: Sequelize.DATEONLY,
+    type: Sequelize.DATE,
     field: "learning_schedule_end_date",
     allowNull: false,
   },

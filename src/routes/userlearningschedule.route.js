@@ -1,19 +1,20 @@
-// UserLearningSchedule.routes.js
-// Routes for UserLearningSchedule CRUD operations
-
 const express = require("express");
 const router = express.Router();
 const userLearningScheduleController = require("../controller/UserLearningSchedule.controller");
 const authMiddleware = require("../middleware/authMiddleware");
 const publicauthenticationMiddleware = require("../middleware/publicMiddleware");
 
-// Create or update
-router.post("/createOrUpdateUserLearningSchedule", authMiddleware, userLearningScheduleController.createOrUpdateUserLearningSchedule);
+// Create new schedule
+router.post("/schedule/create", authMiddleware, userLearningScheduleController.createOrUpdateUserLearningSchedule);
 
-// Delete
-router.post("/deleteUserLearningSchedule/:id", authMiddleware, userLearningScheduleController.deleteUserLearningSchedule);
+// Update existing schedule
+router.post("/schedule/update", authMiddleware, userLearningScheduleController.createOrUpdateUserLearningSchedule);
 
-// Get by userId and date/date range
-router.post("/getUserLearningSchedule", authMiddleware, userLearningScheduleController.getUserLearningScheduleByUserAndDate);
+// Delete schedule
+router.post("/schedule/delete", authMiddleware, userLearningScheduleController.deleteUserLearningSchedule);
+
+// Get user's schedule by date range
+router.post("/schedule/search", authMiddleware, userLearningScheduleController.getUserLearningScheduleByUserAndDate);
+
 
 module.exports = router;

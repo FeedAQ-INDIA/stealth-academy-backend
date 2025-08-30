@@ -42,6 +42,7 @@ db.Flashcard = require("./Flashcard.entity.js")(sequelize, Sequelize);
 db.Organization = require("./Organization.entity.js")(sequelize, Sequelize);
 db.OrganizationUser = require("./OrganizationUser.entity.js")(sequelize, Sequelize);
 db.UserCreditTransaction = require("./UserCreditTransaction.entity.js")(sequelize, Sequelize);
+db.UserLearningSchedule = require("./UserLearningSchedule.entity.js")(sequelize, Sequelize);
 
 
 
@@ -142,5 +143,8 @@ db.CourseFlashcard.hasMany(db.Flashcard, {foreignKey: 'courseFlashcardId', as: '
 
 // Flashcard associations
 db.Flashcard.belongsTo(db.CourseFlashcard, {foreignKey: 'courseFlashcardId', as: 'courseFlashcard'});
+
+// UserLearningSchedule associations
+db.UserLearningSchedule.belongsTo(db.User, {foreignKey: 'userId', as: 'user'});
 
 module.exports = db;

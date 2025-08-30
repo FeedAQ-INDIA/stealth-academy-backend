@@ -5,14 +5,14 @@ const lodash = require("lodash");
 const refreshTokenSecret = process.env.REFRESH_TOKEN_SECRET;
 const accessTokenSecret = process.env.ACCESS_TOKEN_SECRET;
 const logger = require("../config/winston.config");
- 
+const UserLearningScheduleService= require('../service/UserLearningSchedule.service');
 
 // Create or update a user learning schedule entry
 async function createOrUpdateUserLearningSchedule(req, res, next) {
   try {
     const {
       userLearningScheduleId,
-       learningItemId,
+      learningItemId,
       learningItemType,
       title,
       description,
@@ -22,44 +22,72 @@ async function createOrUpdateUserLearningSchedule(req, res, next) {
       metadata
     } = req.body;
 
-     const userId = req.user.userId;
+    const userId = req.user.userId;
 
-    if (!userId || !learningItemId || !learningItemType || !title || !scheduledStartDate || !scheduledEndDate) {
-      return res.status(400).json({ success: false, message: "Missing required fields." });
-    }
+    // Enhanced validation
+    const requiredFields = {
+      // learningItemId,
+      // learningItemType,
+      title,
+      scheduledStartDate,
+      scheduledEndDate
+    };
 
-    let entry;
-    if (userLearningScheduleId) {
-      entry = await db.UserLearningSchedule.findByPk(userLearningScheduleId);
-      if (!entry) return res.status(404).json({ success: false, message: "Entry not found." });
-      await entry.update({
-        userId,
-        learningItemId,
-        learningItemType,
-        title,
-        description,
-        scheduledLink,
-        scheduledStartDate,
-        scheduledEndDate,
-        metadata
-      });
-    } else {
-      entry = await db.UserLearningSchedule.create({
-        userId,
-        learningItemId,
-        learningItemType,
-        title,
-        description,
-        scheduledLink,
-        scheduledStartDate,
-        scheduledEndDate,
-        metadata
+    const missingFields = Object.entries(requiredFields)
+      .filter(([_, value]) => !value)
+      .map(([field]) => field);
+
+    if (missingFields.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Missing required fields",
+        fields: missingFields
       });
     }
-    return res.json({ success: true, data: entry });
+
+    // Validate learning item type
+    const validTypes = ['COURSE', 'VIDEO', 'ARTICLE', 'QUIZ', 'PRACTICE'];
+    if (learningItemType && learningItemId && !validTypes.includes(learningItemType)) {
+      return res.status(400).json({
+        success: false,
+        message: `Invalid learning item type. Must be one of: ${validTypes.join(', ')}`
+      });
+    }
+
+ 
+
+    const scheduleData = {
+      userLearningScheduleId,
+      userId,
+      learningItemId,
+      learningItemType,
+      title,
+      description,
+      scheduledLink,
+      scheduledStartDate,
+      scheduledEndDate,
+      metadata
+    };
+
+    const result = await UserLearningScheduleService.createOrUpdateSchedule(scheduleData);
+    return res.status(200).json(result);
+
   } catch (error) {
+    console.log(error)
     logger.error("Error in createOrUpdateUserLearningSchedule:", error);
-    return res.status(500).json({ success: false, message: error.message });
+    
+    if (error.message.includes('Schedule conflicts')) {
+      return res.status(409).json({
+        success: false,
+        message: error.message
+      });
+    }
+
+    return res.status(500).json({
+      success: false,
+      message: "An error occurred while processing your request",
+      error: error.message
+    });
   }
 }
 
