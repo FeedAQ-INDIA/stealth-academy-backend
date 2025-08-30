@@ -21,39 +21,38 @@ const UserLearningSchedule = sequelize.define("user_learning_schedule", {
       key: "id",
     },
   },
-  courseId: {
+  learningItemId: {
     type: Sequelize.INTEGER,
-    field: "learning_schedule_course_id",
-    allowNull: false,
-    references: {
-      model: "Courses",
-      key: "id",
-    },
+    field: "learning_schedule_item_id",
   },
-  scheduledDate: {
-    type: Sequelize.DATEONLY,
-    field: "learning_schedule_date",
-    allowNull: false,
+  learningItemType: {
+    type: Sequelize.ENUM('BYOC_COURSE'),
+    field: "learning_schedule_item_type",
   },
-  topic: {
+  title: {
     type: Sequelize.STRING(200),
-    field: "learning_schedule_topic",
+    field: "learning_schedule_title",
     allowNull: false,
   },
-  notes: {
+  description: {
     type: Sequelize.TEXT,
-    field: "learning_schedule_notes",
+    field: "learning_schedule_description",
     allowNull: true,
   },
-  status: {
-    type: Sequelize.ENUM("PENDING", "COMPLETED", "SKIPPED"),
-    field: "learning_schedule_status",
-    defaultValue: "PENDING",
+  scheduledLink: {
+    type: Sequelize.STRING,
+    field: "learning_schedule_link",
+    allowNull: true,
   },
-  isActive: {
-    type: Sequelize.BOOLEAN,
-    field: "learning_schedule_is_active",
-    defaultValue: true
+  scheduledStartDate: {
+    type: Sequelize.DATEONLY,
+    field: "learning_schedule_start_date",
+    allowNull: false,
+  },
+  scheduledEndDate: {
+    type: Sequelize.DATEONLY,
+    field: "learning_schedule_end_date",
+    allowNull: false,
   },
   metadata: {
     type: Sequelize.JSONB,
