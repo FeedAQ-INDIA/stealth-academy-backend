@@ -23,6 +23,7 @@ const swaggerUi = require("swagger-ui-express");
 require("./google_oauth.js");
 require("./microsoft_oauth.js");
 const logger = require('./src/config/winston.config.js')
+const userLearningScheduleRoute = require("./src/routes/userLearningSchedule.route.js");
 
 
 const swaggerOptions = {
@@ -88,6 +89,7 @@ app.use(bodyParser.json());
 //     next();
 // });
 
+
 app.use(commonRoute);
 app.use(paymentRoute);
 app.use(authRoute);
@@ -95,6 +97,7 @@ app.use(organizationRoute);
 app.use(orgGroupRoute);
 app.use('/course-access', courseAccessRoute);
 app.use('/credit', creditRoute);
+app.use( userLearningScheduleRoute);
 
 app.listen(port, '0.0.0.0', () => {
     console.log(`Example app listening on port ${port}`);
