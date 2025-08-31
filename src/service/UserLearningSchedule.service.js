@@ -111,15 +111,52 @@ const getScheduleByDateRange = async (userId, startDate, endDate) => {
             where.scheduledStartDate = { [db.Sequelize.Op.between]: [startDate, endDate] };
         }
 
-        const schedules = await db.UserLearningSchedule.findAll({
+        // Fetch schedules and convert to plain objects to make comparisons easy
+        const rawSchedules = await db.UserLearningSchedule.findAll({
             where,
             order: [['scheduledStartDate', 'ASC']]
         });
+        const schedules = rawSchedules.map(s => (typeof s.toJSON === 'function' ? s.toJSON() : s));
 
-        return {
-            success: true,
-            data: schedules
-        };
+        // Helper to get a stable id for each schedule record (some records use id, others use userLearningScheduleId)
+        const getId = (rec) => rec.userLearningScheduleId || rec.id || rec.user_learning_schedule_id;
+
+        // Normalize date values and compute overlaps for each schedule
+        const schedulesWithOverlaps = schedules.map((s) => {
+            const sStart = s.scheduledStartDate ? new Date(s.scheduledStartDate) : null;
+            const sEnd = s.scheduledEndDate ? new Date(s.scheduledEndDate) : null;
+
+            const overlaps = schedules
+                .filter((other) => getId(other) !== getId(s))
+                .filter((other) => {
+                    const oStart = other.scheduledStartDate ? new Date(other.scheduledStartDate) : null;
+                    const oEnd = other.scheduledEndDate ? new Date(other.scheduledEndDate) : null;
+
+                    // If either record misses start or end, conservatively assume they overlap only if times intersect
+                    if (!sStart || !sEnd || !oStart || !oEnd) {
+                        return false;
+                    }
+
+                    // Overlap if start < otherEnd and otherStart < end
+                    return sStart < oEnd && oStart < sEnd;
+                })
+                .map((o) => ({
+                    id: getId(o),
+                    title: o.title,
+                    learningItemId: o.learningItemId,
+                    learningItemType: o.learningItemType,
+                    scheduledStartDate: o.scheduledStartDate,
+                    scheduledEndDate: o.scheduledEndDate
+                }));
+
+            return {
+                ...s,
+                overlappingMeetings: overlaps,
+                overlappingCount: overlaps.length
+            };
+        });
+
+        return schedulesWithOverlaps;
     } catch (error) {
         logger.error('Error in getScheduleByDateRange:', error);
         throw new Error(`Failed to fetch schedules: ${error.message}`);

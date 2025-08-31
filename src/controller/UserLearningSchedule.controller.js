@@ -117,7 +117,8 @@ async function getUserLearningScheduleByUserAndDate(req, res, next) {
     } else if (startDate && endDate) {
       where.scheduledStartDate = { [db.Sequelize.Op.between]: [startDate, endDate] };
     }
-    const entries = await db.UserLearningSchedule.findAll({ where });
+    // const entries = await db.UserLearningSchedule.findAll({ where });
+    const entries = await UserLearningScheduleService.getScheduleByDateRange(userId, startDate, endDate);
     return res.json({ success: true, data: entries });
   } catch (error) {
     logger.error("Error in getUserLearningScheduleByUserAndDate:", error);
