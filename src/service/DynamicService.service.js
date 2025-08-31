@@ -2,6 +2,86 @@ const {Op, fn, col} = require("sequelize");
 const db = require("../entity/index.js");
 const lodash = require("lodash");
 
+async function deleteCourse(courseId, userId) {
+    const t = await db.sequelize.transaction();
+    
+    try {
+        // Delete course enrollments
+        await db.UserCourseEnrollment.destroy({
+            where: { courseId },
+            transaction: t
+        });
+
+        // Delete course content progress
+        await db.UserCourseContentProgress.destroy({
+            where: { courseId },
+            transaction: t
+        });
+
+        // Delete course access records
+        await db.CourseAccess.destroy({
+            where: { courseId },
+            transaction: t
+        });
+
+        // Delete course quizzes and results
+        const quizzes = await db.CourseQuiz.findAll({
+            where: { courseId },
+            transaction: t
+        });
+        
+        for (const quiz of quizzes) {
+            await db.QuizResultLog.destroy({
+                where: { quizId: quiz.quizId },
+                transaction: t
+            });
+            await db.QuizQuestion.destroy({
+                where: { quizId: quiz.quizId },
+                transaction: t
+            });
+        }
+        await db.CourseQuiz.destroy({
+            where: { courseId },
+            transaction: t
+        });
+
+        // Delete course flashcards
+        await db.CourseFlashcard.destroy({
+            where: { courseId },
+            transaction: t
+        });
+
+        // Delete course videos
+        await db.CourseVideo.destroy({
+            where: { courseId },
+            transaction: t
+        });
+
+        // Delete course written content
+        await db.CourseWritten.destroy({
+            where: { courseId },
+            transaction: t
+        });
+
+        // Delete course content
+        await db.CourseContent.destroy({
+            where: { courseId },
+            transaction: t
+        });
+
+        // Finally delete the course itself
+        await db.Course.destroy({
+            where: { courseId: courseId },
+            transaction: t
+        });
+
+        await t.commit();
+    } catch (error) {
+        await t.rollback();
+        throw error;
+    }
+}
+
 function haveSameElements(arr1, arr2) {
     if (arr1.length !== arr2.length) return false;
     const sorted1 = [...arr1].sort((a, b) => a - b);
@@ -137,5 +217,6 @@ module.exports = {
     searchRecord,
     buildWhereClause,
     parseIncludes,
-    haveSameElements
+    haveSameElements,
+    deleteCourse
 };

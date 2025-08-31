@@ -6,6 +6,26 @@ const logger = require("../config/winston.config");
 const AcademyService = require("../service/AcademyService.service.js");
 const DynamicService = require("../service/DynamicService.service.js");
 
+async function deleteCourse(req, res, next) {
+  const { courseId } = req.body;
+  try {
+    // Delete all related course data
+    await DynamicService.deleteCourse(courseId, req.user.userId);
+    
+    res.status(200).send({
+      status: 200,
+      message: "Course and related data deleted successfully"
+    });
+  } catch (err) {
+    console.error(`Error occurred while deleting course:`, err.message);
+    res.status(500).send({
+      status: 500,
+      message: err.message || "Error occurred while deleting the course"
+    });
+    next(err);
+  }
+}
+
 async function getUser(req, res, next) {
   const {} = req.body;
   try {
@@ -339,4 +359,5 @@ module.exports = {
   deleteUserCourseContentProgress,
   submitQuiz,
   clearQuizResult,
+  deleteCourse
 };

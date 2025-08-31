@@ -34,6 +34,9 @@ router.post("/clearQuizResult", authMiddleware, genericController.clearQuizResul
 
 // router.post("/raiseCounsellingRequest", authMiddleware, genericController.raiseCounsellingRequest);
 
+// Course Management Routes
+router.post("/deleteCourse", authMiddleware, genericController.deleteCourse);
+
 // YouTube API Routes - Single API endpoint
 router.post("/createCourseFromUrls", authMiddleware, youtubeController.createCourseFromUrls);
 
