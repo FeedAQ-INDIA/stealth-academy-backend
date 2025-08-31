@@ -28,6 +28,7 @@ db.sequelize = sequelize;
 db.User = require("./User.entity.js")(sequelize, Sequelize);
 db.CourseAccess = require("./CourseAccess.entity.js")(sequelize, Sequelize);
 db.UserCourseEnrollment = require("./UserCourseEnrollment.entity.js")(sequelize, Sequelize);
+db.UserGoal = require("./UserGoal.entity.js")(sequelize, Sequelize);
 db.Course = require("./Course.entity.js")(sequelize, Sequelize);
 db.CourseContent = require("./CourseContent.entity.js")(sequelize, Sequelize);
 db.UserCourseContentProgress = require("./UserCourseContentProgress.entity.js")(sequelize, Sequelize);
@@ -146,5 +147,8 @@ db.Flashcard.belongsTo(db.CourseFlashcard, {foreignKey: 'courseFlashcardId', as:
 
 // UserLearningSchedule associations
 db.UserLearningSchedule.belongsTo(db.User, {foreignKey: 'userId', as: 'user'});
+
+// UserGoal associations
+db.UserGoal.belongsTo(db.User, {foreignKey: 'userId', as: 'user'});
 
 module.exports = db;
