@@ -32,21 +32,30 @@ module.exports = (sequelize, Sequelize) => {
             },
             field: "course_written_content_id",
         },
+        courseWrittenTitle: {
+            type: Sequelize.STRING,
+            field: "course_written_title",
+        },
         courseWrittenDescription: {
             type: Sequelize.TEXT,
             field: "course_written_description",
         },
-        courseWrittenHtmlContent: {
+        courseWrittenContent: {
             type: Sequelize.TEXT,
-            field: "course_written_htmlcontent",
-        },
-        courseWrittenSource: {
+            field: "course_written_content",
+        }, 
+        courseWrittenEmbedUrl: {
             type: Sequelize.STRING(100),
-            field: "course_written_source",
+            field: "course_written_embed_url",
         },
-        courseWrittenUrl: {
-            type: Sequelize.STRING(100),
-            field: "course_written_url",
+        courseWrittenUrlIsEmbeddable: {
+            type: Sequelize.BOOLEAN,
+            field: "course_written_url_is_embeddable",
+        },
+        metadata: {
+            type: Sequelize.JSONB,
+            field: "course_written_metadata",
+            defaultValue: {}
         },
 
         v_created_date: {

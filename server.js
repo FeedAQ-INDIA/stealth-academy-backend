@@ -14,6 +14,7 @@ const organizationRoute = require("./src/routes/organization.route.js");
 const orgGroupRoute = require("./src/routes/orgGroup.route.js");
 const courseAccessRoute = require("./src/routes/courseAccess.route.js");
 const creditRoute = require("./src/routes/credit.route.js");
+const urlEmbeddabilityRoute = require("./src/routes/urlEmbeddability.routes.js");
 const app = express();
 const port = process.env.PORT || 3000;
 const db = require("./src/entity");
@@ -98,6 +99,7 @@ app.use(organizationRoute);
 app.use(orgGroupRoute);
 app.use('/course-access', courseAccessRoute);
 app.use('/credit', creditRoute);
+app.use('/api/url-embeddability', urlEmbeddabilityRoute);
 app.use(userGoalRoute);
 app.use(userLearningScheduleRoute);
 

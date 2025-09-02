@@ -562,10 +562,16 @@ REQUIREMENTS:
               userId,
               courseId,
               courseContentId,
+              courseWrittenTitle: videoContent.topicContent?.title || videoContent.videoTitle,
               courseWrittenDescription: videoContent.topicContent.summary,
-              courseWrittenHtmlContent: htmlContent,
-              courseWrittenSource: "GEMINI_AI",
-              courseWrittenUrl: `https://www.youtube.com/watch?v=${videoContent.videoId}`
+              courseWrittenContent: htmlContent,
+              courseWrittenEmbedUrl: `https://www.youtube.com/watch?v=${videoContent.videoId}`,
+              courseWrittenUrlIsEmbeddable: true,
+              metadata: {
+                source: "GEMINI_AI",
+                originalUrl: `https://www.youtube.com/watch?v=${videoContent.videoId}`,
+                contentType: "topic_content"
+              }
             }, { transaction });
 
             results.topicContent++;
@@ -875,10 +881,16 @@ REQUIREMENTS:
       userId,
       courseId,
       courseContentId: courseContent.courseContentId,
+      courseWrittenTitle: topicContent.title,
       courseWrittenDescription: topicContent.summary,
-      courseWrittenHtmlContent: htmlContent,
-      courseWrittenSource: "GEMINI_AI",
-      courseWrittenUrl: video.videoUrl
+      courseWrittenContent: htmlContent,
+      courseWrittenEmbedUrl: video.videoUrl,
+      courseWrittenUrlIsEmbeddable: true,
+      metadata: {
+        source: "GEMINI_AI",
+        originalUrl: video.videoUrl,
+        contentType: "course_content"
+      }
     }, { transaction });
 
     return {
