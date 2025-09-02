@@ -254,8 +254,53 @@ const getUserGoals = async (params) => {
     }
 };
 
+const deleteGoal = async (params) => {
+    const { userGoalId, userId } = params;
+
+    try {
+        // First check if the goal exists and belongs to the user
+        const goal = await db.UserGoal.findOne({
+            where: {
+                userGoalId,
+                userId
+            }
+        });
+
+        if (!goal) {
+            throw new Error('Goal not found or user not authorized to delete this goal');
+        }
+
+        // Store goal details for logging before deletion
+        const goalTitle = goal.title;
+
+        // Delete the goal
+        const deletedCount = await db.UserGoal.destroy({
+            where: {
+                userGoalId,
+                userId
+            }
+        });
+
+        if (deletedCount === 0) {
+            throw new Error('Failed to delete goal');
+        }
+
+        logger.info(`Goal "${goalTitle}" (ID: ${userGoalId}) deleted successfully for user ${userId}`);
+        
+        return {
+            userGoalId,
+            title: goalTitle,
+            deletedAt: new Date()
+        };
+    } catch (error) {
+        logger.error(`Error deleting goal: ${error.message}`);
+        throw error;
+    }
+};
+
 module.exports = {
     createGoal,
     updateGoal,
-    getUserGoals
+    getUserGoals,
+    deleteGoal
 };

@@ -145,7 +145,49 @@ async function getUserGoals(req, res, next) {
     }
 }
 
+async function deleteUserGoal(req, res, next) {
+    try {
+        const userId = req.user.userId;
+        const { userGoalId } = req.body;
+
+        // Validate required fields
+        if (!userGoalId) {
+            return res.status(400).json({
+                success: false,
+                message: 'userGoalId is required'
+            });
+        }
+
+        // Validate userGoalId is a number
+        if (isNaN(userGoalId) || userGoalId <= 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'userGoalId must be a valid positive number'
+            });
+        }
+
+        const result = await UserGoalService.deleteGoal({
+            userGoalId: parseInt(userGoalId),
+            userId
+        });
+
+        res.status(200).json({
+            success: true,
+            message: 'Goal deleted successfully',
+            data: result
+        });
+
+    } catch (error) {
+        logger.error(`Error in deleteUserGoal: ${error.message}`);
+        res.status(400).json({
+            success: false,
+            message: error.message
+        });
+    }
+}
+
 module.exports = {
     saveUserGoal,
-    getUserGoals
+    getUserGoals,
+    deleteUserGoal
 };

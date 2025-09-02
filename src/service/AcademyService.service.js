@@ -563,7 +563,7 @@ const saveUserCourseContentProgress = async (
                     courseId,
                     courseContentType: 'CourseCertificate',
                     courseContentTitle: 'Course Certificate',
-                    courseSourceMode: 'COMPANY',
+                    // courseSourceMode: 'COMPANY',
                     courseContentSequence: 9999, // or some logic to place it at the end
                     courseContentDuration: 0, // Certificates have no duration
                     isActive: true,

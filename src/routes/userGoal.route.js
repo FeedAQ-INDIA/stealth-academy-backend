@@ -11,4 +11,7 @@ router.post("/goal/createOrUpdate", authMiddleware, userGoalController.saveUserG
 // Get user's goals with optional filters
 router.post("/goal/search", authMiddleware, userGoalController.getUserGoals);
 
+// Delete a goal
+router.post("/goal/delete", authMiddleware, userGoalController.deleteUserGoal);
+
 module.exports = router;

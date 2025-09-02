@@ -592,7 +592,7 @@ REQUIREMENTS:
               courseContentTitle: `${videoContent.topicContent?.title || videoContent.videoTitle} - Flashcards`,
               courseContentCategory: videoContent.flashcards[0]?.category || "General",
               courseContentType: "CourseFlashcard",
-              courseSourceMode: "COMPANY",
+              // courseSourceMode: "COMPANY",
               courseContentSequence: flashcardSequence,
               coursecontentIsLicensed: false,
               courseContentDuration: videoContent.flashcards.length * 30, // Estimate 30 seconds per flashcard
@@ -649,7 +649,7 @@ REQUIREMENTS:
               courseContentTitle: `${videoContent.topicContent?.title || videoContent.videoTitle} - Quiz`,
               courseContentCategory: "Assessment", 
               courseContentType: "CourseQuiz",
-              courseSourceMode: "COMPANY",
+              // courseSourceMode: "COMPANY",
               courseContentSequence: quizSequence,
               coursecontentIsLicensed: false,
               courseContentDuration: videoContent.quizQuestions.length * 45, // Estimated duration based on timer
@@ -798,7 +798,7 @@ REQUIREMENTS:
       courseContentTitle: video.videoTitle,
       courseContentCategory: video.category || "Video Learning",
       courseContentType: "CourseVideo",
-      courseSourceMode: "YOUTUBE",
+      // courseSourceMode: "YOUTUBE",
       courseContentSequence: sequence,
       coursecontentIsLicensed: false,
       courseContentDuration: video.duration,
@@ -843,7 +843,7 @@ REQUIREMENTS:
       courseContentTitle: `${topicContent.title || video.videoTitle} - Study Notes`,
       courseContentCategory: topicContent.category || "Study Material",
       courseContentType: "CourseWritten",
-      courseSourceMode: "COMPANY",
+      // courseSourceMode: "COMPANY",
       courseContentSequence: sequence,
       coursecontentIsLicensed: false,
       courseContentDuration: Math.max(Math.floor(topicContent.detailedContent?.length / 200) || 5, 5), // Reading time estimate
@@ -911,7 +911,7 @@ REQUIREMENTS:
       courseContentTitle: `${video.videoTitle} - Flashcards`,
       courseContentCategory: flashcards[0]?.category || "Review",
       courseContentType: "CourseFlashcard",
-      courseSourceMode: "COMPANY",
+      // courseSourceMode: "COMPANY",
       courseContentSequence: sequence,
       coursecontentIsLicensed: false,
       courseContentDuration: flashcards.length * 30, // 30 seconds per flashcard
@@ -971,7 +971,7 @@ REQUIREMENTS:
       courseContentTitle: `${video.videoTitle} - Quiz`,
       courseContentCategory: "Assessment",
       courseContentType: "CourseQuiz",
-      courseSourceMode: "COMPANY",
+      // courseSourceMode: "COMPANY",
       courseContentSequence: sequence,
       coursecontentIsLicensed: false,
       courseContentDuration: quizQuestions.length * 45, // 45 seconds per question

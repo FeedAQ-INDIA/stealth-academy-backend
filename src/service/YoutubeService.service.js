@@ -413,7 +413,8 @@ async function importPlaylistToDatabase(req, res) {
             courseImageUrl: courseThumbnail,
             courseDuration: 1, // Temporary value, will be updated with actual duration
             courseSourceChannel: courseChannelTitle,
-            courseSourceMode: "YOUTUBE",
+            // courseSourceMode: "YOUTUBE",
+            courseType: "BYOC",
             deliveryMode: "ONLINE",
             status: "DRAFT",
             metadata: {
@@ -444,7 +445,7 @@ async function importPlaylistToDatabase(req, res) {
                 courseId: course.courseId,
                 courseContentTitle: snippet.title,
                 courseContentType: "CourseVideo",
-                courseSourceMode: "YOUTUBE",
+                // courseSourceMode: "YOUTUBE",
                 courseContentSequence: contentList.length + 1,
                 coursecontentIsLicensed: false,
                 courseContentDuration: durationSeconds,
@@ -735,10 +736,11 @@ async function createStructuredCourse(contentUrlList, contentTitle, contentDescr
         courseDuration: totalDuration,
         courseImageUrl,
         courseSourceChannel,
-        courseSourceMode: 'YOUTUBE',
+        // courseSourceMode: 'YOUTUBE',
+        courseType: "BYOC",
         deliveryMode: 'ONLINE',
         status: 'PUBLISHED',
-        courseState: 'ACTIVE',
+        // courseState: 'ACTIVE',
         metadata: {
           createdFrom: "YouTube URLs",
           videoCount: videoArray.length,

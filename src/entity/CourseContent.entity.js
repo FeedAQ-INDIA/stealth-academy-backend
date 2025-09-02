@@ -37,11 +37,11 @@ module.exports = (sequelize, Sequelize) => {
             field: "course_content_type",
             allowNull: false,
         },
-        courseSourceMode: {
-            type: Sequelize.ENUM("YOUTUBE", "COMPANY"),
-            field: "course_content_source_mode",
-            allowNull: false,
-        },
+        // courseSourceMode: {
+        //     type: Sequelize.ENUM("YOUTUBE", "COMPANY"),
+        //     field: "course_content_source_mode",
+        //     allowNull: false,
+        // },
         courseContentSequence: {
             type: Sequelize.INTEGER,
             field: "course_content_seq",
