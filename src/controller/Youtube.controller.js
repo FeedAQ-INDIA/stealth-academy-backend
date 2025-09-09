@@ -91,6 +91,8 @@ async function createMixedContentCourse(youtubeUrls, nonYoutubeUrls, courseTitle
           metadata: {
             createdFrom: "Mixed URLs",
             urlCount: youtubeUrls.length + nonYoutubeUrls.length,
+            youtubeUrlCount: youtubeUrls.length,
+            nonYoutubeUrlCount: nonYoutubeUrls.length,
             coursePlatform: "MIXED",
             courseType: "MIXED_CONTENT",
             courseDifficulty: "BEGINNER",
@@ -142,8 +144,18 @@ async function createMixedContentCourse(youtubeUrls, nonYoutubeUrls, courseTitle
         }
       });
 
-      if (embeddableUrls.length > 0) {
-        logger.info(`✅ Found ${embeddableUrls.length} embeddable URLs out of ${nonYoutubeUrls.length} total`);
+      if (embeddableUrls.length > 0 || nonEmbeddableUrls.length > 0) {
+        logger.info(`✅ Processing ${embeddableUrls.length} embeddable URLs and ${nonEmbeddableUrls.length} non-embeddable URLs`);
+        
+        // Combine all URLs for processing
+        const allUrlsToProcess = [
+          ...embeddableUrls.map(item => ({ ...item, isEmbeddable: true })),
+          ...nonEmbeddableUrls.map(item => ({ 
+            url: item.url, 
+            embeddabilityResult: { embeddable: false, reason: item.reason, details: item.details },
+            isEmbeddable: false 
+          }))
+        ];
         
         // Get the current highest sequence number from existing course content
         const existingContent = await db.CourseContent.findAll({
@@ -154,11 +166,11 @@ async function createMixedContentCourse(youtubeUrls, nonYoutubeUrls, courseTitle
         
         let nextSequence = (existingContent.length > 0 ? existingContent[0].courseContentSequence : 0) + 1;
 
-        // Create course content and written entries for each embeddable URL
+        // Create course content and written entries for each URL (both embeddable and non-embeddable)
         const createdWrittenContent = [];
         
-        for (let i = 0; i < embeddableUrls.length; i++) {
-          const urlData = embeddableUrls[i];
+        for (let i = 0; i < allUrlsToProcess.length; i++) {
+          const urlData = allUrlsToProcess[i];
           const sequence = nextSequence + i;
           
           // Create course content entry
@@ -176,9 +188,32 @@ async function createMixedContentCourse(youtubeUrls, nonYoutubeUrls, courseTitle
               contentType: "EXTERNAL_URL",
               embeddabilityCheck: urlData.embeddabilityResult,
               sequence: sequence,
-              mixedContent: true
+              mixedContent: true,
+              isEmbeddable: urlData.isEmbeddable
             }
           });
+
+          // Create course written entry with different content based on embeddability
+          let courseWrittenContent;
+          if (urlData.isEmbeddable) {
+            // For embeddable URLs, use iframe
+            courseWrittenContent = `<iframe src="${urlData.url}" width="100%" height="600px" frameborder="0"></iframe>`;
+          } else {
+            // For non-embeddable URLs, provide a link with explanation
+            courseWrittenContent = `
+              <div style="padding: 20px; border: 1px solid #e0e0e0; border-radius: 5px; background-color: #f9f9f9;">
+                <h3>External Resource</h3>
+                <p><strong>Note:</strong> This content cannot be embedded directly due to security restrictions.</p>
+                <p><strong>Reason:</strong> ${urlData.embeddabilityResult.reason || 'Content security policy restrictions'}</p>
+                <p>Please click the link below to access the content in a new tab:</p>
+                <a href="${urlData.url}" target="_blank" rel="noopener noreferrer" style="display: inline-block; padding: 10px 20px; background-color: #007bff; color: white; text-decoration: none; border-radius: 3px; margin-top: 10px;">
+                  Open Content in New Tab
+                </a>
+                <br><br>
+                <small><strong>URL:</strong> ${urlData.url}</small>
+              </div>
+            `;
+          }
 
           // Create course written entry
           const courseWritten = await db.CourseWritten.create({
@@ -187,14 +222,15 @@ async function createMixedContentCourse(youtubeUrls, nonYoutubeUrls, courseTitle
             courseContentId: courseContent.courseContentId,
             courseWrittenTitle: `Written Content ${sequence}`,
             courseWrittenDescription: `External content from: ${urlData.url}`,
-            courseWrittenContent: `<iframe src="${urlData.url}" width="100%" height="600px" frameborder="0"></iframe>`,
+            courseWrittenContent: courseWrittenContent,
             courseWrittenEmbedUrl: urlData.url,
-            courseWrittenUrlIsEmbeddable: true,
+            courseWrittenUrlIsEmbeddable: urlData.isEmbeddable,
             metadata: {
               originalUrl: urlData.url,
               embeddabilityCheck: urlData.embeddabilityResult,
               createdAt: new Date().toISOString(),
-              mixedContent: true
+              mixedContent: true,
+              isEmbeddable: urlData.isEmbeddable
             }
           });
 
@@ -203,13 +239,15 @@ async function createMixedContentCourse(youtubeUrls, nonYoutubeUrls, courseTitle
             written: courseWritten
           });
           
-          logger.info(`✅ Created written content item ${sequence}: ${urlData.url}`);
+          const embeddableStatus = urlData.isEmbeddable ? '✅' : '⚠️';
+          logger.info(`${embeddableStatus} Created written content item ${sequence}: ${urlData.url}`);
         }
 
         writtenContentResult = {
           contentItems: createdWrittenContent,
           embeddableUrlsCount: embeddableUrls.length,
           nonEmbeddableUrlsCount: nonEmbeddableUrls.length,
+          totalUrlsProcessed: allUrlsToProcess.length,
           nonEmbeddableUrls: nonEmbeddableUrls
         };
       }
@@ -287,11 +325,17 @@ async function createCourseFromWrittenUrls(urls, courseTitle, courseDescription,
       }
     });
 
-    if (embeddableUrls.length === 0) {
-      throw new Error("No embeddable URLs found in the provided list");
-    }
-
-    logger.info(`✅ Found ${embeddableUrls.length} embeddable URLs out of ${urls.length} total`);
+    logger.info(`✅ Found ${embeddableUrls.length} embeddable URLs and ${nonEmbeddableUrls.length} non-embeddable URLs out of ${urls.length} total`);
+    
+    // We'll create content for all URLs, both embeddable and non-embeddable
+    const allUrlsToProcess = [
+      ...embeddableUrls.map(item => ({ ...item, isEmbeddable: true })),
+      ...nonEmbeddableUrls.map(item => ({ 
+        url: item.url, 
+        embeddabilityResult: { embeddable: false, reason: item.reason, details: item.details },
+        isEmbeddable: false 
+      }))
+    ];
 
     // Create course record
     logger.info("💾 Creating course record...");
@@ -324,7 +368,9 @@ async function createCourseFromWrittenUrls(urls, courseTitle, courseDescription,
       status: 'PUBLISHED',
       metadata: {
         createdFrom: "Written URLs",
-        urlCount: embeddableUrls.length,
+        urlCount: allUrlsToProcess.length,
+        embeddableUrlCount: embeddableUrls.length,
+        nonEmbeddableUrlCount: nonEmbeddableUrls.length,
         coursePlatform: "EXTERNAL",
         courseType: "WRITTEN_CONTENT",
         courseDifficulty: "BEGINNER",
@@ -336,11 +382,11 @@ async function createCourseFromWrittenUrls(urls, courseTitle, courseDescription,
 
     logger.info(`✅ Course created with ID: ${course.courseId}`);
 
-    // Create course content and written entries for each embeddable URL
+    // Create course content and written entries for each URL (both embeddable and non-embeddable)
     const createdContent = [];
     
-    for (let i = 0; i < embeddableUrls.length; i++) {
-      const urlData = embeddableUrls[i];
+    for (let i = 0; i < allUrlsToProcess.length; i++) {
+      const urlData = allUrlsToProcess[i];
       const sequence = i + 1;
       
       // Create course content entry
@@ -357,24 +403,47 @@ async function createCourseFromWrittenUrls(urls, courseTitle, courseDescription,
         metadata: {
           contentType: "EXTERNAL_URL",
           embeddabilityCheck: urlData.embeddabilityResult,
-          sequence: sequence
+          sequence: sequence,
+          isEmbeddable: urlData.isEmbeddable
         }
       }, { transaction });
 
-      // Create course written entry
+      // Create course written entry with different content based on embeddability
+      let courseWrittenContent;
+      if (urlData.isEmbeddable) {
+        // For embeddable URLs, use iframe
+        courseWrittenContent = `<iframe src="${urlData.url}" width="100%" height="600px" frameborder="0"></iframe>`;
+      } else {
+        // For non-embeddable URLs, provide a link with explanation
+        courseWrittenContent = `
+          <div style="padding: 20px; border: 1px solid #e0e0e0; border-radius: 5px; background-color: #f9f9f9;">
+            <h3>External Resource</h3>
+            <p><strong>Note:</strong> This content cannot be embedded directly due to security restrictions.</p>
+            <p><strong>Reason:</strong> ${urlData.embeddabilityResult.reason || 'Content security policy restrictions'}</p>
+            <p>Please click the link below to access the content in a new tab:</p>
+            <a href="${urlData.url}" target="_blank" rel="noopener noreferrer" style="display: inline-block; padding: 10px 20px; background-color: #007bff; color: white; text-decoration: none; border-radius: 3px; margin-top: 10px;">
+              Open Content in New Tab
+            </a>
+            <br><br>
+            <small><strong>URL:</strong> ${urlData.url}</small>
+          </div>
+        `;
+      }
+
       const courseWritten = await db.CourseWritten.create({
         userId: userId,
         courseId: course.courseId,
         courseContentId: courseContent.courseContentId,
         courseWrittenTitle: `Content ${sequence}`,
         courseWrittenDescription: `External content from: ${urlData.url}`,
-        courseWrittenContent: `<iframe src="${urlData.url}" width="100%" height="600px" frameborder="0"></iframe>`,
+        courseWrittenContent: courseWrittenContent,
         courseWrittenEmbedUrl: urlData.url,
-        courseWrittenUrlIsEmbeddable: true,
+        courseWrittenUrlIsEmbeddable: urlData.isEmbeddable,
         metadata: {
           originalUrl: urlData.url,
           embeddabilityCheck: urlData.embeddabilityResult,
-          createdAt: new Date().toISOString()
+          createdAt: new Date().toISOString(),
+          isEmbeddable: urlData.isEmbeddable
         }
       }, { transaction });
 
@@ -383,7 +452,8 @@ async function createCourseFromWrittenUrls(urls, courseTitle, courseDescription,
         written: courseWritten
       });
 
-      logger.info(`✅ Created content item ${sequence}: ${urlData.url}`);
+      const embeddableStatus = urlData.isEmbeddable ? '✅ (embeddable)' : '⚠️ (non-embeddable)';
+      logger.info(`${embeddableStatus} Created content item ${sequence}: ${urlData.url}`);
     }
 
     // Create course access for the owner
@@ -412,6 +482,7 @@ async function createCourseFromWrittenUrls(urls, courseTitle, courseDescription,
       contentItems: createdContent,
       embeddableUrlsCount: embeddableUrls.length,
       nonEmbeddableUrlsCount: nonEmbeddableUrls.length,
+      totalUrlsProcessed: allUrlsToProcess.length,
       nonEmbeddableUrls: nonEmbeddableUrls
     };
 
@@ -589,13 +660,7 @@ async function createCourseFromUrls(req, res, next) {
       });
     }
 
-    if (err.message?.includes("No embeddable URLs found")) {
-      return res.status(400).send({
-        status: 400,
-        message:
-          "No embeddable URLs found in the provided list. Please check that your URLs can be embedded in iframes.",
-      });
-    }
+    // Note: Removed the "No embeddable URLs found" error check since we now process all URLs
 
     if (err.message?.includes("Insufficient credit balance")) {
       return res.status(402).send({
