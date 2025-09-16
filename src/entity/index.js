@@ -42,6 +42,8 @@ db.CourseFlashcard = require("./CourseFlashcard.entity.js")(sequelize, Sequelize
 db.Flashcard = require("./Flashcard.entity.js")(sequelize, Sequelize);
 db.Organization = require("./Organization.entity.js")(sequelize, Sequelize);
 db.OrganizationUser = require("./OrganizationUser.entity.js")(sequelize, Sequelize);
+db.OrganizationGroups = require("./OrganizationGroups.entity.js")(sequelize, Sequelize);
+db.OrganizationUserGroups = require("./OrganizationUserGroups.entity.js")(sequelize, Sequelize);
 db.UserCreditTransaction = require("./UserCreditTransaction.entity.js")(sequelize, Sequelize);
 db.UserLearningSchedule = require("./UserLearningSchedule.entity.js")(sequelize, Sequelize);
 
@@ -56,6 +58,7 @@ db.User.hasMany(db.Notes, {foreignKey: 'userId', as: 'notes'});
 db.User.hasMany(db.UserCourseContentProgress, {foreignKey: 'userId', as: 'activityLogs'});
 db.User.hasMany(db.QuizResultLog, {foreignKey: 'userId', as: 'quizResults'});
 db.User.hasMany(db.OrganizationUser, {foreignKey: 'userId', as: 'organizationMemberships'});
+db.User.hasMany(db.OrganizationUserGroups, {foreignKey: 'userId', as: 'groupMemberships'});
 db.User.hasMany(db.UserCreditTransaction, {foreignKey: 'userId', as: 'creditTransactions'});
 db.User.hasMany(db.CourseFlashcard, {foreignKey: 'userId', as: 'flashcardSets'});
 
@@ -73,11 +76,22 @@ db.Course.hasMany(db.CourseFlashcard, {foreignKey: 'courseId', as: 'flashcardSet
 // Organization associations
 db.Organization.hasMany(db.Course, {foreignKey: 'orgId', as: 'courses'});
 db.Organization.hasMany(db.OrganizationUser, {foreignKey: 'orgId', as: 'members'});
+db.Organization.hasMany(db.OrganizationGroups, {foreignKey: 'orgId', as: 'groups'});
+db.Organization.hasMany(db.OrganizationUserGroups, {foreignKey: 'orgId', as: 'groupMemberships'});
 
 // OrganizationUser associations
 db.OrganizationUser.belongsTo(db.Organization, {foreignKey: 'orgId', as: 'organization'});
 db.OrganizationUser.belongsTo(db.User, {foreignKey: 'userId', as: 'user'});
 db.OrganizationUser.belongsTo(db.User, {foreignKey: 'invitedBy', as: 'inviter'});
+
+// OrganizationGroups associations
+db.OrganizationGroups.belongsTo(db.Organization, {foreignKey: 'orgId', as: 'organization'});
+db.OrganizationGroups.hasMany(db.OrganizationUserGroups, {foreignKey: 'groupId', as: 'members'});
+
+// OrganizationUserGroups associations
+db.OrganizationUserGroups.belongsTo(db.OrganizationGroups, {foreignKey: 'groupId', as: 'group'});
+db.OrganizationUserGroups.belongsTo(db.User, {foreignKey: 'userId', as: 'user'});
+db.OrganizationUserGroups.belongsTo(db.Organization, {foreignKey: 'orgId', as: 'organization'});
 
 // CourseContent associations
 db.CourseContent.belongsTo(db.Course, {foreignKey: 'courseId', as: 'course'});

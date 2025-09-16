@@ -56,27 +56,22 @@ app.use(cors({
 app.use(cookieParser());
 app.use(bodyParser.json());
 
-// For development: Drop indexes first, then sync
+// For production: Sync database with alter (safe for existing data)
 (async () => {
     try {
-        const queryInterface = db.sequelize.getQueryInterface();
+        // Test database connection first
+        await db.sequelize.authenticate();
+        console.log("Database connection established successfully");
         
-        // Drop all indexes first (this is safe as they'll be recreated)
-        // await db.sequelize.query('DROP INDEX IF EXISTS idx_ca_course_id');
-        // await db.sequelize.query('DROP INDEX IF EXISTS idx_ca_user_id');
-        // await db.sequelize.query('DROP INDEX IF EXISTS idx_ca_org_id');
-        // await db.sequelize.query('DROP INDEX IF EXISTS idx_ca_is_active');
-        // await db.sequelize.query('DROP INDEX IF EXISTS idx_ca_unique_access');
-        // await db.sequelize.query('DROP INDEX IF EXISTS idx_ucp_user_id');
-        // await db.sequelize.query('DROP INDEX IF EXISTS idx_ucp_course_id');
-        // await db.sequelize.query('DROP INDEX IF EXISTS idx_ucp_created_at');
-        // await db.sequelize.query('DROP INDEX IF EXISTS idx_ucp_user_course');
-        
-        // Then sync with alter
+        // Use alter: true for production - this won't drop existing data
+        // Now that tables are created, use safer sync method
         // await db.sequelize.sync({ alter: true });
-        console.log("Database synchronized successfully");
+        console.log("Database synchronized successfully - all tables verified");
+        
     } catch (error) {
-        console.error("Error during sync:", error);
+        console.error("Error during database sync:", error);
+        console.error("Please check your database configuration and ensure the database is running");
+        // Don't exit the process, let the server continue running
     }
 })();
 

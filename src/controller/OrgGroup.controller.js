@@ -1,53 +1,21 @@
-const db = require("../config/db.config.js");
-const Group = db.group;
-const GroupUser = db.group_user;
-const Organization = db.organization;
-const OrganizationUser = db.organizationUser;
-const User = db.user;
+const db = require("../entity/index.js");
+const Organization = db.Organization;
+const OrganizationGroups = db.OrganizationGroups;
+const OrganizationUserGroups = db.OrganizationUserGroups;
+const OrganizationUser = db.OrganizationUser;
+const User = db.User;
 const logger = require('../config/winston.config.js');
+const orgGroupService = require('../service/OrgGroup.service.js');
+
+// ============= ORGANIZATION USER MANAGEMENT =============
 
 // Add user to organization
 exports.addUserToOrg = async (req, res) => {
     try {
         const { orgId } = req.params;
-        const { userId, role } = req.body;
+        const { userId, role, invitedBy } = req.body;
 
-        // Check if organization exists
-        const organization = await Organization.findByPk(orgId);
-        if (!organization) {
-            return res.status(404).json({
-                success: false,
-                message: "Organization not found"
-            });
-        }
-
-        // Check if user exists
-        const user = await User.findByPk(userId);
-        if (!user) {
-            return res.status(404).json({
-                success: false,
-                message: "User not found"
-            });
-        }
-
-        // Check if user is already in organization
-        const existingOrgUser = await OrganizationUser.findOne({
-            where: { orgId, userId }
-        });
-
-        if (existingOrgUser) {
-            return res.status(409).json({
-                success: false,
-                message: "User is already part of this organization"
-            });
-        }
-
-        // Add user to organization
-        const orgUser = await OrganizationUser.create({
-            orgId,
-            userId,
-            role: role || 'MEMBER'
-        });
+        const orgUser = await orgGroupService.addUserToOrganization(orgId, userId, role, invitedBy);
 
         return res.status(201).json({
             success: true,
@@ -57,6 +25,76 @@ exports.addUserToOrg = async (req, res) => {
 
     } catch (error) {
         logger.error('Error in addUserToOrg:', error);
+        return res.status(error.message.includes('not found') ? 404 : 
+                         error.message.includes('already part') ? 409 : 500).json({
+            success: false,
+            message: error.message,
+            error: error.message
+        });
+    }
+};
+
+// Remove user from organization
+exports.removeUserFromOrg = async (req, res) => {
+    try {
+        const { orgId, userId } = req.params;
+
+        const result = await orgGroupService.removeUserFromOrganization(orgId, userId);
+
+        return res.status(200).json({
+            success: true,
+            message: result.message
+        });
+
+    } catch (error) {
+        logger.error('Error in removeUserFromOrg:', error);
+        return res.status(error.message.includes('not part') ? 404 : 500).json({
+            success: false,
+            message: error.message,
+            error: error.message
+        });
+    }
+};
+
+// Update user role in organization
+exports.updateUserRoleInOrg = async (req, res) => {
+    try {
+        const { orgId, userId } = req.params;
+        const { role } = req.body;
+
+        const orgUser = await orgGroupService.updateUserRoleInOrganization(orgId, userId, role);
+
+        return res.status(200).json({
+            success: true,
+            message: "User role updated successfully",
+            data: orgUser
+        });
+
+    } catch (error) {
+        logger.error('Error in updateUserRoleInOrg:', error);
+        return res.status(error.message.includes('not part') ? 404 : 500).json({
+            success: false,
+            message: error.message,
+            error: error.message
+        });
+    }
+};
+
+// Get organization users
+exports.getOrganizationUsers = async (req, res) => {
+    try {
+        const { orgId } = req.params;
+        const { includeGroups } = req.query;
+
+        const users = await orgGroupService.getOrganizationUsers(orgId, includeGroups === 'true');
+
+        return res.status(200).json({
+            success: true,
+            data: users
+        });
+
+    } catch (error) {
+        logger.error('Error in getOrganizationUsers:', error);
         return res.status(500).json({
             success: false,
             message: "Internal server error",
@@ -65,40 +103,15 @@ exports.addUserToOrg = async (req, res) => {
     }
 };
 
+// ============= GROUP MANAGEMENT =============
+
 // Create a new group in organization
 exports.createGroup = async (req, res) => {
     try {
         const { orgId } = req.params;
         const { groupName, description, metadata } = req.body;
 
-        // Check if organization exists
-        const organization = await Organization.findByPk(orgId);
-        if (!organization) {
-            return res.status(404).json({
-                success: false,
-                message: "Organization not found"
-            });
-        }
-
-        // Check if group name already exists in this organization
-        const existingGroup = await Group.findOne({
-            where: { orgId, groupName }
-        });
-
-        if (existingGroup) {
-            return res.status(409).json({
-                success: false,
-                message: "Group with this name already exists in the organization"
-            });
-        }
-
-        // Create new group
-        const group = await Group.create({
-            orgId,
-            groupName,
-            description,
-            metadata: metadata || {}
-        });
+        const group = await orgGroupService.createGroup(orgId, groupName, description, metadata);
 
         return res.status(201).json({
             success: true,
@@ -108,66 +121,57 @@ exports.createGroup = async (req, res) => {
 
     } catch (error) {
         logger.error('Error in createGroup:', error);
-        return res.status(500).json({
+        return res.status(error.message.includes('not found') ? 404 : 
+                         error.message.includes('already exists') ? 409 : 500).json({
             success: false,
-            message: "Internal server error",
+            message: error.message,
             error: error.message
         });
     }
 };
 
-// Add users to a group
-exports.addUsersToGroup = async (req, res) => {
+// Update group
+exports.updateGroup = async (req, res) => {
     try {
         const { groupId } = req.params;
-        const { userIds } = req.body;
+        const updates = req.body;
 
-        // Check if group exists
-        const group = await Group.findByPk(groupId);
-        if (!group) {
-            return res.status(404).json({
-                success: false,
-                message: "Group not found"
-            });
-        }
-
-        // Check if all users exist and are part of the organization
-        const orgId = group.orgId;
-        const orgUsers = await OrganizationUser.findAll({
-            where: {
-                orgId,
-                userId: userIds
-            }
-        });
-
-        if (orgUsers.length !== userIds.length) {
-            return res.status(400).json({
-                success: false,
-                message: "Some users are not part of the organization"
-            });
-        }
-
-        // Add users to group
-        const groupUsers = await Promise.all(
-            userIds.map(async (userId) => {
-                return GroupUser.findOrCreate({
-                    where: { groupId, userId },
-                    defaults: { role: 'MEMBER' }
-                });
-            })
-        );
+        const group = await orgGroupService.updateGroup(groupId, updates);
 
         return res.status(200).json({
             success: true,
-            message: "Users added to group successfully",
-            data: groupUsers.map(([groupUser]) => groupUser)
+            message: "Group updated successfully",
+            data: group
         });
 
     } catch (error) {
-        logger.error('Error in addUsersToGroup:', error);
-        return res.status(500).json({
+        logger.error('Error in updateGroup:', error);
+        return res.status(error.message.includes('not found') ? 404 : 
+                         error.message.includes('already exists') ? 409 : 500).json({
             success: false,
-            message: "Internal server error",
+            message: error.message,
+            error: error.message
+        });
+    }
+};
+
+// Delete group
+exports.deleteGroup = async (req, res) => {
+    try {
+        const { groupId } = req.params;
+
+        const result = await orgGroupService.deleteGroup(groupId);
+
+        return res.status(200).json({
+            success: true,
+            message: result.message
+        });
+
+    } catch (error) {
+        logger.error('Error in deleteGroup:', error);
+        return res.status(error.message.includes('not found') ? 404 : 500).json({
+            success: false,
+            message: error.message,
             error: error.message
         });
     }
@@ -177,10 +181,9 @@ exports.addUsersToGroup = async (req, res) => {
 exports.getOrgGroups = async (req, res) => {
     try {
         const { orgId } = req.params;
+        const { includeMembers } = req.query;
 
-        const groups = await Group.findAll({
-            where: { orgId }
-        });
+        const groups = await orgGroupService.getOrganizationGroups(orgId, includeMembers === 'true');
 
         return res.status(200).json({
             success: true,
@@ -197,18 +200,108 @@ exports.getOrgGroups = async (req, res) => {
     }
 };
 
+// Get group by ID
+exports.getGroupById = async (req, res) => {
+    try {
+        const { groupId } = req.params;
+        const { includeMembers } = req.query;
+
+        const group = await orgGroupService.getGroupById(groupId, includeMembers === 'true');
+
+        return res.status(200).json({
+            success: true,
+            data: group
+        });
+
+    } catch (error) {
+        logger.error('Error in getGroupById:', error);
+        return res.status(error.message.includes('not found') ? 404 : 500).json({
+            success: false,
+            message: error.message,
+            error: error.message
+        });
+    }
+};
+
+// ============= GROUP MEMBERSHIP MANAGEMENT =============
+
+// Add users to a group
+exports.addUsersToGroup = async (req, res) => {
+    try {
+        const { groupId } = req.params;
+        const { userIds, role } = req.body;
+
+        const groupUsers = await orgGroupService.addUsersToGroup(groupId, userIds, role);
+
+        return res.status(200).json({
+            success: true,
+            message: "Users added to group successfully",
+            data: groupUsers
+        });
+
+    } catch (error) {
+        logger.error('Error in addUsersToGroup:', error);
+        return res.status(error.message.includes('not found') ? 404 : 
+                         error.message.includes('not part') ? 400 : 500).json({
+            success: false,
+            message: error.message,
+            error: error.message
+        });
+    }
+};
+
+// Remove user from group
+exports.removeUserFromGroup = async (req, res) => {
+    try {
+        const { groupId, userId } = req.params;
+
+        const result = await orgGroupService.removeUserFromGroup(groupId, userId);
+
+        return res.status(200).json({
+            success: true,
+            message: result.message
+        });
+
+    } catch (error) {
+        logger.error('Error in removeUserFromGroup:', error);
+        return res.status(error.message.includes('not a member') ? 404 : 500).json({
+            success: false,
+            message: error.message,
+            error: error.message
+        });
+    }
+};
+
+// Update user role in group
+exports.updateUserRoleInGroup = async (req, res) => {
+    try {
+        const { groupId, userId } = req.params;
+        const { role } = req.body;
+
+        const groupUser = await orgGroupService.updateUserRoleInGroup(groupId, userId, role);
+
+        return res.status(200).json({
+            success: true,
+            message: "User role in group updated successfully",
+            data: groupUser
+        });
+
+    } catch (error) {
+        logger.error('Error in updateUserRoleInGroup:', error);
+        return res.status(error.message.includes('not a member') ? 404 : 500).json({
+            success: false,
+            message: error.message,
+            error: error.message
+        });
+    }
+};
+
 // Get group members
 exports.getGroupMembers = async (req, res) => {
     try {
         const { groupId } = req.params;
 
-        const groupUsers = await GroupUser.findAll({
-            where: { groupId },
-            include: [{
-                model: User,
-                attributes: ['userId', 'firstName', 'lastName', 'email']
-            }]
-        });
+        const groupUsers = await orgGroupService.getGroupMembers(groupId);
 
         return res.status(200).json({
             success: true,
@@ -217,6 +310,29 @@ exports.getGroupMembers = async (req, res) => {
 
     } catch (error) {
         logger.error('Error in getGroupMembers:', error);
+        return res.status(500).json({
+            success: false,
+            message: "Internal server error",
+            error: error.message
+        });
+    }
+};
+
+// Get user groups
+exports.getUserGroups = async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const { orgId } = req.query;
+
+        const userGroups = await orgGroupService.getUserGroups(userId, orgId);
+
+        return res.status(200).json({
+            success: true,
+            data: userGroups
+        });
+
+    } catch (error) {
+        logger.error('Error in getUserGroups:', error);
         return res.status(500).json({
             success: false,
             message: "Internal server error",

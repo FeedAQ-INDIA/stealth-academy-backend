@@ -13,6 +13,31 @@ module.exports = (sequelize, Sequelize) => {
                 field: "org_name",
                 allowNull: false
             },
+            orgDescription: {
+                type: Sequelize.TEXT,
+                field: "org_description",
+                allowNull: true
+            },
+            orgType: {
+                type: Sequelize.ENUM("company", "educational", "non_profit", "government", "startup"),
+                field: "org_type",
+                allowNull: true
+            },
+            orgIndustry: {
+                type: Sequelize.STRING(100),
+                field: "org_industry",
+                allowNull: true
+            },
+            orgSize: {
+                type: Sequelize.STRING(50),
+                field: "org_size",
+                allowNull: true
+            },
+            orgWebsite: {
+                type: Sequelize.STRING(255),
+                field: "org_website",
+                allowNull: true
+            },
             orgEmail: {
                 type: Sequelize.STRING(100),
                 field: "org_email",
@@ -48,6 +73,16 @@ module.exports = (sequelize, Sequelize) => {
                 type: Sequelize.STRING(10),
                 field: "org_pincode",
             },
+            adminName: {
+                type: Sequelize.STRING(100),
+                field: "admin_name",
+                allowNull: true
+            },
+            adminEmail: {
+                type: Sequelize.STRING(100),
+                field: "admin_email",
+                allowNull: true
+            },
             orgStatus: {
                 type: Sequelize.ENUM("ACTIVE", "INACTIVE", "SUSPENDED"),
                 field: "org_status",
@@ -74,6 +109,15 @@ module.exports = (sequelize, Sequelize) => {
                 },
                 {
                     fields: ['org_domain']
+                },
+                {
+                    fields: ['org_type']
+                },
+                {
+                    fields: ['org_industry']
+                },
+                {
+                    fields: ['admin_email']
                 }
             ]
         }

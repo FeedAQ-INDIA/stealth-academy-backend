@@ -254,7 +254,20 @@ async function fetchSingleVideoMetadata(videoId, apiKey) {
 }
 
 function parseISO8601Duration(duration) {
+    // Handle null, undefined, or non-string inputs
+    if (!duration || typeof duration !== 'string') {
+        logger.warn(`Invalid duration format: ${duration}, returning 0`);
+        return 0;
+    }
+    
     const match = duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+    
+    // Handle case where regex doesn't match
+    if (!match) {
+        logger.warn(`Duration format not recognized: ${duration}, returning 0`);
+        return 0;
+    }
+    
     const [, hours = 0, minutes = 0, seconds = 0] = match.map(x => parseInt(x) || 0);
     return hours * 3600 + minutes * 60 + seconds;
 }
@@ -578,7 +591,20 @@ async function importPlaylistToDatabase(req, res) {
 
 // Helper functions for createStructuredCourse
 function parseISO8601Duration(duration) {
+  // Handle null, undefined, or non-string inputs
+  if (!duration || typeof duration !== 'string') {
+    logger.warn(`Invalid duration format: ${duration}, returning 0`);
+    return 0;
+  }
+  
   const match = duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+  
+  // Handle case where regex doesn't match
+  if (!match) {
+    logger.warn(`Duration format not recognized: ${duration}, returning 0`);
+    return 0;
+  }
+  
   const [, hours = 0, minutes = 0, seconds = 0] = match.map((x) => parseInt(x) || 0);
   return hours * 3600 + minutes * 60 + seconds;
 }
