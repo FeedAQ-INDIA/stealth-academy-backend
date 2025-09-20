@@ -4,21 +4,12 @@ const organizationController = require("../controller/Organization.controller.js
 const authMiddleware = require("../middleware/authMiddleware");
 const { 
     validateOrganizationRegistration,
-    validateOrganizationUpdate,
-    validateUserInvitation,
-    validateGroupCreation,
-    validateBulkUserInvitation,
-    validateSearchQuery,
-    handleValidationErrors
+ 
 } = require("../middleware/organizationValidation");
 
 // ========== ORGANIZATION MANAGEMENT ==========
 
-// Check if user can create an organization
-router.get("/canCreateOrganization", 
-    authMiddleware,
-    organizationController.canCreateOrganization
-);
+ 
 
 // Register a new organization
 router.post("/registerOrg", 
