@@ -446,13 +446,12 @@ class OrganizationService {
 
     async getUserOrganizations(userId) {
         try {
-            const userOrganizations = await db.OrganizationUser.findAll({
-                where: { userId },
+            const userOrganizations = await db.Organization.findAll({
                 include: [
                     {
-                        model: db.Organization,
-                        as: 'organization',
-                        attributes: ['orgId', 'orgName', 'orgEmail', 'orgType', 'orgStatus']
+                        model: db.OrganizationUser,
+                        as: 'members',
+                        where: { userId },
                     }
                 ]
             });
