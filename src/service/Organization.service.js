@@ -1,5 +1,7 @@
 const db = require("../entity/index.js");
 const logger = require('../config/winston.config.js');
+const emailService = require('../utils/emailService.js');
+const crypto = require('crypto');
 const { Op } = require('sequelize');
 
 class OrganizationService {
@@ -312,7 +314,13 @@ class OrganizationService {
 
     async inviteUserToOrganization(orgId, inviterUserId, invitationData) {
         try {
-            const { email, userRole = 'MEMBER', permissions = {} } = invitationData;
+            const { email, userRole = 'MEMBER', permissions = {}, message } = invitationData;
+
+            // Validate email format
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                throw new Error("Invalid email format");
+            }
 
             // Check if organization exists
             const organization = await db.Organization.findByPk(orgId);
@@ -320,80 +328,317 @@ class OrganizationService {
                 throw new Error("Organization not found");
             }
 
-            // Find user by email
-            const user = await db.User.findOne({ where: { email } });
-            if (!user) {
-                throw new Error("User not found with this email");
+            // Check if inviter has permission (must be admin or manager)
+            const inviterMembership = await db.OrganizationUser.findOne({
+                where: {
+                    orgId,
+                    userId: inviterUserId,
+                    userRole: { [Op.in]: ['ADMIN', 'MANAGER'] },
+                    status: 'ACTIVE'
+                }
+            });
+
+            if (!inviterMembership) {
+                throw new Error("You don't have permission to invite users to this organization");
             }
 
+            // Get inviter details
+            const inviter = await db.User.findByPk(inviterUserId, {
+                attributes: ['firstName', 'lastName', 'email']
+            });
+
+            if (!inviter) {
+                throw new Error("Inviter not found");
+            }
+
+            // Check if user already exists in the system
+            const existingUser = await db.User.findOne({ where: { email } });
+            
             // Check if user is already in organization
-            const existingMembership = await db.OrganizationUser.findOne({
-                where: { orgId, userId: user.userId }
-            });
+            if (existingUser) {
+                const existingMembership = await db.OrganizationUser.findOne({
+                    where: { orgId, userId: existingUser.userId }
+                });
 
-            if (existingMembership) {
-                throw new Error("User is already part of this organization");
+                if (existingMembership) {
+                    throw new Error("User is already part of this organization");
+                }
             }
 
-            // Create invitation
-            const invitation = await db.OrganizationUser.create({
-                orgId,
-                userId: user.userId,
-                userRole,
-                invitedBy: inviterUserId,
-                status: 'PENDING',
-                permissions
+            // Check if there's already a pending invitation
+            const existingInvite = await db.OrganizationUserInvites.findOne({
+                where: {
+                    orgId,
+                    invitedEmail: email,
+                    inviteStatus: 'PENDING'
+                }
             });
 
-            return invitation;
+            if (existingInvite) {
+                throw new Error("A pending invitation already exists for this email");
+            }
+
+            // Generate unique invite token
+            const inviteToken = crypto.randomBytes(32).toString('hex');
+            
+            // Set expiration time (7 days from now)
+            const expiresAt = new Date();
+            expiresAt.setDate(expiresAt.getDate() + 7);
+
+            // Create invitation record
+            const invitation = await db.OrganizationUserInvites.create({
+                orgId,
+                invitedEmail: email,
+                invitedBy: inviterUserId,
+                invitedRole: userRole,
+                inviteStatus: 'PENDING',
+                inviteToken,
+                expiresAt,
+                inviteMessage: message,
+                metadata: permissions || {}
+            });
+
+            // Prepare email data
+            const acceptUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/accept-invite?token=${inviteToken}`;
+            
+            const emailData = {
+                organizationName: organization.orgName,
+                organizationEmail: organization.orgEmail,
+                invitedEmail: email,
+                inviterName: `${inviter.firstName} ${inviter.lastName}`,
+                inviterEmail: inviter.email,
+                inviteToken,
+                userRole,
+                expiresAt,
+                acceptUrl,
+                message
+            };
+
+            // Send invitation email
+            try {
+                const emailResult = await emailService.sendOrganizationInvite(emailData);
+                logger.info(`Invitation email sent successfully for invitation ${invitation.inviteId}`);
+                
+                // Update invitation with email status
+                await invitation.update({
+                    metadata: {
+                        ...invitation.metadata,
+                        emailSent: true,
+                        emailSentAt: new Date(),
+                        emailMessageId: emailResult.messageId
+                    }
+                });
+            } catch (emailError) {
+                logger.error(`Failed to send invitation email for invitation ${invitation.inviteId}:`, emailError);
+                
+                // Update invitation with email failure status
+                await invitation.update({
+                    metadata: {
+                        ...invitation.metadata,
+                        emailSent: false,
+                        emailError: emailError.message,
+                        emailFailedAt: new Date()
+                    }
+                });
+                
+                // Don't throw error here - invitation is created, email can be retried
+            }
+
+            // Return invitation with additional details
+            const invitationWithDetails = await db.OrganizationUserInvites.findByPk(invitation.inviteId, {
+                include: [
+                    {
+                        model: db.Organization,
+                        as: 'organization',
+                        attributes: ['orgId', 'orgName', 'orgEmail']
+                    },
+                    {
+                        model: db.User,
+                        as: 'inviter',
+                        attributes: ['userId', 'firstName', 'lastName', 'email']
+                    }
+                ]
+            });
+
+            return {
+                invitation: invitationWithDetails,
+                message: 'User invited successfully',
+                emailSent: invitation.metadata?.emailSent || false,
+                acceptUrl
+            };
         } catch (error) {
             logger.error('Error in inviteUserToOrganization service:', error);
             throw error;
         }
     }
 
-    async acceptOrganizationInvite(orgId, userId) {
+    async acceptOrganizationInvite(inviteToken, acceptingUserId = null) {
         try {
-            const invitation = await db.OrganizationUser.findOne({
+            // Find the invitation by token
+            const invitation = await db.OrganizationUserInvites.findOne({
                 where: {
-                    orgId,
-                    userId,
-                    status: 'PENDING'
-                }
+                    inviteToken,
+                    inviteStatus: 'PENDING'
+                },
+                include: [
+                    {
+                        model: db.Organization,
+                        as: 'organization',
+                        attributes: ['orgId', 'orgName', 'orgEmail', 'orgStatus']
+                    },
+                    {
+                        model: db.User,
+                        as: 'inviter',
+                        attributes: ['userId', 'firstName', 'lastName', 'email']
+                    }
+                ]
             });
 
             if (!invitation) {
-                throw new Error("No pending invitation found for this organization");
+                throw new Error("Invalid or expired invitation token");
             }
 
-            await invitation.update({
-                status: 'ACTIVE',
-                joinedAt: new Date()
+            // Check if invitation has expired
+            if (new Date() > new Date(invitation.expiresAt)) {
+                await invitation.update({ inviteStatus: 'EXPIRED' });
+                throw new Error("This invitation has expired");
+            }
+
+            // Check if organization is still active
+            if (invitation.organization.orgStatus !== 'ACTIVE') {
+                throw new Error("This organization is no longer active");
+            }
+
+            let userId = acceptingUserId;
+            
+            // If no userId provided, find or create user by email
+            if (!userId) {
+                let user = await db.User.findOne({ where: { email: invitation.invitedEmail } });
+                
+                if (!user) {
+                    // For now, require user to exist - in a real app, you might create the user here
+                    throw new Error("User account not found. Please create an account first before accepting the invitation.");
+                }
+                
+                userId = user.userId;
+            }
+
+            // Check if user is already in organization
+            const existingMembership = await db.OrganizationUser.findOne({
+                where: { orgId: invitation.orgId, userId }
             });
 
-            return invitation;
+            if (existingMembership) {
+                // Mark invitation as accepted anyway
+                await invitation.update({
+                    inviteStatus: 'ACCEPTED',
+                    acceptedAt: new Date(),
+                    acceptedBy: userId
+                });
+                throw new Error("User is already part of this organization");
+            }
+
+            // Create organization membership
+            const membership = await db.OrganizationUser.create({
+                orgId: invitation.orgId,
+                userId,
+                userRole: invitation.invitedRole,
+                invitedBy: invitation.invitedBy,
+                status: 'ACTIVE',
+                joinedAt: new Date(),
+                permissions: invitation.metadata || {}
+            });
+
+            // Update invitation status
+            await invitation.update({
+                inviteStatus: 'ACCEPTED',
+                acceptedAt: new Date(),
+                acceptedBy: userId
+            });
+
+            // Return membership with organization details
+            const membershipWithDetails = await db.OrganizationUser.findByPk(membership.orgUserId, {
+                include: [
+                    {
+                        model: db.Organization,
+                        as: 'organization',
+                        attributes: ['orgId', 'orgName', 'orgEmail', 'orgDescription']
+                    },
+                    {
+                        model: db.User,
+                        as: 'user',
+                        attributes: ['userId', 'firstName', 'lastName', 'email']
+                    }
+                ]
+            });
+
+            return {
+                membership: membershipWithDetails,
+                message: 'Invitation accepted successfully'
+            };
         } catch (error) {
             logger.error('Error in acceptOrganizationInvite service:', error);
             throw error;
         }
     }
 
-    async rejectOrganizationInvite(orgId, userId) {
+    async getInvitationByToken(inviteToken) {
         try {
-            const invitation = await db.OrganizationUser.findOne({
+            const invitation = await db.OrganizationUserInvites.findOne({
                 where: {
-                    orgId,
-                    userId,
-                    status: 'PENDING'
+                    inviteToken,
+                    inviteStatus: 'PENDING'
+                },
+                include: [
+                    {
+                        model: db.Organization,
+                        as: 'organization',
+                        attributes: ['orgId', 'orgName', 'orgEmail', 'orgDescription', 'orgStatus']
+                    },
+                    {
+                        model: db.User,
+                        as: 'inviter',
+                        attributes: ['userId', 'firstName', 'lastName', 'email']
+                    }
+                ]
+            });
+
+            if (!invitation) {
+                throw new Error("Invalid or expired invitation token");
+            }
+
+            // Check if invitation has expired
+            if (new Date() > new Date(invitation.expiresAt)) {
+                await invitation.update({ inviteStatus: 'EXPIRED' });
+                throw new Error("This invitation has expired");
+            }
+
+            return invitation;
+        } catch (error) {
+            logger.error('Error in getInvitationByToken service:', error);
+            throw error;
+        }
+    }
+
+    async rejectOrganizationInvite(inviteToken, rejectingUserId = null) {
+        try {
+            const invitation = await db.OrganizationUserInvites.findOne({
+                where: {
+                    inviteToken,
+                    inviteStatus: 'PENDING'
                 }
             });
 
             if (!invitation) {
-                throw new Error("No pending invitation found for this organization");
+                throw new Error("Invalid or expired invitation token");
             }
 
-            await invitation.destroy();
-            return { message: "Invitation rejected successfully" };
+            await invitation.update({
+                inviteStatus: 'DECLINED',
+                declinedAt: new Date()
+            });
+
+            return { message: "Invitation declined successfully" };
         } catch (error) {
             logger.error('Error in rejectOrganizationInvite service:', error);
             throw error;
@@ -421,8 +666,7 @@ class OrganizationService {
                     {
                         model: db.User,
                         as: 'user',
-                        attributes: ['userId', 'firstName', 'lastName', 'email', 'profilePicture']
-                    }
+                     }
                 ],
                 limit: parseInt(limit),
                 offset: parseInt(offset),

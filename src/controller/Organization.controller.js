@@ -126,7 +126,7 @@ async function getUserOrganizations(req, res, next) {
 // Invite user to organization
 async function inviteUserToOrganization(req, res, next) {
     const { orgId } = req.params;
-    const { email, userRole, permissions } = req.body;
+    const { email, userRole, permissions, message } = req.body;
 
     try {
         if (!email) {
@@ -136,13 +136,26 @@ async function inviteUserToOrganization(req, res, next) {
             });
         }
 
-        const invitationData = { email, userRole, permissions };
-        const val = await OrganizationService.inviteUserToOrganization(orgId, req.user?.userId, invitationData);
+        // Validate userRole if provided
+        const validRoles = ['ADMIN', 'MANAGER', 'INSTRUCTOR', 'MEMBER'];
+        if (userRole && !validRoles.includes(userRole)) {
+            return res.status(400).send({
+                status: 400,
+                message: `Invalid user role. Must be one of: ${validRoles.join(', ')}`
+            });
+        }
+
+        const invitationData = { email, userRole, permissions, message };
+        const result = await OrganizationService.inviteUserToOrganization(orgId, req.user?.userId, invitationData);
         
         res.status(201).send({
             status: 201,
-            message: "User invited successfully",
-            data: val != null ? val : []
+            message: result.message,
+            data: {
+                invitation: result.invitation,
+                emailSent: result.emailSent,
+                acceptUrl: result.acceptUrl
+            }
         });
     } catch (err) {
         console.error(`Error occurred while inviting user:`, err.message);
@@ -183,6 +196,94 @@ async function removeUserFromOrganization(req, res, next) {
     }
 }
 
+// Get invitation details by token
+async function getInvitationByToken(req, res, next) {
+    const { token } = req.params;
+    
+    try {
+        if (!token) {
+            return res.status(400).send({
+                status: 400,
+                message: "Invitation token is required"
+            });
+        }
+
+        const invitation = await OrganizationService.getInvitationByToken(token);
+        
+        res.status(200).send({
+            status: 200,
+            message: "Invitation details retrieved successfully",
+            data: invitation
+        });
+    } catch (err) {
+        console.error(`Error occurred while getting invitation details:`, err.message);
+        res.status(404).send({
+            status: 404,
+            message: err.message || "Invitation not found"
+        });
+        next(err);
+    }
+}
+
+// Accept organization invitation
+async function acceptOrganizationInvite(req, res, next) {
+    const { token } = req.params;
+    const { userId } = req.body; // Optional - if not provided, will use token's email
+    
+    try {
+        if (!token) {
+            return res.status(400).send({
+                status: 400,
+                message: "Invitation token is required"
+            });
+        }
+
+        const result = await OrganizationService.acceptOrganizationInvite(token, userId || req.user?.userId);
+        
+        res.status(200).send({
+            status: 200,
+            message: result.message,
+            data: result.membership
+        });
+    } catch (err) {
+        console.error(`Error occurred while accepting invitation:`, err.message);
+        res.status(400).send({
+            status: 400,
+            message: err.message || "Error occurred while accepting invitation"
+        });
+        next(err);
+    }
+}
+
+// Reject organization invitation
+async function rejectOrganizationInvite(req, res, next) {
+    const { token } = req.params;
+    
+    try {
+        if (!token) {
+            return res.status(400).send({
+                status: 400,
+                message: "Invitation token is required"
+            });
+        }
+
+        const result = await OrganizationService.rejectOrganizationInvite(token, req.user?.userId);
+        
+        res.status(200).send({
+            status: 200,
+            message: result.message,
+            data: {}
+        });
+    } catch (err) {
+        console.error(`Error occurred while rejecting invitation:`, err.message);
+        res.status(400).send({
+            status: 400,
+            message: err.message || "Error occurred while rejecting invitation"
+        });
+        next(err);
+    }
+}
+
 module.exports = {
     // Organization Management - keep only what we need
     registerOrganization,
@@ -191,5 +292,10 @@ module.exports = {
     // Organization User Management - keep only what we need
     inviteUserToOrganization,
     removeUserFromOrganization,
-    getUserOrganizations
+    getUserOrganizations,
+    
+    // Invitation Management
+    getInvitationByToken,
+    acceptOrganizationInvite,
+    rejectOrganizationInvite
 };

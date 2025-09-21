@@ -98,8 +98,7 @@ class OrgGroupService {
                 {
                     model: User,
                     as: 'user',
-                    attributes: ['userId', 'firstName', 'lastName', 'email', 'profilePicture']
-                }
+                 }
             ];
 
             if (includeGroups) {
@@ -353,8 +352,7 @@ class OrgGroupService {
                 include: [{
                     model: User,
                     as: 'user',
-                    attributes: ['userId', 'firstName', 'lastName', 'email', 'profilePicture']
-                }]
+                 }]
             });
 
             return groupUsers;

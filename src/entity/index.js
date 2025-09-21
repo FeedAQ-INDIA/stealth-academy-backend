@@ -42,6 +42,7 @@ db.CourseFlashcard = require("./CourseFlashcard.entity.js")(sequelize, Sequelize
 db.Flashcard = require("./Flashcard.entity.js")(sequelize, Sequelize);
 db.Organization = require("./Organization.entity.js")(sequelize, Sequelize);
 db.OrganizationUser = require("./OrganizationUser.entity.js")(sequelize, Sequelize);
+db.OrganizationUserInvites = require("./OrganizationUserInvites.entity.js")(sequelize, Sequelize);
 db.OrganizationGroups = require("./OrganizationGroups.entity.js")(sequelize, Sequelize);
 db.OrganizationUserGroups = require("./OrganizationUserGroups.entity.js")(sequelize, Sequelize);
 db.UserCreditTransaction = require("./UserCreditTransaction.entity.js")(sequelize, Sequelize);
@@ -58,6 +59,9 @@ db.User.hasMany(db.Notes, {foreignKey: 'userId', as: 'notes'});
 db.User.hasMany(db.UserCourseContentProgress, {foreignKey: 'userId', as: 'activityLogs'});
 db.User.hasMany(db.QuizResultLog, {foreignKey: 'userId', as: 'quizResults'});
 db.User.hasMany(db.OrganizationUser, {foreignKey: 'userId', as: 'organizationMemberships'});
+db.User.hasMany(db.OrganizationUserInvites, {foreignKey: 'invitedBy', as: 'sentInvites'});
+db.User.hasMany(db.OrganizationUserInvites, {foreignKey: 'acceptedBy', as: 'acceptedInvites'});
+db.User.hasMany(db.OrganizationUserInvites, {foreignKey: 'cancelledBy', as: 'cancelledInvites'});
 db.User.hasMany(db.OrganizationUserGroups, {foreignKey: 'userId', as: 'groupMemberships'});
 db.User.hasMany(db.UserCreditTransaction, {foreignKey: 'userId', as: 'creditTransactions'});
 db.User.hasMany(db.CourseFlashcard, {foreignKey: 'userId', as: 'flashcardSets'});
@@ -76,6 +80,7 @@ db.Course.hasMany(db.CourseFlashcard, {foreignKey: 'courseId', as: 'flashcardSet
 // Organization associations
 db.Organization.hasMany(db.Course, {foreignKey: 'orgId', as: 'courses'});
 db.Organization.hasMany(db.OrganizationUser, {foreignKey: 'orgId', as: 'members'});
+db.Organization.hasMany(db.OrganizationUserInvites, {foreignKey: 'orgId', as: 'invites'});
 db.Organization.hasMany(db.OrganizationGroups, {foreignKey: 'orgId', as: 'groups'});
 db.Organization.hasMany(db.OrganizationUserGroups, {foreignKey: 'orgId', as: 'groupMemberships'});
 
@@ -83,6 +88,12 @@ db.Organization.hasMany(db.OrganizationUserGroups, {foreignKey: 'orgId', as: 'gr
 db.OrganizationUser.belongsTo(db.Organization, {foreignKey: 'orgId', as: 'organization'});
 db.OrganizationUser.belongsTo(db.User, {foreignKey: 'userId', as: 'user'});
 db.OrganizationUser.belongsTo(db.User, {foreignKey: 'invitedBy', as: 'inviter'});
+
+// OrganizationUserInvites associations
+db.OrganizationUserInvites.belongsTo(db.Organization, {foreignKey: 'orgId', as: 'organization'});
+db.OrganizationUserInvites.belongsTo(db.User, {foreignKey: 'invitedBy', as: 'inviter'});
+db.OrganizationUserInvites.belongsTo(db.User, {foreignKey: 'acceptedBy', as: 'acceptedByUser'});
+db.OrganizationUserInvites.belongsTo(db.User, {foreignKey: 'cancelledBy', as: 'cancelledByUser'});
 
 // OrganizationGroups associations
 db.OrganizationGroups.belongsTo(db.Organization, {foreignKey: 'orgId', as: 'organization'});
