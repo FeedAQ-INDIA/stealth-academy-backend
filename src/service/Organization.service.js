@@ -394,7 +394,6 @@ class OrganizationService {
                 inviteStatus: 'PENDING',
                 inviteToken,
                 expiresAt,
-                inviteMessage: message,
                 metadata: permissions || {}
             });
 
@@ -405,7 +404,6 @@ class OrganizationService {
                 organizationName: organization.orgName,
                 organizationEmail: organization.orgEmail,
                 invitedEmail: email,
-                inviterName: `${inviter.firstName} ${inviter.lastName}`,
                 inviterEmail: inviter.email,
                 inviteToken,
                 userRole,

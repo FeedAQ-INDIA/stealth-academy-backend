@@ -57,7 +57,6 @@ class EmailService {
                 organizationName,
                 organizationEmail,
                 invitedEmail,
-                inviterName,
                 inviterEmail,
                 inviteToken,
                 userRole,
@@ -68,7 +67,7 @@ class EmailService {
 
             const emailHtml = this.generateInviteEmailTemplate({
                 organizationName,
-                inviterName,
+                inviterEmail,
                 userRole,
                 acceptUrl,
                 expiresAt,
@@ -109,8 +108,8 @@ class EmailService {
     generateInviteEmailTemplate(data) {
         const {
             organizationName,
-            inviterName,
-            userRole,
+            inviterEmail,
+             userRole,
             acceptUrl,
             expiresAt,
             message
@@ -154,7 +153,7 @@ class EmailService {
                     
                     <p>Hello!</p>
                     
-                    <p><strong>${inviterName}</strong> has invited you to join <strong>${organizationName}</strong> as a <span class="role-badge">${userRole}</span>.</p>
+                    <p><strong>${inviterEmail}</strong> has invited you to join <strong>${organizationName}</strong> as a <span class="role-badge">${userRole}</span>.</p>
                     
                     ${message ? `<div class="alert"><strong>Personal Message:</strong><br>${message}</div>` : ''}
                     

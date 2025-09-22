@@ -81,10 +81,6 @@ module.exports = (sequelize, Sequelize) => {
                 },
                 field: "cancelled_by",
             },
-            inviteMessage: {
-                type: Sequelize.TEXT,
-                field: "invite_message",
-            },
             metadata: {
                 type: Sequelize.JSONB,
                 field: "invite_metadata",
