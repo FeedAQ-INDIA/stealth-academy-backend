@@ -25,7 +25,7 @@ require("./google_oauth.js");
 require("./microsoft_oauth.js");
 const logger = require('./src/config/winston.config.js')
 const userGoalRoute = require("./src/routes/userGoal.route.js");
-const userLearningScheduleRoute = require("./src/routes/userLearningSchedule.route.js");
+const userLearningScheduleRoute = require("./src/routes/userlearningschedule.route.js");
 
 
 const swaggerOptions = {
