@@ -19,7 +19,7 @@
               "query": [
                 {
                   "key": "redirectUri",
-                  "value": "{{frontendUrl}}/dashboard",
+                  "value": "{{frontendUrl}}/",
                   "description": "Optional redirect URI after successful login"
                 }
               ]
@@ -37,7 +37,7 @@
               "query": [
                 {
                   "key": "redirectUri",
-                  "value": "{{frontendUrl}}/dashboard",
+                  "value": "{{frontendUrl}}/",
                   "description": "Optional redirect URI after successful login"
                 }
               ]

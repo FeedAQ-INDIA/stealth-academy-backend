@@ -16,7 +16,7 @@ router.get(
       //   scope: ["profile", "email"],
       //   session: false,
       // })
-      const redirect = req.query.redirectUri || `${frontendUrl}/dashboard`;
+      const redirect = req.query.redirectUri || `${frontendUrl}/`;
 
       console.log("Redirect URL :: " + redirect);
 
@@ -69,7 +69,7 @@ router.get(
 
       console.log("Redirect URL :: "+req.cookies?.postAuthRedirect)
 
-      const redirectUrl =  req.cookies?.postAuthRedirect || `${frontendUrl}/dashboard`;
+      const redirectUrl =  req.cookies?.postAuthRedirect || `${frontendUrl}/`;
 
       let accessToken  = jwt.sign(claims, accessTokenSecret, {
           expiresIn: '30m',
@@ -110,7 +110,7 @@ router.get(
       //   scope: ["profile", "email"],
       //   session: false,
       // })
-      const redirect = req.query.redirectUri || `${frontendUrl}/dashboard`;
+      const redirect = req.query.redirectUri || `${frontendUrl}/`;
 
       console.log("Redirect URL :: " + redirect);
 
@@ -167,7 +167,7 @@ router.get(
 
       console.log("Redirect URL :: "+req.cookies?.postAuthRedirect)
 
-      const redirectUrl =  req.cookies?.postAuthRedirect || `${frontendUrl}/dashboard`;
+      const redirectUrl =  req.cookies?.postAuthRedirect || `${frontendUrl}/`;
 
       let accessToken  = jwt.sign(claims, accessTokenSecret, {
         expiresIn: '1m',
