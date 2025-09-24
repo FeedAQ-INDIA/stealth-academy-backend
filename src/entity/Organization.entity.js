@@ -8,6 +8,11 @@ module.exports = (sequelize, Sequelize) => {
                 autoIncrement: true,
                 field: "org_id",
             },
+            orgInitial:{
+                 type: Sequelize.STRING(2),
+                 field: "org_initial",
+                //  allowNull: false
+            },
             orgName: {
                 type: Sequelize.STRING(100),
                 field: "org_name",

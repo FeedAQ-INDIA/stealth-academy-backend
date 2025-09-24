@@ -45,6 +45,7 @@ class OrganizationService {
             // Create new organization
             const organization = await db.Organization.create({
                 orgName,
+                orgNameInitial: getInitials(orgName),
                 orgEmail,
                 orgContactNo,
                 orgDomain,
@@ -706,6 +707,22 @@ class OrganizationService {
     }
 
   
+}
+
+const getInitials = (name) => {
+    // Trim the input to handle extra spaces
+    const trimmedName = name.trim();
+
+    // If there's only one word, return its first two letters in uppercase
+    if (!trimmedName.includes(" ")) {
+        return trimmedName.slice(0, 2).toUpperCase();
+    }
+
+    // For multiple words, split and get initials
+    const words = trimmedName.split(" ");
+    const initials = words?.slice(0, 2)?.map(word => word.charAt(0).toUpperCase()).join("");
+
+    return initials;
 }
 
 module.exports = new OrganizationService();

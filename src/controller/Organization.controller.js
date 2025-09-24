@@ -188,6 +188,15 @@ async function removeUserFromOrganization(req, res, next) {
         });
     } catch (err) {
         console.error(`Error occurred while removing user from organization:`, err.message);
+        
+        // Handle admin validation error specifically
+        if (err.message === "Cannot remove the last admin from the organization. At least one admin must remain.") {
+            return res.status(400).send({
+                status: 400,
+                message: err.message
+            });
+        }
+        
         res.status(500).send({
             status: 500,
             message: err.message || "Error occurred while removing user from organization"

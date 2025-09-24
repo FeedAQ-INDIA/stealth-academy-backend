@@ -57,6 +57,21 @@ class OrgGroupService {
                 throw new Error("User is not part of this organization");
             }
 
+            // Check if user is an admin and if they are the last admin
+            if (orgUser.userRole === 'ADMIN') {
+                const adminCount = await OrganizationUser.count({
+                    where: { 
+                        orgId, 
+                        userRole: 'ADMIN',
+                        status: 'ACTIVE'
+                    }
+                });
+
+                if (adminCount <= 1) {
+                    throw new Error("Cannot remove the last admin from the organization. At least one admin must remain.");
+                }
+            }
+
             // Remove user from all groups in this organization first
             await OrganizationUserGroups.destroy({
                 where: { orgId, userId }
