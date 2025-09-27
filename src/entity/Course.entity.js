@@ -24,11 +24,6 @@ module.exports = (sequelize, Sequelize) => {
         key: "org_id",
       },
     },
-    // isMarketplaceFlag: {
-    //   type: Sequelize.BOOLEAN,
-    //   field: "is_marketplace_flag",
-    //   defaultValue: false,
-    // },
     courseTitle: {
       type: Sequelize.STRING(100),
       field: "course_title",
@@ -51,15 +46,6 @@ module.exports = (sequelize, Sequelize) => {
       type: Sequelize.INTEGER,
       field: "course_validity"
     },
-    courseSourceChannel: {
-      type: Sequelize.STRING(100),
-      field: "course_source_channel",
-    },
-    // courseSourceMode: {
-    //   type: Sequelize.ENUM("YOUTUBE", "VIMEO", "CUSTOM"),
-    //   field: "course_source_mode",
-    //   allowNull: false,
-    // },
     courseType: {
       type: Sequelize.ENUM("BYOC", "INSTRUCTOR_LED"),
       field: "course_delivery_mode",
