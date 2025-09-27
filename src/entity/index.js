@@ -47,6 +47,7 @@ db.OrganizationGroups = require("./OrganizationGroups.entity.js")(sequelize, Seq
 db.OrganizationUserGroups = require("./OrganizationUserGroups.entity.js")(sequelize, Sequelize);
 db.UserCreditTransaction = require("./UserCreditTransaction.entity.js")(sequelize, Sequelize);
 db.UserLearningSchedule = require("./UserLearningSchedule.entity.js")(sequelize, Sequelize);
+db.CourseBuilder = require("./CourseBuilder.entity.js")(sequelize, Sequelize);
 
 
 
@@ -65,6 +66,7 @@ db.User.hasMany(db.OrganizationUserInvites, {foreignKey: 'cancelledBy', as: 'can
 db.User.hasMany(db.OrganizationUserGroups, {foreignKey: 'userId', as: 'groupMemberships'});
 db.User.hasMany(db.UserCreditTransaction, {foreignKey: 'userId', as: 'creditTransactions'});
 db.User.hasMany(db.CourseFlashcard, {foreignKey: 'userId', as: 'flashcardSets'});
+db.User.hasMany(db.CourseBuilder, {foreignKey: 'userId', as: 'courseBuilders'});
 
 // Course associations
 db.Course.belongsTo(db.User, {foreignKey: 'userId', as: 'instructor'});
@@ -83,6 +85,7 @@ db.Organization.hasMany(db.OrganizationUser, {foreignKey: 'orgId', as: 'members'
 db.Organization.hasMany(db.OrganizationUserInvites, {foreignKey: 'orgId', as: 'invites'});
 db.Organization.hasMany(db.OrganizationGroups, {foreignKey: 'orgId', as: 'groups'});
 db.Organization.hasMany(db.OrganizationUserGroups, {foreignKey: 'orgId', as: 'groupMemberships'});
+db.Organization.hasMany(db.CourseBuilder, {foreignKey: 'orgId', as: 'courseBuilders'});
 
 // OrganizationUser associations
 db.OrganizationUser.belongsTo(db.Organization, {foreignKey: 'orgId', as: 'organization'});
@@ -175,5 +178,9 @@ db.UserLearningSchedule.belongsTo(db.User, {foreignKey: 'userId', as: 'user'});
 
 // UserGoal associations
 db.UserGoal.belongsTo(db.User, {foreignKey: 'userId', as: 'user'});
+
+// CourseBuilder associations
+db.CourseBuilder.belongsTo(db.User, {foreignKey: 'userId', as: 'user'});
+db.CourseBuilder.belongsTo(db.Organization, {foreignKey: 'orgId', as: 'organization'});
 
 module.exports = db;

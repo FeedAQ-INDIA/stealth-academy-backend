@@ -1,0 +1,187 @@
+{
+  "courseTitle": "Example Course",
+  "courseDescription": "This is an example course",
+  "contentUrlsList": [
+    "https://youtube.com/watch?v=example1",
+    "https://example.com/article1"
+  ],
+  "processedAt": "2025-09-27T10:30:00.000Z",
+  "processingStatus": "COMPLETED",
+  "courseDetail": {
+    "courseId": "temp_course_id",
+    "userId": 123,
+    "orgId": null,
+    "courseTitle": "Example Course",
+    "courseDescription": "This is an example course",
+    "courseDuration": 3600,
+    "courseImageUrl": "https://i.ytimg.com/vi/example1/hqdefault.jpg",
+    "courseSourceChannel": "Example Channel",
+    "courseType": "BYOC",
+    "deliveryMode": "ONLINE",
+    "status": "PUBLISHED",
+    "isActive": true,
+    "isPublic": false,
+    "metadata": {
+      "createdFrom": "CourseBuilderDirect",
+      "urlCount": 2,
+      "youtubeUrlCount": 1,
+      "nonYoutubeUrlCount": 1,
+      "coursePlatform": "MIXED",
+      "courseType": "MIXED_CONTENT",
+      "courseDifficulty": "BEGINNER",
+      "isPublic": false,
+      "createdAt": "2025-09-27T10:30:00.000Z"
+    },
+    "createdAt": "2025-09-27T10:30:00.000Z",
+    "updatedAt": "2025-09-27T10:30:00.000Z"
+  },
+  "courseContent": [
+    {
+      "courseContent": {
+        "courseContentId": "temp_content_1",
+        "courseId": "temp_course_id",
+        "courseContentTitle": "Example Video Title",
+        "courseContentCategory": "Video Content",
+        "courseContentType": "CourseVideo",
+        "courseContentSequence": 1,
+        "coursecontentIsLicensed": false,
+        "courseContentDuration": 3600,
+        "isPublished": true,
+        "status": "PUBLISHED",
+        "metadata": {
+          "videoId": "example1",
+          "contentType": "YOUTUBE_VIDEO",
+          "sequence": 1
+        },
+        "createdAt": "2025-09-27T10:30:00.000Z",
+        "updatedAt": "2025-09-27T10:30:00.000Z"
+      },
+      "courseVideo": {
+        "courseVideoId": "temp_video_1",
+        "userId": 123,
+        "courseId": "temp_course_id",
+        "courseContentId": "temp_content_1",
+        "courseVideoTitle": "Example Video Title",
+        "courseVideoDescription": "Video description here",
+        "courseVideoUrl": "https://youtube.com/watch?v=example1",
+        "duration": 3600,
+        "thumbnailUrl": "https://i.ytimg.com/vi/example1/hqdefault.jpg",
+        "isPreview": false,
+        "status": "READY",
+        "createdAt": "2025-09-27T10:30:00.000Z",
+        "updatedAt": "2025-09-27T10:30:00.000Z"
+      },
+      "type": "youtube",
+      "sequence": 1,
+      "contentType": "CourseVideo"
+    },
+    {
+      "courseContent": {
+        "courseContentId": "temp_content_2",
+        "courseId": "temp_course_id",
+        "courseContentTitle": "Written Content 2: https://example.com/article1",
+        "courseContentCategory": "Written Content",
+        "courseContentType": "CourseWritten",
+        "courseContentSequence": 2,
+        "coursecontentIsLicensed": false,
+        "courseContentDuration": 0,
+        "isPublished": true,
+        "status": "PUBLISHED",
+        "metadata": {
+          "contentType": "EXTERNAL_URL",
+          "embeddabilityCheck": {
+            "embeddable": true,
+            "reason": "URL is embeddable"
+          },
+          "sequence": 2,
+          "isEmbeddable": true
+        },
+        "createdAt": "2025-09-27T10:30:00.000Z",
+        "updatedAt": "2025-09-27T10:30:00.000Z"
+      },
+      "courseWritten": {
+        "courseWrittenId": "temp_written_2",
+        "userId": 123,
+        "courseId": "temp_course_id",
+        "courseContentId": "temp_content_2",
+        "courseWrittenTitle": "Written Content 2",
+        "courseWrittenDescription": "External content from: https://example.com/article1",
+        "courseWrittenContent": "<iframe src=\"https://example.com/article1\" width=\"100%\" height=\"600px\" frameborder=\"0\"></iframe>",
+        "courseWrittenEmbedUrl": "https://example.com/article1",
+        "courseWrittenUrlIsEmbeddable": true,
+        "metadata": {
+          "originalUrl": "https://example.com/article1",
+          "embeddabilityCheck": {
+            "embeddable": true,
+            "reason": "URL is embeddable"
+          },
+          "createdAt": "2025-09-27T10:30:00.000Z",
+          "isEmbeddable": true
+        },
+        "createdAt": "2025-09-27T10:30:00.000Z",
+        "updatedAt": "2025-09-27T10:30:00.000Z"
+      },
+      "type": "written",
+      "sequence": 2,
+      "contentType": "CourseWritten"
+    }
+  ],
+  "courseContentDetails": {
+    "totalItems": 2,
+    "contentBreakdown": {
+      "youtubeVideos": 1,
+      "writtenContent": 1,
+      "embeddableUrls": 1,
+      "nonEmbeddableUrls": 0
+    },
+    "contentSequencing": [
+      {
+        "sequence": 1,
+        "contentType": "CourseVideo",
+        "title": "Example Video Title",
+        "duration": 3600
+      },
+      {
+        "sequence": 2,
+        "contentType": "CourseWritten",
+        "title": "Written Content 2: https://example.com/article1",
+        "duration": 0
+      }
+    ],
+    "totalDuration": 3600,
+    "contentTypes": ["CourseVideo", "CourseWritten"],
+    "statistics": {
+      "videoCount": 1,
+      "writtenCount": 1,
+      "embeddableCount": 1
+    }
+  },
+  "urlProcessingResults": {
+    "youtubeVideos": [
+      {
+        "courseContent": "... (YouTube content structure)",
+        "courseVideo": "... (YouTube video structure)",
+        "type": "youtube",
+        "sequence": 1,
+        "contentType": "CourseVideo"
+      }
+    ],
+    "writtenContent": [
+      {
+        "courseContent": "... (Written content structure)",
+        "courseWritten": "... (Written content structure)",
+        "type": "written",
+        "sequence": 2,
+        "contentType": "CourseWritten"
+      }
+    ],
+    "totalProcessed": 2,
+    "errors": [],
+    "nonEmbeddableUrls": []
+  },
+  "processedUrls": {
+    "totalUrlsProcessed": 2,
+    "youtubeErrors": [],
+    "nonEmbeddableUrls": []
+  }
+}
