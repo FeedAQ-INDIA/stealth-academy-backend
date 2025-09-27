@@ -180,6 +180,53 @@ async function createOrUpdateCourseBuilder(req, res) {
     }
 }
 
+/**
+ * Get course builder by ID
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+async function getCourseBuilderById(req, res) {
+    try {
+        const { courseBuilderId } = req.params;
+        const userId = req.user?.userId; // assuming auth middleware attaches user
+
+        if (!courseBuilderId || isNaN(parseInt(courseBuilderId))) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid or missing courseBuilderId parameter'
+            });
+        }
+        if (!userId) {
+            return res.status(401).json({
+                success: false,
+                message: 'Unauthorized: user context missing'
+            });
+        }
+
+        const courseBuilder = await CourseBuilderService.getCourseBuilder(parseInt(courseBuilderId), userId);
+
+        return res.status(200).json({
+            success: true,
+            message: 'Course builder fetched successfully',
+            data: courseBuilder
+        });
+    } catch (error) {
+        logger.error('Error in getCourseBuilderById controller:', error);
+        if (error.message === 'Course builder not found or access denied') {
+            return res.status(404).json({
+                success: false,
+                message: 'Course builder not found'
+            });
+        }
+        return res.status(500).json({
+            success: false,
+            message: 'Failed to fetch course builder',
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
+    }
+}
+
 module.exports = {
-    createOrUpdateCourseBuilder
+    createOrUpdateCourseBuilder,
+    getCourseBuilderById
 };
