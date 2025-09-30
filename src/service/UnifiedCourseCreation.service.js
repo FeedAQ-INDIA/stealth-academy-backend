@@ -451,7 +451,6 @@ async function createWrittenContent(course, urlData, startSequence, transaction)
       courseId: course.courseId,
       courseContentId: courseContent.courseContentId,
       courseWrittenTitle: `Written Content ${sequence}`,
-      courseWrittenDescription: `External content from: ${data.url}`,
       courseWrittenContent: courseWrittenContent,
       courseWrittenEmbedUrl: data.url,
       courseWrittenUrlIsEmbeddable: data.isEmbeddable,

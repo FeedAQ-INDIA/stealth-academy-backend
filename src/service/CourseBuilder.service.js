@@ -845,7 +845,6 @@ function prepareWrittenContentData(courseData, urlData, startSequence = 1) {
       courseId: 'temp_course_id', // Will be assigned when course is actually created
       courseContentId: tempContentId, // Reference to course content
       courseWrittenTitle: `Written Content ${sequence}`,
-      courseWrittenDescription: `External content from: ${data.url}`,
       courseWrittenContent: courseWrittenContent,
       courseWrittenEmbedUrl: data.url,
       courseWrittenUrlIsEmbeddable: data.isEmbeddable,
