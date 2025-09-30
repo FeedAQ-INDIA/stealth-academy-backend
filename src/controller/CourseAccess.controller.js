@@ -2,12 +2,12 @@ const db = require("../entity");
 const { Op } = require("sequelize");
 const { handleError } = require("../utils/errorHandler");
 
-const CourseAccess = db.courseAccess;
-const Course = db.course;
-const User = db.user;
-const Organization = db.organization;
-const Group = db.group;
-const GroupUser = db.groupUser;
+const CourseAccess = db.CourseAccess;
+const Course = db.Course;
+const User = db.User;
+const Organization = db.Organization;
+const OrganizationGroups = db.OrganizationGroups;
+const OrganizationUserGroups = db.OrganizationUserGroups;
 
 /**
  * Grant access to a course for a user or organization

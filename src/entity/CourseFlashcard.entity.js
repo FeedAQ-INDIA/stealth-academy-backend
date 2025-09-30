@@ -43,72 +43,12 @@ module.exports = (sequelize, Sequelize) => {
             field: "flashcard_set_tags",
             defaultValue: []
         },
-        setCategory: {
-            type: Sequelize.STRING(100),
-            field: "flashcard_set_category",
-            allowNull: true,
-        },
+
         estimatedDuration: {
             type: Sequelize.INTEGER,
             field: "flashcard_estimated_duration_minutes",
             defaultValue: 15,
             comment: "Estimated time to complete the flashcard set in minutes"
-        },
-        totalFlashcards: {
-            type: Sequelize.INTEGER,
-            field: "flashcard_total_count",
-            defaultValue: 0,
-            comment: "Total number of flashcards in this set"
-        },
-        learningObjectives: {
-            type: Sequelize.JSON,
-            field: "flashcard_learning_objectives",
-            defaultValue: [],
-            comment: "Array of learning objectives for this flashcard set"
-        },
-        orderIndex: {
-            type: Sequelize.INTEGER,
-            field: "flashcard_set_order_index",
-            defaultValue: 0,
-        },
-        isActive: {
-            type: Sequelize.BOOLEAN,
-            field: "flashcard_set_is_active",
-            defaultValue: true
-        },
-        status: {
-            type: Sequelize.ENUM("DRAFT", "PUBLISHED", "ARCHIVED"),
-            field: "flashcard_set_status",
-            defaultValue: "DRAFT"
-        },
-        visibility: {
-            type: Sequelize.ENUM("PUBLIC", "PRIVATE", "COURSE_ONLY"),
-            field: "flashcard_set_visibility",
-            defaultValue: "COURSE_ONLY"
-        },
-        allowShuffling: {
-            type: Sequelize.BOOLEAN,
-            field: "flashcard_allow_shuffling",
-            defaultValue: true,
-            comment: "Whether cards in this set can be shuffled for practice"
-        },
-        requireSequentialOrder: {
-            type: Sequelize.BOOLEAN,
-            field: "flashcard_require_sequential",
-            defaultValue: false,
-            comment: "Whether cards must be studied in a specific order"
-        },
-        passingScore: {
-            type: Sequelize.INTEGER,
-            field: "flashcard_passing_score_percentage",
-            defaultValue: 70,
-            comment: "Percentage score required to pass this flashcard set"
-        },
-        maxAttemptsPerSession: {
-            type: Sequelize.INTEGER,
-            field: "flashcard_max_attempts_per_session",
-            defaultValue: 3,
-            comment: "Maximum number of attempts allowed per study session"
         },
         metadata: {
             type: Sequelize.JSONB,
@@ -148,14 +88,7 @@ module.exports = (sequelize, Sequelize) => {
                     : this.setDescription;
             }
         },
-        v_completion_status: {
-            type: Sequelize.VIRTUAL,
-            get() {
-                // This would be calculated based on associated flashcard progress
-                // For now, return basic status
-                return this.status === 'PUBLISHED' ? 'Available' : 'In Progress';
-            }
-        },
+ 
         v_estimated_duration_formatted: {
             type: Sequelize.VIRTUAL,
             get() {
@@ -190,24 +123,6 @@ module.exports = (sequelize, Sequelize) => {
             },
             {
                 fields: ['flashcard_content_id']
-            },
-            {
-                fields: ['flashcard_set_status']
-            },
-            {
-                fields: ['flashcard_set_difficulty']
-            },
-            {
-                fields: ['flashcard_set_category']
-            },
-            {
-                fields: ['flashcard_set_order_index']
-            },
-            {
-                fields: ['flashcard_set_visibility']
-            },
-            {
-                fields: ['flashcard_set_is_active']
             },
             {
                 fields: ['flashcard_user_id']

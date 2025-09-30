@@ -13,7 +13,7 @@ module.exports = (sequelize, Sequelize) => {
             field: "course_quiz_description",
         },
         courseQuizType: {
-            type: Sequelize.ENUM('CERTIFICATION', 'KNOWLEDGE CHECK'),
+            type: Sequelize.ENUM('CERTIFICATION', 'QUIZ'),
             field: "course_quiz_type",
             allowNull: false,
         },

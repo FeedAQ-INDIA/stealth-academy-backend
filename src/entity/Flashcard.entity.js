@@ -36,56 +36,11 @@ module.exports = (sequelize, Sequelize) => {
             type: Sequelize.ENUM("EASY", "MEDIUM", "HARD"),
             field: "flashcard_difficulty",
             defaultValue: "MEDIUM"
-        },
-        cardType: {
-            type: Sequelize.ENUM("BASIC", "MULTIPLE_CHOICE", "TRUE_FALSE", "FILL_BLANK"),
-            field: "flashcard_type",
-            defaultValue: "BASIC"
-        },
-        tags: {
-            type: Sequelize.JSON,
-            field: "flashcard_tags",
-            defaultValue: []
-        },
-        hints: {
-            type: Sequelize.JSON,
-            field: "flashcard_hints",
-            defaultValue: []
-        },
+        }, 
         orderIndex: {
             type: Sequelize.INTEGER,
             field: "flashcard_order_index",
             defaultValue: 0,
-        },
-        isActive: {
-            type: Sequelize.BOOLEAN,
-            field: "flashcard_is_active",
-            defaultValue: true
-        },
-        status: {
-            type: Sequelize.ENUM("DRAFT", "PUBLISHED", "ARCHIVED"),
-            field: "flashcard_status",
-            defaultValue: "DRAFT"
-        },
-        reviewCount: {
-            type: Sequelize.INTEGER,
-            field: "flashcard_review_count",
-            defaultValue: 0
-        },
-        correctCount: {
-            type: Sequelize.INTEGER,
-            field: "flashcard_correct_count",
-            defaultValue: 0
-        },
-        lastReviewed: {
-            type: Sequelize.DATE,
-            field: "flashcard_last_reviewed",
-            allowNull: true
-        },
-        nextReviewDate: {
-            type: Sequelize.DATE,
-            field: "flashcard_next_review_date",
-            allowNull: true
         },
         metadata: {
             type: Sequelize.JSONB,
@@ -135,20 +90,7 @@ module.exports = (sequelize, Sequelize) => {
                     : this.answer;
             }
         },
-        v_success_rate: {
-            type: Sequelize.VIRTUAL,
-            get() {
-                if (this.reviewCount === 0) return 0;
-                return Math.round((this.correctCount / this.reviewCount) * 100);
-            }
-        },
-        v_last_reviewed_formatted: {
-            type: Sequelize.VIRTUAL,
-            get() {
-                if (!this.lastReviewed) return 'Never';
-                return formatDate(this.lastReviewed);
-            }
-        }
+ 
     }, {
         timestamps: true,
         createdAt: "flashcard_created_at",
@@ -159,27 +101,6 @@ module.exports = (sequelize, Sequelize) => {
             {
                 fields: ['course_flashcard_id']
             },
-            {
-                fields: ['flashcard_status']
-            },
-            {
-                fields: ['flashcard_difficulty']
-            },
-            {
-                fields: ['flashcard_type']
-            },
-            {
-                fields: ['flashcard_order_index']
-            },
-            {
-                fields: ['flashcard_is_active']
-            },
-            {
-                fields: ['flashcard_last_reviewed']
-            },
-            {
-                fields: ['flashcard_next_review_date']
-            }
         ],
     });
 

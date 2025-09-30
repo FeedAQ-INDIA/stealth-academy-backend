@@ -47,16 +47,6 @@ module.exports = (sequelize, Sequelize) => {
             type: Sequelize.STRING(500),
             field: "course_video_thumbnail_url",
         },
-        isPreview: {
-            type: Sequelize.BOOLEAN,
-            field: "course_video_is_preview",
-            defaultValue: false
-        },
-        status: {
-            type: Sequelize.ENUM("PENDING", "PROCESSING", "READY", "FAILED"),
-            field: "course_video_status",
-            defaultValue: "PENDING"
-        },
         metadata: {
             type: Sequelize.JSONB,
             field: "course_video_metadata",
@@ -107,9 +97,6 @@ module.exports = (sequelize, Sequelize) => {
             {
                 fields: ['course_video_content_id']
             },
-            {
-                fields: ['course_video_status']
-            }
         ],
 
     });

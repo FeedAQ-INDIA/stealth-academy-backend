@@ -45,7 +45,7 @@ module.exports = (sequelize, Sequelize) => {
             field: "quiz_question_note",
         },
         quizQuestionType: {
-            type: Sequelize.ENUM('MULTIPLE_CHOICE', 'SINGLE_CHOICE', 'TRUE_FALSE', 'FILL_BLANK', 'ESSAY'),
+            type: Sequelize.ENUM('MULTIPLE_CHOICE', 'SINGLE_CHOICE', 'INPUT_BOX', 'TRUE_FALSE', 'FILL_BLANK', 'ESSAY'),
             field: "quiz_question_type",
             allowNull: false,
             defaultValue: 'SINGLE_CHOICE'
@@ -70,25 +70,25 @@ module.exports = (sequelize, Sequelize) => {
             field: "quiz_question_neg_points",
             defaultValue: 0
         },
-        isQuestionTimed: {
-            type: Sequelize.BOOLEAN,
-            field: "quiz_question_is_timed",
-            defaultValue: false,
-        },
-        quizQuestionTimer: {
-            type: Sequelize.INTEGER,
-            field: "quiz_question_timer_seconds"
-        },
+        // isQuestionTimed: {
+        //     type: Sequelize.BOOLEAN,
+        //     field: "quiz_question_is_timed",
+        //     defaultValue: false,
+        // },
+        // quizQuestionTimer: {
+        //     type: Sequelize.INTEGER,
+        //     field: "quiz_question_timer_seconds"
+        // },
         questionSequence: {
             type: Sequelize.INTEGER,
             field: "quiz_question_sequence",
             allowNull: false
         },
-        isActive: {
-            type: Sequelize.BOOLEAN,
-            field: "quiz_question_is_active",
-            defaultValue: true,
-        },
+        // isActive: {
+        //     type: Sequelize.BOOLEAN,
+        //     field: "quiz_question_is_active",
+        //     defaultValue: true,
+        // },
         difficultyLevel: {
             type: Sequelize.ENUM('EASY', 'MEDIUM', 'HARD'),
             field: "quiz_question_difficulty",

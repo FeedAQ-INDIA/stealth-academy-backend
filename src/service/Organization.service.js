@@ -45,7 +45,7 @@ class OrganizationService {
             // Create new organization
             const organization = await db.Organization.create({
                 orgName,
-                orgNameInitial: getInitials(orgName),
+                orgInitial: getInitials(orgName),
                 orgEmail,
                 orgContactNo,
                 orgDomain,
@@ -280,7 +280,7 @@ class OrganizationService {
             });
 
             // Get group count
-            const groupCount = await db.Group.count({
+            const groupCount = await db.OrganizationGroups.count({
                 where: { orgId }
             });
 
