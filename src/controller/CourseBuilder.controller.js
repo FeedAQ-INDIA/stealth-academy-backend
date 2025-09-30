@@ -42,30 +42,18 @@ async function createOrUpdateCourseBuilder(req, res) {
             }
 
             // Process URLs and create course using the service
-            const publishResult = await CourseBuilderService.processUrlsAndCreateCourse({
+            const courseDetail = await CourseBuilderService.processUrlsAndCreateCourse({
                 userId,
                 orgId,
                 courseBuilderData
             });
 
-            // Store the entire processing result in courseBuilderData with DB-like structure
+            // Simplified enrichment: just persist the generated course detail
             const enrichedCourseBuilderData = {
                 ...courseBuilderData,
                 processedAt: new Date().toISOString(),
-                processedUrls: publishResult.processing,
                 processingStatus: 'COMPLETED',
-                // Store complete course data in DB-like format
-                courseDetail: publishResult.course,
-                courseContent: publishResult.courseContent,
-                courseContentDetails: publishResult.courseContentDetails,
-                // Additional processing metadata
-                urlProcessingResults: {
-                    youtubeVideos: publishResult.courseContent.filter(item => item.type === 'youtube'),
-                    writtenContent: publishResult.courseContent.filter(item => item.type === 'written'),
-                    totalProcessed: publishResult.processing.totalUrlsProcessed,
-                    errors: publishResult.processing.youtubeErrors,
-                    nonEmbeddableUrls: publishResult.processing.nonEmbeddableUrls
-                }
+                courseDetail
             };
 
             // Create course builder record with all the data
@@ -79,9 +67,8 @@ async function createOrUpdateCourseBuilder(req, res) {
             
             const result = await CourseBuilderService.createOrUpdateCourseBuilder(courseBuilderPayload);
             
-            logger.info('CourseBuilder created with course publication', { 
-                id: result.data.courseBuilderId,
-                courseId: publishResult.course.courseId
+            logger.info('CourseBuilder created with course data', { 
+                id: result.data.courseBuilderId
             });
             
             return res.status(201).json({
@@ -90,10 +77,7 @@ async function createOrUpdateCourseBuilder(req, res) {
                 operation: 'create_with_course_data',
                 data: {
                     courseBuilder: result.data,
-                    course: publishResult.course,
-                    courseContent: publishResult.courseContent,
-                    courseContentDetails: publishResult.courseContentDetails,
-                    processing: publishResult.processing
+                    courseDetail
                 }
             });
         } else {

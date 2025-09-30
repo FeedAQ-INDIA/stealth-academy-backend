@@ -4,18 +4,18 @@
 const { formatDate, formatTime } = require("../utils/dateFormatters");
 
 module.exports = (sequelize, Sequelize) => {
-  const CourseStudyGroup = sequelize.define(
-    "course_study_group",
+  const CourseStudyGroupUser = sequelize.define(
+    "course_study_group_user",
     {
-      courseStudyGroupId: {
+      courseStudyGroupUserId: {
         type: Sequelize.INTEGER,
         primaryKey: true,
         autoIncrement: true,
-        field: "course_study_group_id",
+        field: "course_study_group_user_id",
       },
       courseId: {
         type: Sequelize.INTEGER,
-        field: "study_group_course_id",
+        field: "course_study_group_user_course_id",
         allowNull: false,
         references: {
           model: "Courses",
@@ -24,17 +24,17 @@ module.exports = (sequelize, Sequelize) => {
       },
       groupName: {
         type: Sequelize.STRING(200),
-        field: "study_group_name",
+        field: "course_study_group_user_name",
         allowNull: false,
       },
       description: {
         type: Sequelize.TEXT,
-        field: "study_group_description",
+        field: "course_study_group_user_description",
         allowNull: true,
       },
       createdBy: {
         type: Sequelize.INTEGER,
-        field: "study_group_created_by",
+        field: "course_study_group_user_created_by",
         allowNull: false,
         references: {
           model: "user",
@@ -43,7 +43,7 @@ module.exports = (sequelize, Sequelize) => {
       },
       ownedBy: {
         type: Sequelize.INTEGER,
-        field: "study_group_owned_by",
+        field: "course_study_group_user_owned_by",
         allowNull: false,
         references: {
           model: "user",
@@ -57,38 +57,38 @@ module.exports = (sequelize, Sequelize) => {
           model: "organization",
           key: "org_id",
         },
-        field: "study_group_org_id",
+        field: "course_study_group_user_org_id",
       },
       analyticsVisibility: {
         type: Sequelize.JSONB,
-        field: "study_group_analytics_visibility",
+        field: "course_study_group_user_analytics_visibility",
       },
       metadata: {
         type: Sequelize.JSONB,
-        field: "study_group_metadata",
+        field: "course_study_group_user_metadata",
       },
       v_created_date: {
         type: Sequelize.VIRTUAL,
         get() {
-          return formatDate(this.study_group_created_at);
+          return formatDate(this.course_study_group_user_created_at);
         },
       },
       v_created_time: {
         type: Sequelize.VIRTUAL,
         get() {
-          return formatTime(this.study_group_created_at);
+          return formatTime(this.course_study_group_user_created_at);
         },
       },
       v_updated_date: {
         type: Sequelize.VIRTUAL,
         get() {
-          return formatDate(this.study_group_updated_at);
+          return formatDate(this.course_study_group_user_updated_at);
         },
       },
       v_updated_time: {
         type: Sequelize.VIRTUAL,
         get() {
-          return formatTime(this.study_group_updated_at);
+          return formatTime(this.course_study_group_user_updated_at);
         },
       },
       v_description_preview: {
@@ -103,12 +103,18 @@ module.exports = (sequelize, Sequelize) => {
     },
     {
       timestamps: true,
-      createdAt: "study_group_created_at",
-      updatedAt: "study_group_updated_at",
+      createdAt: "course_study_group_user_created_at",
+      updatedAt: "course_study_group_user_updated_at",
       paranoid: true,
-      deletedAt: "study_group_deleted_at",
-      
+      deletedAt: "course_study_group_user_deleted_at",
+            indexes: [
+            {
+                name: 'idx_c_unique_access',
+                unique: true,
+                fields: ['course_access_course_id', 'course_access_user_id', 'course_access_org_id']
+            }
+      ]
     }
   );
-  return CourseStudyGroup;
+  return CourseStudyGroupUser;
 };

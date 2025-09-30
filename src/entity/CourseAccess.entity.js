@@ -36,8 +36,8 @@ module.exports = (sequelize, Sequelize) => {
             field: "course_access_org_id",
         },
         accessLevel: {
-            type: Sequelize.ENUM("OWN", "SHARED",  "ADMIN"),
-            defaultValue: "READ",
+            type: Sequelize.ENUM("OWN", "SHARED",  "ADMIN", "STUDY_GROUP"),
+            defaultValue: "OWN",
             field: "course_access_level",
             allowNull: false,
         },

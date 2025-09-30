@@ -701,43 +701,16 @@ async function processUrlsAndCreateCourse(payload) {
 
     logger.info("✅ Course data processing completed without database saves");
 
-    // Prepare response with complete course structure
-    const result = {
-      success: true,
-      course: courseData,
-      courseContent: courseContentData,
-      courseContentDetails: {
-        totalItems: courseContentData.length,
-        contentBreakdown: {
-          youtubeVideos: youtubeResult.videos.length,
-          writtenContent: nonYoutubeResult.allUrls?.length || 0,
-          embeddableUrls: nonYoutubeResult.embeddableUrls?.length || 0,
-          nonEmbeddableUrls: nonYoutubeResult.nonEmbeddableUrls?.length || 0
-        },
-        contentSequencing: courseContentData.map(item => ({
-          sequence: item.sequence,
-          contentType: item.contentType,
-          title: item.courseContent.courseContentTitle,
-          duration: item.courseContent.courseContentDuration || 0
-        })),
-        totalDuration: courseContentData.reduce((sum, item) => 
-          sum + (item.courseContent.courseContentDuration || 0), 0),
-        contentTypes: [...new Set(courseContentData.map(item => item.contentType))],
-        statistics: {
-          videoCount: courseContentData.filter(item => item.type === 'youtube').length,
-          writtenCount: courseContentData.filter(item => item.type === 'written').length,
-          embeddableCount: courseContentData.filter(item => 
-            item.type === 'written' && item.courseWritten?.courseWrittenUrlIsEmbeddable).length
-        }
-      },
-      processing: {
-        totalUrlsProcessed: contentUrlsList.length,
-        youtubeErrors: youtubeResult.errors,
-        nonEmbeddableUrls: nonYoutubeResult.nonEmbeddableUrls || []
-      }
+    // Prepare simplified response structure
+    const courseDetail = {
+      ...courseData,
+      courseContent: courseContentData.map(item => ({
+        ...item.courseContent,
+        courseContentTypeDetails: item.type === 'youtube' ? item.courseVideo : item.courseWritten
+      }))
     };
 
-    return result;
+    return courseDetail;
 
   } catch (error) {
     logger.error(`❌ Error processing URLs and preparing course data:`, error.message);
