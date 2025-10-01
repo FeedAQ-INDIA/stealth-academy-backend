@@ -173,36 +173,50 @@ async function fetchPlaylistDetails(playlistId) {
       return null;
     }
 
+    // Collect video IDs then fetch details (durations etc.)
+    const videoIds = items
+      .map(it => it?.contentDetails?.videoId)
+      .filter(Boolean);
+
+    let detailsMap = {};
+    if (videoIds.length) {
+      try {
+        const details = await fetchVideoDetails(videoIds);
+        detailsMap = details.reduce((acc, d) => { acc[d.videoId] = d; return acc; }, {});
+      } catch (e) {
+        logger.warn(`Failed to enrich playlist videos with durations: ${e.message}`);
+      }
+    }
+
     // Derive minimal playlist-level metadata from first item
     const first = items[0];
     const playlistTitle = first?.snippet?.playlistId ? `Playlist ${playlistId}` : (first?.snippet?.channelTitle || 'YouTube Playlist');
 
-    // Map items directly to the expected internal video object structure
     const videos = items
-      .filter(it => it?.contentDetails?.videoId && it?.snippet) // skip malformed
+      .filter(it => it?.contentDetails?.videoId && it?.snippet)
       .map(it => {
         const vid = it.contentDetails.videoId;
         const sn = it.snippet;
         const thumbs = sn.thumbnails || {};
         const thumb = thumbs.high?.url || thumbs.standard?.url || thumbs.maxres?.url || thumbs.medium?.url || thumbs.default?.url || null;
+        const enriched = detailsMap[vid] || {};
         return {
           videoId: vid,
-          videoTitle: sn.title || 'Untitled Video',
-          videoDescription: sn.description || '',
+          videoTitle: enriched.videoTitle || sn.title || 'Untitled Video',
+          videoDescription: enriched.videoDescription || sn.description || '',
           videoUrl: `https://www.youtube.com/watch?v=${vid}`,
-          duration: 0, // Unknown without separate videos API call
-          thumbnailUrl: thumb,
-          channelTitle: sn.videoOwnerChannelTitle || sn.channelTitle || null,
-          publishedAt: it.contentDetails?.videoPublishedAt || sn.publishedAt || null
+          duration: typeof enriched.duration === 'number' ? enriched.duration : 0,
+          thumbnailUrl: enriched.thumbnailUrl || thumb,
+          channelTitle: enriched.channelTitle || sn.videoOwnerChannelTitle || sn.channelTitle || null,
+          publishedAt: enriched.publishedAt || it.contentDetails?.videoPublishedAt || sn.publishedAt || null
         };
       })
-      // Filter out deleted / unavailable placeholders (keep if you want them)
       .filter(v => v.videoTitle && v.videoTitle.toLowerCase() !== 'deleted video');
 
     return {
       playlistId,
       playlistTitle: playlistTitle,
-      playlistDescription: null, // Not available without playlists endpoint
+      playlistDescription: null,
       channelTitle: first?.snippet?.channelTitle || null,
       videos
     };
@@ -210,6 +224,50 @@ async function fetchPlaylistDetails(playlistId) {
     logger.error(`Error fetching playlist details for ${playlistId}:`, error.message);
     return null;
   }
+}
+
+/**
+ * Fetch details (duration, title, etc.) for multiple video IDs using a single or batched YouTube API call
+ * @param {string[]} videoIds
+ * @returns {Promise<Array<{videoId:string,duration:number,videoTitle:string,videoDescription:string,thumbnailUrl:string,channelTitle:string,publishedAt:string}>>}
+ */
+async function fetchVideoDetails(videoIds = []) {
+  const apiKey = process.env.YOUTUBE_API_KEY;
+  if (!apiKey) throw new Error('YOUTUBE_API_KEY not configured');
+  const uniqueIds = [...new Set(videoIds.filter(Boolean))];
+  if (!uniqueIds.length) return [];
+
+  const results = [];
+  // API supports up to 50 IDs per request
+  for (let i = 0; i < uniqueIds.length; i += 50) {
+    const batch = uniqueIds.slice(i, i + 50);
+    const url = `https://www.googleapis.com/youtube/v3/videos?part=contentDetails,snippet&id=${batch.join(',')}&key=${apiKey}`;
+    try {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+      const data = await res.json();
+      (data.items || []).forEach(item => {
+        const vid = item.id;
+        const durationIso = item.contentDetails?.duration;
+        const durationSecs = parseISO8601Duration(durationIso);
+        const sn = item.snippet || {};
+        const thumbs = sn.thumbnails || {};
+        const thumb = thumbs.maxres?.url || thumbs.standard?.url || thumbs.high?.url || thumbs.medium?.url || thumbs.default?.url || null;
+        results.push({
+          videoId: vid,
+            duration: durationSecs,
+          videoTitle: sn.title || `Video ${vid}`,
+          videoDescription: sn.description || '',
+          thumbnailUrl: thumb,
+          channelTitle: sn.channelTitle || null,
+          publishedAt: sn.publishedAt || null
+        });
+      });
+    } catch (e) {
+      logger.warn(`Failed to fetch video details batch: ${e.message}`);
+    }
+  }
+  return results;
 }
 
 /**
@@ -223,6 +281,7 @@ async function processYouTubeUrls(youtubeUrls) {
 
   const videos = [];
   const errors = [];
+  const singleVideoIds = [];
 
   for (const url of youtubeUrls) {
     const playlistId = extractPlaylistIdFromUrl(url);
@@ -238,7 +297,7 @@ async function processYouTubeUrls(youtubeUrls) {
     }
     const videoId = extractVideoIdFromUrl(url);
     if (videoId) {
-      // Minimal single-video object (no API call, duration unknown)
+      // Placeholder; will enrich after collecting all single IDs
       videos.push({
         videoId,
         videoTitle: `Video ${videoId}`,
@@ -247,10 +306,34 @@ async function processYouTubeUrls(youtubeUrls) {
         duration: 0,
         thumbnailUrl: `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`,
         channelTitle: null,
-        publishedAt: null
+        publishedAt: null,
+        _needsEnrich: true
       });
+      singleVideoIds.push(videoId);
     } else {
       errors.push(`Unrecognized URL: ${url}`);
+    }
+  }
+
+  // Enrich single video placeholders with real details (durations etc.)
+  if (singleVideoIds.length) {
+    try {
+      const details = await fetchVideoDetails(singleVideoIds);
+      const detailsMap = details.reduce((acc, d) => { acc[d.videoId] = d; return acc; }, {});
+      videos.forEach(v => {
+        if (v._needsEnrich && detailsMap[v.videoId]) {
+          const d = detailsMap[v.videoId];
+          v.videoTitle = d.videoTitle || v.videoTitle;
+          v.videoDescription = d.videoDescription || v.videoDescription;
+          v.duration = typeof d.duration === 'number' ? d.duration : v.duration;
+          v.thumbnailUrl = d.thumbnailUrl || v.thumbnailUrl;
+          v.channelTitle = d.channelTitle || v.channelTitle;
+          v.publishedAt = d.publishedAt || v.publishedAt;
+          delete v._needsEnrich;
+        }
+      });
+    } catch (e) {
+      logger.warn(`Failed to enrich single video details: ${e.message}`);
     }
   }
 

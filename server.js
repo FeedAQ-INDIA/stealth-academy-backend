@@ -27,6 +27,7 @@ const logger = require('./src/config/winston.config.js')
 const userGoalRoute = require("./src/routes/userGoal.route.js");
 const userLearningScheduleRoute = require("./src/routes/userlearningschedule.route.js");
 const courseBuilderRoute = require("./src/routes/courseBuilder.route.js");
+const publishCourseRoute = require("./src/routes/publishCourse.route.js");
 
 
 const swaggerOptions = {
@@ -99,6 +100,7 @@ app.use('/api/url-embeddability', urlEmbeddabilityRoute);
 app.use(userGoalRoute);
 app.use(userLearningScheduleRoute);
 app.use(courseBuilderRoute);
+app.use(publishCourseRoute);
 
 app.listen(port, '0.0.0.0', () => {
     console.log(`Example app listening on port ${port}`);
