@@ -31,6 +31,7 @@ async function deleteCourse(courseId, userId) {
         });
         
         for (const quiz of quizzes) {
+            if(quiz.quizId){
             await db.QuizResultLog.destroy({
                 where: { quizId: quiz.quizId },
                 transaction: t
@@ -39,6 +40,7 @@ async function deleteCourse(courseId, userId) {
                 where: { quizId: quiz.quizId },
                 transaction: t
             });
+        }
         }
         await db.CourseQuiz.destroy({
             where: { courseId },
