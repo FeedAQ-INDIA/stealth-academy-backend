@@ -28,6 +28,7 @@ const userGoalRoute = require("./src/routes/userGoal.route.js");
 const userLearningScheduleRoute = require("./src/routes/userlearningschedule.route.js");
 const courseBuilderRoute = require("./src/routes/courseBuilder.route.js");
 const publishCourseRoute = require("./src/routes/publishCourse.route.js");
+const courseStudyGroupRoute = require("./src/routes/courseStudyGroup.route.js");
 
 
 const swaggerOptions = {
@@ -101,6 +102,7 @@ app.use(userGoalRoute);
 app.use(userLearningScheduleRoute);
 app.use(courseBuilderRoute);
 app.use(publishCourseRoute);
+app.use('/course-study-group', courseStudyGroupRoute);
 
 app.listen(port, '0.0.0.0', () => {
     console.log(`Example app listening on port ${port}`);

@@ -48,6 +48,9 @@ db.OrganizationUserGroups = require("./OrganizationUserGroups.entity.js")(sequel
 db.UserCreditTransaction = require("./UserCreditTransaction.entity.js")(sequelize, Sequelize);
 db.UserLearningSchedule = require("./UserLearningSchedule.entity.js")(sequelize, Sequelize);
 db.CourseBuilder = require("./CourseBuilder.entity.js")(sequelize, Sequelize);
+db.CourseStudyGroup = require("./CourseStudyGroup.entity.js")(sequelize, Sequelize);
+db.CourseStudyGroupUser = require("./CourseStudyGroupUser.entity.js")(sequelize, Sequelize);
+db.CourseStudyGroupContent = require("./CourseStudyGroupContent.entity.js")(sequelize, Sequelize);
 
 
 
@@ -67,6 +70,11 @@ db.User.hasMany(db.OrganizationUserGroups, {foreignKey: 'userId', as: 'groupMemb
 db.User.hasMany(db.UserCreditTransaction, {foreignKey: 'userId', as: 'creditTransactions'});
 db.User.hasMany(db.CourseFlashcard, {foreignKey: 'userId', as: 'flashcardSets'});
 db.User.hasMany(db.CourseBuilder, {foreignKey: 'userId', as: 'courseBuilders'});
+db.User.hasMany(db.CourseStudyGroup, {foreignKey: 'createdBy', as: 'createdStudyGroups'});
+db.User.hasMany(db.CourseStudyGroup, {foreignKey: 'ownedBy', as: 'ownedStudyGroups'});
+db.User.hasMany(db.CourseStudyGroupUser, {foreignKey: 'userId', as: 'studyGroupMemberships'});
+db.User.hasMany(db.CourseStudyGroupUser, {foreignKey: 'invitedBy', as: 'sentStudyGroupInvites'});
+db.User.hasMany(db.CourseStudyGroupContent, {foreignKey: 'createdBy', as: 'createdGroupContent'});
 
 // Course associations
 db.Course.belongsTo(db.User, {foreignKey: 'userId', as: 'instructor'});
@@ -78,6 +86,8 @@ db.Course.hasMany(db.Notes, {foreignKey: 'courseId', as: 'notes'});
 db.Course.hasMany(db.UserCourseContentProgress, {foreignKey: 'courseId', as: 'activityLogs'});
 db.Course.hasMany(db.QuizResultLog, {foreignKey: 'courseId', as: 'quizResults'});
 db.Course.hasMany(db.CourseFlashcard, {foreignKey: 'courseId', as: 'flashcardSets'});
+db.Course.hasMany(db.CourseStudyGroup, {foreignKey: 'courseId', as: 'studyGroups'});
+db.Course.hasMany(db.CourseStudyGroupContent, {foreignKey: 'courseId', as: 'studyGroupContent'});
 
 // Organization associations
 db.Organization.hasMany(db.Course, {foreignKey: 'orgId', as: 'courses'});
@@ -182,5 +192,24 @@ db.UserGoal.belongsTo(db.User, {foreignKey: 'userId', as: 'user'});
 // CourseBuilder associations
 db.CourseBuilder.belongsTo(db.User, {foreignKey: 'userId', as: 'user'});
 db.CourseBuilder.belongsTo(db.Organization, {foreignKey: 'orgId', as: 'organization'});
+
+// CourseStudyGroup associations
+db.CourseStudyGroup.belongsTo(db.Course, {foreignKey: 'courseId', as: 'course'});
+db.CourseStudyGroup.belongsTo(db.User, {foreignKey: 'createdBy', as: 'creator'});
+db.CourseStudyGroup.belongsTo(db.User, {foreignKey: 'ownedBy', as: 'owner'});
+db.CourseStudyGroup.belongsTo(db.Organization, {foreignKey: 'organizationId', as: 'organization'});
+db.CourseStudyGroup.hasMany(db.CourseStudyGroupUser, {foreignKey: 'courseStudyGroupId', as: 'members'});
+db.CourseStudyGroup.hasMany(db.CourseStudyGroupContent, {foreignKey: 'courseStudyGroupId', as: 'groupContent'});
+
+// CourseStudyGroupUser associations
+db.CourseStudyGroupUser.belongsTo(db.CourseStudyGroup, {foreignKey: 'courseStudyGroupId', as: 'studyGroup'});
+db.CourseStudyGroupUser.belongsTo(db.User, {foreignKey: 'userId', as: 'user'});
+db.CourseStudyGroupUser.belongsTo(db.User, {foreignKey: 'invitedBy', as: 'inviter'});
+
+// CourseStudyGroupContent associations
+db.CourseStudyGroupContent.belongsTo(db.CourseStudyGroup, {foreignKey: 'courseStudyGroupId', as: 'studyGroup'});
+db.CourseStudyGroupContent.belongsTo(db.Course, {foreignKey: 'courseId', as: 'course'});
+db.CourseStudyGroupContent.belongsTo(db.User, {foreignKey: 'createdBy', as: 'creator'});
+db.CourseStudyGroupContent.belongsTo(db.User, {foreignKey: 'lastModifiedBy', as: 'lastModifier'});
 
 module.exports = db;

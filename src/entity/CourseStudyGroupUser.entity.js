@@ -1,5 +1,5 @@
-// CourseStudyGroup.entity.js
-// Entity for managing study groups within a course
+// CourseStudyGroupUser.entity.js
+// Junction table for many-to-many mapping between users and study groups
 
 const { formatDate, formatTime } = require("../utils/dateFormatters");
 
@@ -13,59 +13,56 @@ module.exports = (sequelize, Sequelize) => {
         autoIncrement: true,
         field: "course_study_group_user_id",
       },
-      courseId: {
+      courseStudyGroupId: {
         type: Sequelize.INTEGER,
-        field: "course_study_group_user_course_id",
+        field: "course_study_group_id",
         allowNull: false,
         references: {
-          model: "Courses",
-          key: "id",
+          model: "course_study_group",
+          key: "course_study_group_id",
         },
       },
-      groupName: {
-        type: Sequelize.STRING(200),
-        field: "course_study_group_user_name",
-        allowNull: false,
-      },
-      description: {
-        type: Sequelize.TEXT,
-        field: "course_study_group_user_description",
-        allowNull: true,
-      },
-      createdBy: {
+      userId: {
         type: Sequelize.INTEGER,
-        field: "course_study_group_user_created_by",
+        field: "user_id",
         allowNull: false,
         references: {
           model: "user",
           key: "user_id",
         },
       },
-      ownedBy: {
-        type: Sequelize.INTEGER,
-        field: "course_study_group_user_owned_by",
+      role: {
+        type: Sequelize.ENUM('MEMBER', 'ADMIN', 'OWNER'),
+        field: "user_role",
         allowNull: false,
+        defaultValue: 'MEMBER',
+      },
+      joinedAt: {
+        type: Sequelize.DATE,
+        field: "joined_at",
+        allowNull: false,
+        defaultValue: Sequelize.NOW,
+      },
+      invitedBy: {
+        type: Sequelize.INTEGER,
+        field: "invited_by",
+        allowNull: true,
         references: {
           model: "user",
           key: "user_id",
         },
       },
-      organizationId: {
-        type: Sequelize.INTEGER,
-        allowNull: true,
-        references: {
-          model: "organization",
-          key: "org_id",
+      v_joined_date: {
+        type: Sequelize.VIRTUAL,
+        get() {
+          return formatDate(this.joined_at);
         },
-        field: "course_study_group_user_org_id",
       },
-      analyticsVisibility: {
-        type: Sequelize.JSONB,
-        field: "course_study_group_user_analytics_visibility",
-      },
-      metadata: {
-        type: Sequelize.JSONB,
-        field: "course_study_group_user_metadata",
+      v_joined_time: {
+        type: Sequelize.VIRTUAL,
+        get() {
+          return formatTime(this.joined_at);
+        },
       },
       v_created_date: {
         type: Sequelize.VIRTUAL,
@@ -91,15 +88,6 @@ module.exports = (sequelize, Sequelize) => {
           return formatTime(this.course_study_group_user_updated_at);
         },
       },
-      v_description_preview: {
-        type: Sequelize.VIRTUAL,
-        get() {
-          if (!this.description) return "";
-          return this.description.length > 150
-            ? this.description.substring(0, 150) + "..."
-            : this.description;
-        },
-      },
     },
     {
       timestamps: true,
@@ -107,12 +95,21 @@ module.exports = (sequelize, Sequelize) => {
       updatedAt: "course_study_group_user_updated_at",
       paranoid: true,
       deletedAt: "course_study_group_user_deleted_at",
-            indexes: [
-            {
-                name: 'idx_c_unique_access',
-                unique: true,
-                fields: ['course_access_course_id', 'course_access_user_id', 'course_access_org_id']
-            }
+      indexes: [
+        {
+          name: 'idx_unique_group_user',
+          unique: true,
+          fields: ['course_study_group_id', 'user_id']
+        },
+        {
+          name: 'idx_group_id',
+          fields: ['course_study_group_id']
+        },
+        {
+          name: 'idx_user_id',
+          fields: ['user_id']
+        },
+        
       ]
     }
   );
