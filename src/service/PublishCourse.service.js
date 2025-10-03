@@ -2,37 +2,54 @@ const db = require("../entity/index.js");
 const logger = require("../config/winston.config.js");
 
 /**
- * Publish Course from a pre-processed Course Builder payload
- * Accepts the full structure produced by CourseBuilder processing (or a subset)
+ * Publish Course from CourseBuilder data
+ * Accepts courseBuilderId and fetches courseBuilderData from CourseBuilder entity table
  * and persists normalized records into Course, CourseContent, CourseVideo, CourseWritten, etc.
  *
- * Expected payload shape (examples accepted):
- * 1. { success, message, operation, data: { courseBuilderId, userId, orgId, status, courseBuilderData: { courseDetail: {...} } } }
- * 2. { courseBuilderId, userId, orgId, courseBuilderData: { courseDetail: {...} } }
- * 3. { courseBuilderData: { courseDetail: {...} } }
+ * Expected payload shape:
+ * { courseBuilderId: number }
  */
 async function publishCourseFromBuilderPayload(rawPayload, authUserId) {
   const transaction = await db.sequelize.transaction();
   try {
-    // Normalize payload paths
-    const rootData = rawPayload?.data || rawPayload || {};
-    const courseBuilderData = rootData?.courseBuilderData || {};
-    const courseDetail = courseBuilderData?.courseDetail;
-    const courseBuilderId = rootData?.courseBuilderId || rawPayload?.courseBuilderId || rawPayload?.data?.courseBuilderId || null;
+    const courseBuilderId = rawPayload?.courseBuilderId;
 
-    if (!courseDetail) {
-      throw new Error("courseDetail missing in payload");
+    if (!courseBuilderId) {
+      throw new Error("courseBuilderId is required");
     }
 
-    const userId = courseDetail.userId || rootData.userId || rawPayload?.data?.userId || authUserId;
-    const orgId = courseDetail.orgId || rootData.orgId || null;
+    // Fetch CourseBuilder data from database
+    const courseBuilder = await db.CourseBuilder.findOne({
+      where: { courseBuilderId },
+      transaction
+    });
 
-    if (!userId) {
-      throw new Error("userId missing in payload");
+    if (!courseBuilder) {
+      throw new Error(`CourseBuilder not found with ID: ${courseBuilderId}`);
     }
-    if (authUserId && userId !== authUserId) {
-      throw new Error("User mismatch: cannot publish for another user");
+
+    // Verify user authorization
+    if (authUserId && courseBuilder.userId !== authUserId) {
+      throw new Error("User mismatch: cannot publish course for another user");
     }
+
+    // Check if already published
+    if (courseBuilder.status === 'PUBLISHED') {
+      throw new Error("Course has already been published");
+    }
+
+    const courseBuilderData = courseBuilder.courseBuilderData || {};
+    
+    // Handle the actual courseBuilderData structure
+    // The course data is at the root level, not nested under courseDetail
+    const courseDetail = courseBuilderData;
+
+    if (!courseDetail?.courseTitle) {
+      throw new Error("Course data missing in CourseBuilder data");
+    }
+
+    const userId = courseBuilder.userId;
+    const orgId = courseBuilder.orgId;
 
     const {
       courseTitle,
@@ -41,13 +58,12 @@ async function publishCourseFromBuilderPayload(rawPayload, authUserId) {
       courseImageUrl = null,
       courseType = 'BYOC',
       deliveryMode = 'ONLINE',
-      status = 'DRAFT',
       courseSourceChannel = null,
       metadata = {}
     } = courseDetail;
 
     if (!courseTitle || !courseDescription) {
-      throw new Error("Missing courseTitle or courseDescription in courseDetail");
+      throw new Error("Missing courseTitle or courseDescription in CourseBuilder data");
     }
 
     // Create Course (always publish in this flow)
@@ -84,7 +100,8 @@ async function publishCourseFromBuilderPayload(rawPayload, authUserId) {
           courseContentDuration = 0,
           metadata: contentMetadata = {},
           coursecontentIsLicensed = false,
-          courseContentTypeDetail = {}
+          courseContentTypeDetail = {},
+          status: contentStatus = 'DRAFT' // Handle status from sample data
         } = item || {};
 
         if (!courseContentTitle || !courseContentType || !courseContentSequence) {
@@ -92,16 +109,18 @@ async function publishCourseFromBuilderPayload(rawPayload, authUserId) {
           continue;
         }
 
+   
+
         // Persist CourseContent
         const contentRecord = await db.CourseContent.create({
           courseId: course.courseId,
-            courseContentTitle: courseContentTitle.trim(),
-            courseContentCategory: courseContentCategory || null,
-            courseContentType: courseContentType,
-            courseContentSequence: courseContentSequence,
-            coursecontentIsLicensed: !!coursecontentIsLicensed,
-            courseContentDuration: courseContentDuration || 0,
-            metadata: contentMetadata || {}
+          courseContentTitle: courseContentTitle.trim(),
+          courseContentCategory: courseContentCategory || null,
+          courseContentType: courseContentType,
+          courseContentSequence: courseContentSequence,
+          coursecontentIsLicensed: !!coursecontentIsLicensed,
+          courseContentDuration: courseContentDuration || 0,
+          metadata: contentMetadata || {}
         }, { transaction });
 
         let detailRecord = null;
@@ -131,6 +150,71 @@ async function publishCourseFromBuilderPayload(rawPayload, authUserId) {
             courseWrittenUrlIsEmbeddable: writtenMeta.courseWrittenUrlIsEmbeddable || false,
             metadata: (writtenMeta.metadata) ? { ...writtenMeta.metadata } : {}
           }, { transaction });
+        } else if (courseContentType === 'CourseQuiz' && db.CourseQuiz) {
+          const quizMeta = courseContentTypeDetail || {};
+          detailRecord = await db.CourseQuiz.create({
+            courseId: course.courseId,
+            courseContentId: contentRecord.courseContentId,
+            courseQuizDescription: quizMeta.courseQuizDescription || '',
+            courseQuizType: quizMeta.courseQuizType || 'QUIZ',
+            courseQuizTimer: quizMeta.courseQuizTimer || 0,
+            isQuizTimed: quizMeta.isQuizTimed || false,
+            courseQuizPassPercent: quizMeta.courseQuizPassPercent || 70,
+            metadata: (quizMeta.metadata) ? { ...quizMeta.metadata } : {}
+          }, { transaction });
+
+          // Persist quiz questions if they exist
+          if (quizMeta.questions && Array.isArray(quizMeta.questions) && db.QuizQuestion) {
+            for (const question of quizMeta.questions) {
+              await db.QuizQuestion.create({
+                courseId: course.courseId,
+                courseQuizId: detailRecord.courseQuizId,
+                courseContentId: contentRecord.courseContentId,
+                quizQuestionTitle: question.quizQuestionTitle || '',
+                quizQuestionType: question.quizQuestionType || 'SINGLE_CHOICE',
+                quizQuestionOption: question.quizQuestionOption || [],
+                quizQuestionCorrectAnswer: question.quizQuestionCorrectAnswer || [],
+                quizQuestionPosPoint: question.quizQuestionPosPoint || 1,
+                quizQuestionNegPoint: question.quizQuestionNegPoint || 0,
+                questionSequence: question.questionSequence || 1,
+                difficultyLevel: question.difficultyLevel || 'MEDIUM',
+                quizQuestionNote: question.quizQuestionNote || null,
+                explanation: question.explanation || null,
+                metadata: question.metadata || {}
+              }, { transaction });
+            }
+          }
+        } else if (courseContentType === 'CourseFlashcard' && db.CourseFlashcard) {
+          const flashcardMeta = courseContentTypeDetail || {};
+          detailRecord = await db.CourseFlashcard.create({
+            userId,
+            courseId: course.courseId,
+            courseContentId: contentRecord.courseContentId,
+            setTitle: flashcardMeta.setTitle || contentRecord.courseContentTitle,
+            setDescription: flashcardMeta.setDescription || '',
+            setDifficulty: flashcardMeta.setDifficulty || 'MEDIUM',
+            estimatedDuration: flashcardMeta.estimatedDuration || 0,
+            setTags: flashcardMeta.setTags || [],
+            metadata: (flashcardMeta.metadata) ? { ...flashcardMeta.metadata } : {}
+          }, { transaction });
+
+          // Persist flashcard cards if they exist
+          if (flashcardMeta.cards && Array.isArray(flashcardMeta.cards) && db.Flashcard) {
+            for (const card of flashcardMeta.cards) {
+              await db.Flashcard.create({
+                courseId: course.courseId,
+                courseFlashcardId: detailRecord.courseFlashcardId,
+                courseContentId: contentRecord.courseContentId,
+                question: card.question || '',
+                answer: card.answer || '',
+                explanation: card.explanation || null,
+                hints: card.hints || [],
+                difficulty: card.difficulty || 'MEDIUM',
+                orderIndex: card.orderIndex || 1,
+                metadata: card.metadata || {}
+              }, { transaction });
+            }
+          }
         }
 
         createdContent.push({
@@ -139,7 +223,11 @@ async function publishCourseFromBuilderPayload(rawPayload, authUserId) {
           type: courseContentType
         });
       } catch (innerErr) {
-        logger.error('Failed to persist content item', { error: innerErr.message });
+        logger.error('Failed to persist content item', { 
+          error: innerErr.message, 
+          contentTitle: item?.courseContentTitle,
+          contentType: item?.courseContentType 
+        });
         throw innerErr; // Abort whole publish; atomic requirement
       }
     }
@@ -156,26 +244,21 @@ async function publishCourseFromBuilderPayload(rawPayload, authUserId) {
       }, { transaction });
     }
 
-    // Update builder status if builderId present
-    if (courseBuilderId && db.CourseBuilder) {
-      const builder = await db.CourseBuilder.findOne({ where: { courseBuilderId, userId } });
-      if (builder) {
-        try {
-          const bData = builder.courseBuilderData || {};
-          bData.publishedCourseId = course.courseId;
-          await builder.update({ status: 'PUBLISHED', courseBuilderData: bData }, { transaction });
-        } catch (e) {
-          logger.warn(`Failed to update CourseBuilder status for ${courseBuilderId}: ${e.message}`);
-        }
-      }
-    }
+    // Update CourseBuilder status to PUBLISHED
+    const builderData = courseBuilder.courseBuilderData || {};
+    builderData.publishedCourseId = course.courseId;
+    await courseBuilder.update({ 
+      status: 'PUBLISHED', 
+      courseBuilderData: builderData 
+    }, { transaction });
 
     await transaction.commit();
 
     return {
       success: true,
-      message: 'Course published successfully',
+      message: 'Course published successfully from CourseBuilder',
       data: {
+        courseBuilderId: courseBuilder.courseBuilderId,
         course,
         courseContentItems: createdContent.map(c => ({
           courseContentId: c.courseContent.courseContentId,
@@ -185,13 +268,15 @@ async function publishCourseFromBuilderPayload(rawPayload, authUserId) {
         counts: {
           total: createdContent.length,
           video: createdContent.filter(c => c.type === 'CourseVideo').length,
-          written: createdContent.filter(c => c.type === 'CourseWritten').length
+          written: createdContent.filter(c => c.type === 'CourseWritten').length,
+          quiz: createdContent.filter(c => c.type === 'CourseQuiz').length,
+          flashcard: createdContent.filter(c => c.type === 'CourseFlashcard').length
         }
       }
     };
   } catch (error) {
     await transaction.rollback();
-    logger.error('Error publishing course from builder payload', { error: error.message, stack: error.stack });
+    logger.error('Error publishing course from builder payload', error);
     throw error;
   }
 }
