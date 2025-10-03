@@ -48,20 +48,15 @@ async function createOrUpdateCourseBuilder(req, res) {
                 orgId,
                 courseBuilderData
             });
-
-            // Extract only the courseBuilderData portion to persist (avoid recursive nesting)
-            const processedCourseBuilderData = processedResult.courseBuilderData || {};
-
-            // Persist exactly what was produced by the service (already has processedAt, courseDetail, etc.)
-            const enrichedCourseBuilderData = processedCourseBuilderData;
+ 
 
             // Create course builder record with all the data
             const courseBuilderPayload = {
                 courseBuilderId: null,
                 userId,
                 orgId,
-                status: 'PUBLISHED',
-                courseBuilderData: enrichedCourseBuilderData
+                status: 'DRAFT',
+                courseBuilderData: processedResult
             };
             
             const result = await CourseBuilderService.createOrUpdateCourseBuilder(courseBuilderPayload);
@@ -72,19 +67,13 @@ async function createOrUpdateCourseBuilder(req, res) {
             
             // To avoid duplicacy: courseDetail exists inside courseBuilderData.courseDetail.
             // We will return it only once at top-level (courseDetail) and remove it from the nested structure in the response.
-            const responseCourseBuilder = lodash.cloneDeep(result.data);
-            if (responseCourseBuilder?.courseBuilderData?.courseDetail) {
-                delete responseCourseBuilder.courseBuilderData.courseDetail;
-            }
+ 
 
             return res.status(201).json({
                 success: true,
                 message: 'Course builder created and course data prepared successfully',
                 operation: 'create_with_course_data',
-                data: {
-                    courseBuilder: responseCourseBuilder,
-                    courseDetail: processedCourseBuilderData.courseDetail
-                }
+                data: result.data
             });
         } else {
             // Regular create/update without URL processing
