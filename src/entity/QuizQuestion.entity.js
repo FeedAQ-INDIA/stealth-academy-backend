@@ -46,6 +46,7 @@ module.exports = (sequelize, Sequelize) => {
         },
         quizQuestionType: {
             type: Sequelize.ENUM('MULTIPLE_CHOICE', 'SINGLE_CHOICE', 'INPUT_BOX', 'TRUE_FALSE', 'FILL_BLANK', 'ESSAY'),
+            type: Sequelize.ENUM('MULTIPLE_CHOICE', 'SINGLE_CHOICE', 'INPUT_BOX'),
             field: "quiz_question_type",
             allowNull: false,
             defaultValue: 'SINGLE_CHOICE'
