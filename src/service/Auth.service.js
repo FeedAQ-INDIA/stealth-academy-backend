@@ -1,6 +1,7 @@
 const db = require("../entity/index.js");
 const lodash = require("lodash")
-const logger = require('../config/winston.config.js')
+const logger = require('../config/winston.config.js');
+const { addCreditTransaction } = require("./CreditService.service.js");
 
 
 const getInitials = (name) => {
@@ -26,7 +27,12 @@ async function createUser(firstName, lastName, email, number) {
             email: email,
         }, defaults: user,
     });
-    console.log(data);
+    console.log(data.userId);
+
+    if(created == true){
+       await addCreditTransaction({ userId: data.userId, transactionType: 'CREDIT', referenceType: 'SIGN_UP_BONUS', amount: 100.00, description: 'Initial credit on signup', metadata: null });
+    }
+    console.log(data.userId);
     return data;
 }
 

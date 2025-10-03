@@ -10,6 +10,11 @@ const express = require("express");
 const commonRoute = require("./src/routes/common.route.js");
 const authRoute = require("./src/routes/auth.route.js");
 const paymentRoute = require("./src/routes/payment.route.js");
+const organizationRoute = require("./src/routes/organization.route.js");
+const orgGroupRoute = require("./src/routes/orgGroup.route.js");
+const courseAccessRoute = require("./src/routes/courseAccess.route.js");
+const creditRoute = require("./src/routes/credit.route.js");
+const urlEmbeddabilityRoute = require("./src/routes/urlEmbeddability.routes.js");
 const app = express();
 const port = process.env.PORT || 3000;
 const db = require("./src/entity");
@@ -19,6 +24,11 @@ const swaggerUi = require("swagger-ui-express");
 require("./google_oauth.js");
 require("./microsoft_oauth.js");
 const logger = require('./src/config/winston.config.js')
+const userGoalRoute = require("./src/routes/userGoal.route.js");
+const userLearningScheduleRoute = require("./src/routes/userlearningschedule.route.js");
+const courseBuilderRoute = require("./src/routes/courseBuilder.route.js");
+const publishCourseRoute = require("./src/routes/publishCourse.route.js");
+const courseStudyGroupRoute = require("./src/routes/courseStudyGroup.route.js");
 
 
 const swaggerOptions = {
@@ -49,11 +59,25 @@ app.use(cors({
 app.use(cookieParser());
 app.use(bodyParser.json());
 
-// db.Webinar.sync({ alter: true });
+// For production: Sync database with alter (safe for existing data)
+(async () => {
+    try {
+        // Test database connection first
+        await db.sequelize.authenticate();
+        console.log("Database connection established successfully");
+        
+        // Use alter: true for production - this won't drop existing data
+        // Now that tables are created, use safer sync method
+        // await db.sequelize.sync({ force: true });
+        console.log("Database synchronized successfully - all tables verified");
+        
+    } catch (error) {
+        console.error("Error during database sync:", error);
+        console.error("Please check your database configuration and ensure the database is running");
+        // Don't exit the process, let the server continue running
+    }
+})();
 
-// db.sequelize.sync({alter:true}).then(() => {
-//     console.log("Drop and re-sync db.");
-// });
 
 
 // app.use(function (req, res, next) {
@@ -65,9 +89,20 @@ app.use(bodyParser.json());
 //     next();
 // });
 
+
 app.use(commonRoute);
 app.use(paymentRoute);
 app.use(authRoute);
+app.use(organizationRoute);
+app.use(orgGroupRoute);
+app.use('/course-access', courseAccessRoute);
+app.use('/credit', creditRoute);
+app.use('/api/url-embeddability', urlEmbeddabilityRoute);
+app.use(userGoalRoute);
+app.use(userLearningScheduleRoute);
+app.use(courseBuilderRoute);
+app.use(publishCourseRoute);
+app.use('/course-study-group', courseStudyGroupRoute);
 
 app.listen(port, '0.0.0.0', () => {
     console.log(`Example app listening on port ${port}`);

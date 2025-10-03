@@ -1,3 +1,4 @@
+const { formatDate, formatTime } = require("../utils/dateFormatters");
 module.exports = (sequelize, Sequelize) => {
     const CourseWritten = sequelize.define("course_written", {
         courseWrittenId: {
@@ -6,29 +7,14 @@ module.exports = (sequelize, Sequelize) => {
             autoIncrement: true,
             field: "course_written_id",
         },
-        courseWrittenDescription: {
-            type: Sequelize.TEXT,
-            field: "course_written_description",
-        },
-        courseWrittenHtmlContent: {
-            type: Sequelize.TEXT,
-            field: "course_written_htmlcontent",
-        },
-        courseWrittenSource: {
-            type: Sequelize.STRING(100),
-            field: "course_written_source",
-        },
-        courseWrittenUrl: {
-            type: Sequelize.STRING(100),
-            field: "course_written_url",
-        },
-        courseTopicId: {
+        userId: {
             type: Sequelize.INTEGER,
+            field: "course_written_user_id",
             references: {
-                model: "course_topic",
-                key: "course_topic_id",
+                model: "user",
+                key: "user_id",
             },
-            field: "course_written_topic_id",
+            allowNull: false,
         },
         courseId: {
             type: Sequelize.INTEGER,
@@ -38,41 +24,61 @@ module.exports = (sequelize, Sequelize) => {
             },
             field: "course_written_course_id",
         },
+        courseContentId: {
+            type: Sequelize.INTEGER,
+            references: {
+                model: "course_content",
+                key: "course_content_id",
+            },
+            field: "course_written_content_id",
+        },
+        courseWrittenTitle: {
+            type: Sequelize.STRING,
+            field: "course_written_title",
+        },
+        courseWrittenContent: {
+            type: Sequelize.TEXT,
+            field: "course_written_content",
+        }, 
+        courseWrittenEmbedUrl: {
+            type: Sequelize.STRING(100),
+            field: "course_written_embed_url",
+        },
+        courseWrittenUrlIsEmbeddable: {
+            type: Sequelize.BOOLEAN,
+            field: "course_written_url_is_embeddable",
+        },
+        metadata: {
+            type: Sequelize.JSONB,
+            field: "course_written_metadata",
+            defaultValue: {}
+        },
+
         v_created_date: {
             type: Sequelize.VIRTUAL,
             get() {
-                if (!this.course_written_created_at) return null;
-                const date = new Date(this.course_written_created_at);
-                const day = String(date.getDate()).padStart(2, "0");
-                const month = date.toLocaleString("en-US", { month: "short" });
-                const year = date.getFullYear();
-                return `${day}-${month}-${year}`; // Format: dd-MMM-YYYY
+               return formatDate(this.course_written_created_at)
             },
         },
         v_created_time: {
             type: Sequelize.VIRTUAL,
             get() {
-                if (!this.course_written_created_at) return null;
-                return this.course_written_created_at.toTimeString().split(" ")[0]; // Format: HH:MM:SS
+                return formatTime(this.course_written_created_at)
             },
         },
 
         v_updated_date: {
             type: Sequelize.VIRTUAL,
             get() {
-                if (!this.course_written_updated_at) return null;
-                const date = new Date(this.course_written_updated_at);
-                const day = String(date.getDate()).padStart(2, "0");
-                const month = date.toLocaleString("en-US", { month: "short" });
-                const year = date.getFullYear();
-                return `${day}-${month}-${year}`; // Format: dd-MMM-YYYY
+                return formatDate(this.course_written_updated_at)
+
             },
         },
         v_updated_time: {
             type: Sequelize.VIRTUAL,
             get() {
-                if (!this.course_written_updated_at) return null;
-                return this.course_written_updated_at.toTimeString().split(" ")[0]; // Format: HH:MM:SS
+                return formatTime(this.course_written_updated_at)
+
             },
         },
     } , {

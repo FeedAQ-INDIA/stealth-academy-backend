@@ -1,3 +1,5 @@
+const {formatDate, formatTime} = require("../utils/dateFormatters");
+
 module.exports = (sequelize, Sequelize) => {
     const CourseQuiz = sequelize.define("course_quiz", {
         courseQuizId: {
@@ -11,7 +13,7 @@ module.exports = (sequelize, Sequelize) => {
             field: "course_quiz_description",
         },
         courseQuizType: {
-            type: Sequelize.ENUM('CERTIFICATION', 'KNOWLEDGE CHECK'),
+            type: Sequelize.ENUM('CERTIFICATION', 'QUIZ'),
             field: "course_quiz_type",
             allowNull: false,
         },
@@ -28,13 +30,13 @@ module.exports = (sequelize, Sequelize) => {
             type: Sequelize.INTEGER,
             field: "course_quiz_pass_percent",
         },
-        courseTopicId: {
+        courseContentId: {
             type: Sequelize.INTEGER,
             references: {
-                model: "course_topic",
-                key: "course_topic_id",
+                model: "course_content",
+                key: "course_content_id",
             },
-            field: "course_quiz_topic_id",
+            field: "course_quiz_content_id",
         },
         courseId: {
             type: Sequelize.INTEGER,
@@ -47,38 +49,30 @@ module.exports = (sequelize, Sequelize) => {
         v_created_date: {
             type: Sequelize.VIRTUAL,
             get() {
-                if (!this.course_quiz_created_at) return null;
-                const date = new Date(this.course_quiz_created_at);
-                const day = String(date.getDate()).padStart(2, "0");
-                const month = date.toLocaleString("en-US", { month: "short" });
-                const year = date.getFullYear();
-                return `${day}-${month}-${year}`; // Format: dd-MMM-YYYY
+                return formatDate(this.course_quiz_created_at)
+
             },
         },
         v_created_time: {
             type: Sequelize.VIRTUAL,
             get() {
-                if (!this.course_quiz_created_at) return null;
-                return this.course_quiz_created_at.toTimeString().split(" ")[0]; // Format: HH:MM:SS
+                return formatTime(this.course_quiz_created_at)
+
             },
         },
 
         v_updated_date: {
             type: Sequelize.VIRTUAL,
             get() {
-                if (!this.course_quiz_updated_at) return null;
-                const date = new Date(this.course_quiz_updated_at);
-                const day = String(date.getDate()).padStart(2, "0");
-                const month = date.toLocaleString("en-US", { month: "short" });
-                const year = date.getFullYear();
-                return `${day}-${month}-${year}`; // Format: dd-MMM-YYYY
+                return formatDate(this.course_quiz_updated_at)
+
             },
         },
         v_updated_time: {
             type: Sequelize.VIRTUAL,
             get() {
-                if (!this.course_quiz_updated_at) return null;
-                return this.course_quiz_updated_at.toTimeString().split(" ")[0]; // Format: HH:MM:SS
+                return formatTime(this.course_quiz_updated_at)
+
             },
         },
     } , {

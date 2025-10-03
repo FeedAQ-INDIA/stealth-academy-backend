@@ -1,26 +1,12 @@
+const {formatDate, formatTime} = require("../utils/dateFormatters");
+
 module.exports = (sequelize, Sequelize) => {
     const QuizResultLog = sequelize.define("quiz_result_log", {
-        quizResultId: {
+        resultId: {
             type: Sequelize.INTEGER,
             primaryKey: true,
             autoIncrement: true,
-            field: "quiz_result_id",
-        },
-        quizResultSnapshot: {
-            type: Sequelize.JSON,
-            field: "quiz_result_snap",
-        },
-        quizResultPoint: {
-            type: Sequelize.INTEGER,
-            field: "quiz_result_point",
-        },
-        totalPoints: {
-            type: Sequelize.INTEGER,
-            field: "quiz_result_tot_point",
-        },
-        isPassed: {
-            type: Sequelize.BOOLEAN,
-            field: "quiz_result_is_passed",
+            field: "result_id",
         },
         userId: {
             type: Sequelize.INTEGER,
@@ -28,7 +14,8 @@ module.exports = (sequelize, Sequelize) => {
                 model: "user",
                 key: "user_id",
             },
-            field: "quiz_result_user_id",
+            field: "result_user_id",
+            allowNull: false,
         },
         courseId: {
             type: Sequelize.INTEGER,
@@ -36,7 +23,8 @@ module.exports = (sequelize, Sequelize) => {
                 model: "course",
                 key: "course_id",
             },
-            field: "quiz_result_course_id",
+            field: "result_course_id",
+            allowNull: false,
         },
         courseQuizId: {
             type: Sequelize.INTEGER,
@@ -44,50 +32,85 @@ module.exports = (sequelize, Sequelize) => {
                 model: "course_quiz",
                 key: "course_quiz_id",
             },
-            field: "quiz_result_quiz_id",
+            field: "result_course_quiz_id",
+            allowNull: false,
+        },
+        score: {
+            type: Sequelize.DECIMAL(5,2),
+            field: "result_score"
+        },
+        totalQuestions: {
+            type: Sequelize.INTEGER,
+            field: "result_total_questions"
+        },
+        correctAnswers: {
+            type: Sequelize.INTEGER,
+            field: "result_correct_answers"
+        },
+        timeTaken: {
+            type: Sequelize.INTEGER,
+            field: "result_time_taken",
+            comment: "Time taken in seconds"
+        },
+        isPassed: {
+            type: Sequelize.BOOLEAN,
+            field: "result_is_passed",
+            defaultValue: false,
+        },
+        answers: {
+            type: Sequelize.JSONB,
+            field: "result_answers",
+            defaultValue: {}
+        },
+        metadata: {
+            type: Sequelize.JSONB,
+            field: "result_metadata",
+            defaultValue: {}
         },
         v_created_date: {
             type: Sequelize.VIRTUAL,
             get() {
-                if (!this.quiz_result_created_at) return null;
-                const date = new Date(this.quiz_result_created_at);
-                const day = String(date.getDate()).padStart(2, "0");
-                const month = date.toLocaleString("en-US", { month: "short" });
-                const year = date.getFullYear();
-                return `${day}-${month}-${year}`; // Format: dd-MMM-YYYY
+                return formatDate(this.result_created_at);
             },
         },
         v_created_time: {
             type: Sequelize.VIRTUAL,
             get() {
-                if (!this.quiz_result_created_at) return null;
-                return this.quiz_result_created_at.toTimeString().split(" ")[0]; // Format: HH:MM:SS
+                return formatTime(this.result_created_at);
             },
         },
-
         v_updated_date: {
             type: Sequelize.VIRTUAL,
             get() {
-                if (!this.quiz_result_updated_at) return null;
-                const date = new Date(this.quiz_result_updated_at);
-                const day = String(date.getDate()).padStart(2, "0");
-                const month = date.toLocaleString("en-US", { month: "short" });
-                const year = date.getFullYear();
-                return `${day}-${month}-${year}`; // Format: dd-MMM-YYYY
+                return formatDate(this.result_updated_at);
             },
         },
         v_updated_time: {
             type: Sequelize.VIRTUAL,
             get() {
-                if (!this.quiz_result_updated_at) return null;
-                return this.quiz_result_updated_at.toTimeString().split(" ")[0]; // Format: HH:MM:SS
+                return formatTime(this.result_updated_at);
             },
         },
-    } , {
+    }, {
         timestamps: true,
-        createdAt: "quiz_result_created_at",
-        updatedAt: "quiz_result_updated_at",
+        createdAt: "result_created_at",
+        updatedAt: "result_updated_at",
+        indexes: [
+            {
+                fields: ['result_user_id']
+            },
+            {
+                fields: ['result_course_id']
+            },
+            {
+                fields: ['result_course_quiz_id']
+            },
+            {
+                fields: ['result_user_id', 'result_course_id']
+            }
+        ]
     });
+    
     return QuizResultLog;
 };
 

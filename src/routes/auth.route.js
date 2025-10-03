@@ -16,7 +16,7 @@ router.get(
       //   scope: ["profile", "email"],
       //   session: false,
       // })
-      const redirect = req.query.redirectUri || `${frontendUrl}/dashboard`;
+      const redirect = req.query.redirectUri || `${frontendUrl}/`;
 
       console.log("Redirect URL :: " + redirect);
 
@@ -24,7 +24,7 @@ router.get(
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: "None",
-        maxAge: 5 * 60 * 1000, // optional: 5 mins
+        maxAge: 30 * 60 * 1000, // optional: 5 mins
       });
 
       passport.authenticate("google", {
@@ -69,16 +69,16 @@ router.get(
 
       console.log("Redirect URL :: "+req.cookies?.postAuthRedirect)
 
-      const redirectUrl =  req.cookies?.postAuthRedirect || `${frontendUrl}/dashboard`;
+      const redirectUrl =  req.cookies?.postAuthRedirect || `${frontendUrl}/`;
 
       let accessToken  = jwt.sign(claims, accessTokenSecret, {
-          expiresIn: '1m',
+          expiresIn: '30m',
         });
       claims = {...claims }
 
 
       const refreshToken = jwt.sign(claims, refreshTokenSecret, {
-        expiresIn: "15m",
+        expiresIn: "60m",
       });
 
       res.cookie("accessToken", accessToken, {
@@ -110,7 +110,7 @@ router.get(
       //   scope: ["profile", "email"],
       //   session: false,
       // })
-      const redirect = req.query.redirectUri || `${frontendUrl}/dashboard`;
+      const redirect = req.query.redirectUri || `${frontendUrl}/`;
 
       console.log("Redirect URL :: " + redirect);
 
@@ -167,7 +167,7 @@ router.get(
 
       console.log("Redirect URL :: "+req.cookies?.postAuthRedirect)
 
-      const redirectUrl =  req.cookies?.postAuthRedirect || `${frontendUrl}/dashboard`;
+      const redirectUrl =  req.cookies?.postAuthRedirect || `${frontendUrl}/`;
 
       let accessToken  = jwt.sign(claims, accessTokenSecret, {
         expiresIn: '1m',
@@ -222,7 +222,7 @@ router.post("/auth/refresh-token", (req, res) => {
           userEmail: decoded.userEmail,
         },
         accessTokenSecret,
-        { expiresIn: "1m" }
+        { expiresIn: "30m" }
     );
 
     res.cookie("accessToken", newAccessToken, {

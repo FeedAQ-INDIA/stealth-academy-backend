@@ -1,0 +1,123 @@
+const {formatDate, formatTime} = require("../utils/dateFormatters");
+
+module.exports = (sequelize, Sequelize) => {
+    const UserCreditTransaction = sequelize.define("user_credit_transaction", {
+        transactionId: {
+            type: Sequelize.INTEGER,
+            primaryKey: true,
+            autoIncrement: true,
+            field: "transaction_id",
+        },
+        userId: {
+            type: Sequelize.INTEGER,
+            allowNull: false,
+            field: "user_id",
+        },
+        transactionType: {
+            type: Sequelize.ENUM('CREDIT', 'DEBIT'),
+            allowNull: false,
+            field: "transaction_type",
+        },
+        amount: {
+            type: Sequelize.DECIMAL(10, 2),
+            allowNull: false,
+            field: "amount",
+        },
+        balanceBefore: {
+            type: Sequelize.DECIMAL(10, 2),
+            allowNull: false,
+            defaultValue: 0.00,
+            field: "balance_before",
+        },
+        balanceAfter: {
+            type: Sequelize.DECIMAL(10, 2),
+            allowNull: false,
+            defaultValue: 0.00,
+            field: "balance_after",
+        },
+        description: {
+            type: Sequelize.STRING(255),
+            field: "description",
+        },
+        referenceType: {
+            type: Sequelize.ENUM('BYOC_COURSE_CREATION', 'COURSE_ENROLLMENT', 'COURSE_COMPLETION', 'MANUAL_ADJUSTMENT', 'QUIZ_COMPLETION', 'REFUND', 'PURCHASE', 'SIGN_UP_BONUS'),
+            field: "reference_type",
+        },
+        referenceId: {
+            type: Sequelize.INTEGER,
+            field: "reference_id",
+        },
+        transactionStatus: {
+            type: Sequelize.ENUM('PENDING', 'COMPLETED', 'FAILED', 'CANCELLED'),
+            field: "transaction_status",
+            defaultValue: 'COMPLETED',
+        },
+        processedBy: {
+            type: Sequelize.INTEGER,
+            field: "processed_by",
+        },
+        transactionDate: {
+            type: Sequelize.DATE,
+            field: "transaction_date",
+            defaultValue: Sequelize.NOW,
+        },
+        amountValidityDate: {
+            type: Sequelize.DATE,
+            field: "amount_validity_date",
+        },
+        
+        metadata: {
+            type: Sequelize.JSON,
+            field: "metadata",
+        },
+
+        //order attributes
+        orderItemType: {
+            type: Sequelize.ENUM('COURSE'),
+            allowNull: true,
+            field: "order_item_type",
+        },
+        orderItemId: {
+            type: Sequelize.INTEGER,
+            allowNull: true,
+            field: "order_item_id",
+        },
+        orderItemData: {
+            type: Sequelize.JSONB,
+            allowNull: true,
+            field: "order_item_data",
+        },
+    }, {
+        tableName: "user_credit_transaction",
+        timestamps: true,
+        createdAt: "created_at",
+        updatedAt: "updated_at",
+        indexes: [
+            {
+                fields: ['user_id']
+            },
+            {
+                fields: ['transaction_type']
+            },
+            {
+                fields: ['transaction_status']
+            },
+            {
+                fields: ['reference_type', 'reference_id']
+            },
+            {
+                fields: ['transaction_date']
+            }
+        ]
+    });
+
+    UserCreditTransaction.prototype.toJSON = function () {
+        let values = Object.assign({}, this.get());
+        values.transactionDate = formatDate(values.transactionDate);
+        values.createdAt = formatDate(values.createdAt);
+        values.updatedAt = formatDate(values.updatedAt);
+        return values;
+    };
+
+    return UserCreditTransaction;
+};
