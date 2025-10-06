@@ -3,31 +3,96 @@ const lodash = require("lodash");
 const logger = require("../config/winston.config");
 const CourseBuilderService = require("../service/CourseBuilder.service.js");
 
-/**
- * Create or update course builder with integrated URL processing and course creation
- * @param {Object} req - Express request object
- * @param {Object} res - Express response object
- */
-async function createOrUpdateCourseBuilder(req, res) {
+
+async function registerBuilder(req, res) {
     try {
-        logger.info('CourseBuilder create/update request received', { 
+        logger.info('Course builder registration request received', { 
             body: req.body, 
             userId: req.user?.userId 
         });
         
-        const { courseBuilderId, status, courseBuilderData, orgId, processUrls = true, createCourse = true } = req.body;
+        const { title, description, orgId } = req.body;
         const userId = req.user?.userId;
 
-        // For updates, courseBuilderId is required
-        if (courseBuilderId && !Number.isInteger(parseInt(courseBuilderId))) {
+        // Validate required fields
+        if (!title || !description) {
             return res.status(400).json({
                 success: false,
-                message: 'Invalid course builder ID format'
+                message: 'Missing required fields: title and description are required'
+            });
+        }
+
+        if (!userId) {
+            return res.status(401).json({
+                success: false,
+                message: 'User ID is required for creating course builder'
+            });
+        }
+
+        // Create course builder payload with basic information
+        const courseBuilderPayload = {
+            courseBuilderId: null,
+            userId,
+            orgId,
+            status: 'DRAFT',
+            courseBuilderData: {
+                courseTitle: title,
+                courseDescription: description
+            }
+        };
+        
+        const result = await CourseBuilderService.createOrUpdateCourseBuilder(courseBuilderPayload);
+        
+        logger.info('Course builder registered successfully', { 
+            id: result.data.courseBuilderId,
+            operation: result.operation
+        });
+        
+        return res.status(201).json({
+            success: true,
+            message: 'Course builder registered successfully',
+            operation: result.operation,
+            data: result.data
+        });
+        
+    } catch (error) {
+        logger.error('Error in registerBuilder controller:', error);
+        
+        if (error.message === 'User ID is required for creating course builder') {
+            return res.status(400).json({
+                success: false,
+                message: 'User ID is required for creating course builder'
+            });
+        }
+        
+        return res.status(400).json({
+            success: false,
+            message: error.message || 'Failed to register course builder',
+            error: process.env.NODE_ENV === 'development' ? error.stack : undefined
+        });
+    }
+}
+
+
+async function createCourseBuilder(req, res) {
+    try {
+        logger.info('CourseBuilder create request received', { 
+            body: req.body, 
+            userId: req.user?.userId 
+        });
+        
+        const { status, courseBuilderData, orgId, processUrls = true, createCourse = true } = req.body;
+        const userId = req.user?.userId;
+
+        if (!userId) {
+            return res.status(401).json({
+                success: false,
+                message: 'User ID is required for creating course builder'
             });
         }
 
         // Check if this is a create request with URL processing
-        if (!courseBuilderId && processUrls && createCourse && courseBuilderData) {
+        if (processUrls && createCourse && courseBuilderData) {
             // This is a CREATE request - process URLs and create course
             logger.info('Processing create request with URL processing and course creation');
             
@@ -76,9 +141,9 @@ async function createOrUpdateCourseBuilder(req, res) {
                 data: result.data
             });
         } else {
-            // Regular create/update without URL processing
+            // Regular create without URL processing
             const courseBuilderPayload = {
-                courseBuilderId: courseBuilderId ? parseInt(courseBuilderId) : null,
+                courseBuilderId: null,
                 userId,
                 orgId,
                 status: status || 'DRAFT',
@@ -87,34 +152,21 @@ async function createOrUpdateCourseBuilder(req, res) {
             
             const result = await CourseBuilderService.createOrUpdateCourseBuilder(courseBuilderPayload);
             
-            const isUpdate = result.operation === 'update';
-            const statusCode = isUpdate ? 200 : 201;
-            const message = isUpdate 
-                ? 'Course builder updated successfully' 
-                : 'Course builder created successfully';
-            
             logger.info(`CourseBuilder ${result.operation} successful`, { 
                 id: result.data.courseBuilderId,
                 operation: result.operation
             });
             
-            return res.status(statusCode).json({
+            return res.status(201).json({
                 success: true,
-                message,
+                message: 'Course builder created successfully',
                 operation: result.operation,
                 data: result.data
             });
         }
         
     } catch (error) {
-        logger.error('Error in createOrUpdateCourseBuilder controller:', error);
-        
-        if (error.message === 'Course builder not found') {
-            return res.status(404).json({
-                success: false,
-                message: 'Course builder not found'
-            });
-        }
+        logger.error('Error in createCourseBuilder controller:', error);
         
         if (error.message === 'User ID is required for creating course builder') {
             return res.status(400).json({
@@ -153,17 +205,114 @@ async function createOrUpdateCourseBuilder(req, res) {
         
         return res.status(400).json({
             success: false,
+            message: error.message || 'Failed to create course builder',
+            error: process.env.NODE_ENV === 'development' ? error.stack : undefined
+        });
+    }
+}
+
+
+async function updateCourseBuilder(req, res) {
+    try {
+        logger.info('CourseBuilder update request received', { 
+            body: req.body, 
+            userId: req.user?.userId 
+        });
+        
+        const { courseBuilderId, status, courseBuilderData, orgId } = req.body;
+        const userId = req.user?.userId;
+
+        // For updates, courseBuilderId is required
+        if (!courseBuilderId || !Number.isInteger(parseInt(courseBuilderId))) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid or missing course builder ID'
+            });
+        }
+
+        if (!userId) {
+            return res.status(401).json({
+                success: false,
+                message: 'User ID is required for updating course builder'
+            });
+        }
+
+        // Update course builder
+        const courseBuilderPayload = {
+            courseBuilderId: parseInt(courseBuilderId),
+            userId,
+            orgId,
+            status: status || 'DRAFT',
+            courseBuilderData: courseBuilderData || {}
+        };
+        
+        const result = await CourseBuilderService.createOrUpdateCourseBuilder(courseBuilderPayload);
+        
+        logger.info(`CourseBuilder ${result.operation} successful`, { 
+            id: result.data.courseBuilderId,
+            operation: result.operation
+        });
+        
+        return res.status(200).json({
+            success: true,
+            message: 'Course builder updated successfully',
+            operation: result.operation,
+            data: result.data
+        });
+        
+    } catch (error) {
+        logger.error('Error in updateCourseBuilder controller:', error);
+        
+        if (error.message === 'Course builder not found') {
+            return res.status(404).json({
+                success: false,
+                message: 'Course builder not found'
+            });
+        }
+        
+        if (error.message === 'User ID is required for creating course builder') {
+            return res.status(400).json({
+                success: false,
+                message: 'User ID is required for updating course builder'
+            });
+        }
+        
+        return res.status(400).json({
+            success: false,
+            message: error.message || 'Failed to update course builder',
+            error: process.env.NODE_ENV === 'development' ? error.stack : undefined
+        });
+    }
+}
+
+
+async function createOrUpdateCourseBuilder(req, res) {
+    try {
+        logger.info('CourseBuilder create/update request received (legacy)', { 
+            body: req.body, 
+            userId: req.user?.userId 
+        });
+        
+        const { courseBuilderId } = req.body;
+
+        // Determine if this is create or update and delegate to appropriate function
+        if (courseBuilderId) {
+            return await updateCourseBuilder(req, res);
+        } else {
+            return await createCourseBuilder(req, res);
+        }
+        
+    } catch (error) {
+        logger.error('Error in createOrUpdateCourseBuilder controller:', error);
+        return res.status(400).json({
+            success: false,
             message: error.message || 'Failed to process course builder request',
             error: process.env.NODE_ENV === 'development' ? error.stack : undefined
         });
     }
 }
 
-/**
- * Get course builder by ID
- * @param {Object} req - Express request object
- * @param {Object} res - Express response object
- */
+
 async function getCourseBuilderById(req, res) {
     try {
         const { courseBuilderId } = req.params;
@@ -205,7 +354,124 @@ async function getCourseBuilderById(req, res) {
     }
 }
 
+
+async function importFromYoutube(req, res) {
+    try {
+        logger.info('YouTube import request received', { 
+            body: req.body, 
+            userId: req.user?.userId 
+        });
+        
+        const { playlistUrl } = req.body;
+        const userId = req.user?.userId;
+
+        // Validate required fields
+        if (!playlistUrl) {
+            return res.status(400).json({
+                success: false,
+                message: 'Missing required field: playlistUrl is required'
+            });
+        }
+
+        if (!userId) {
+            return res.status(401).json({
+                success: false,
+                message: 'User ID is required for importing from YouTube'
+            });
+        }
+
+        // Validate YouTube URL
+        if (!CourseBuilderService.isYouTubeUrl(playlistUrl)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid YouTube URL provided'
+            });
+        }
+
+        // Extract playlist ID
+        const playlistId = CourseBuilderService.extractPlaylistIdFromUrl(playlistUrl);
+        if (!playlistId) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid YouTube playlist URL. Please provide a valid playlist URL.'
+            });
+        }
+
+        // Process the YouTube playlist and get course content
+        const result = await CourseBuilderService.processYouTubeUrls([playlistUrl]);
+        
+        if (result.errors && result.errors.length > 0) {
+            logger.warn('YouTube import completed with errors', { errors: result.errors });
+        }
+
+        if (!result.videos || result.videos.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'No videos found in the provided YouTube playlist'
+            });
+        }
+
+        // Convert videos to course content format
+        const courseContentArray = CourseBuilderService.prepareYouTubeContentData(
+            { courseId: 'temp_course_id', userId }, 
+            result.videos, 
+            1
+        );
+
+        logger.info('YouTube import completed successfully', { 
+            playlistId,
+            videoCount: result.videos.length,
+            contentItemsCount: courseContentArray.length
+        });
+        
+        return res.status(200).json({
+            success: true,
+            message: 'YouTube playlist imported successfully',
+            data: {
+                playlistId,
+                totalVideos: result.videos.length,
+                courseContent: courseContentArray,
+                errors: result.errors || []
+            }
+        });
+        
+    } catch (error) {
+        logger.error('Error in importFromYoutube controller:', error);
+        
+        if (error.message?.includes("YOUTUBE_API_KEY not configured")) {
+            return res.status(500).json({
+                success: false,
+                message: "YouTube API is not properly configured. Please contact administrator."
+            });
+        }
+
+        if (error.message?.includes("YouTube API error")) {
+            return res.status(502).json({
+                success: false,
+                message: "Failed to fetch data from YouTube API. Please try again later."
+            });
+        }
+
+        if (error.message === "No valid content found in the provided URLs") {
+            return res.status(404).json({
+                success: false,
+                message: "No valid videos found in the provided YouTube playlist."
+            });
+        }
+        
+        return res.status(500).json({
+            success: false,
+            message: error.message || 'Failed to import from YouTube',
+            error: process.env.NODE_ENV === 'development' ? error.stack : undefined
+        });
+    }
+}
+
 module.exports = {
-    createOrUpdateCourseBuilder,
-    getCourseBuilderById
+    registerBuilder,
+    createCourseBuilder,
+    updateCourseBuilder,
+    createOrUpdateCourseBuilder, // Legacy support
+    getCourseBuilderById,
+    importFromYoutube
 };

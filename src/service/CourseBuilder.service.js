@@ -939,55 +939,54 @@ function prepareYouTubeContentData(courseData, videos, startSequence = 1) {
     const video = videos[i];
     const sequence = startSequence + i;
     const tempContentId = `temp_content_${sequence}`; // Temporary ID for relationship
-
-    // Prepare course content structure (mirrors CourseContent table)
-    const courseContentData = {
-      courseContentId: tempContentId,
-      courseId: "temp_course_id", // Will be assigned when course is actually created
-      courseContentTitle: video.videoTitle,
-      courseContentCategory: "Video Content",
-      courseContentType: "CourseVideo",
-      courseContentSequence: sequence,
-      coursecontentIsLicensed: false,
-      courseContentDuration: video.duration,
-      isPublished: true,
-      status: "PUBLISHED",
-      metadata: {
-        videoId: video.videoId,
-        contentType: "YOUTUBE_VIDEO",
-        sequence: sequence,
-      },
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
+    const currentTimestamp = new Date().toISOString();
 
     // Prepare course video structure (mirrors CourseVideo table)
     const courseVideoData = {
-      courseVideoId: `temp_video_${sequence}`, // Temporary ID
-      userId: courseData.userId,
-      courseId: "temp_course_id", // Will be assigned when course is actually created
       courseContentId: tempContentId, // Reference to course content
-      courseVideoTitle: video.videoTitle,
+      courseId: "temp_course_id", // Will be assigned when course is actually created
       courseVideoDescription: video.videoDescription || "",
+      courseVideoId: `temp_video_${sequence}`, // Temporary ID
+      courseVideoTitle: video.videoTitle,
       courseVideoUrl: video.videoUrl,
+      createdAt: currentTimestamp,
       duration: video.duration,
-      thumbnailUrl: video.thumbnailUrl,
       isPreview: false,
-      status: "READY",
       metadata: {
-        videoId: video.videoId,
         channelTitle: video.channelTitle,
         publishedAt: video.publishedAt,
         sourcePlatform: "YOUTUBE",
+        videoId: video.videoId
       },
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      status: "READY",
+      thumbnailUrl: video.thumbnailUrl,
+      updatedAt: currentTimestamp,
+      userId: courseData.userId
     };
 
-    courseContentData.courseContentTypeDetail = courseVideoData; // Link for reference
+    // Prepare course content structure (mirrors CourseContent table)
+    const courseContentData = {
+      courseContentCategory: "Video Content",
+      courseContentDuration: video.duration,
+      courseContentId: tempContentId,
+      coursecontentIsLicensed: false,
+      courseContentSequence: sequence,
+      courseContentTitle: video.videoTitle,
+      courseContentType: "CourseVideo",
+      courseContentTypeDetail: courseVideoData,
+      courseId: "temp_course_id", // Will be assigned when course is actually created
+      createdAt: currentTimestamp,
+      isPublished: true,
+      metadata: {
+        contentType: "YOUTUBE_VIDEO",
+        sequence: sequence,
+        videoId: video.videoId
+      },
+      status: "PUBLISHED",
+      updatedAt: currentTimestamp
+    };
 
-    contentItems.push( 
-      courseContentData );
+    contentItems.push(courseContentData);
 
     logger.info(`✅ Prepared YouTube content ${sequence}: ${video.videoTitle}`);
   }
@@ -1106,4 +1105,5 @@ module.exports = {
   extractPlaylistIdFromUrl,
   processYouTubeUrls,
   processNonYouTubeUrls,
+  prepareYouTubeContentData,
 };
