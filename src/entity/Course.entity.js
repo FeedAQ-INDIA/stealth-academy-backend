@@ -24,6 +24,10 @@ module.exports = (sequelize, Sequelize) => {
         key: "org_id",
       },
     },
+    courseBuilderId: {
+      type: Sequelize.INTEGER,
+      field: "course_builder_id"
+    },
     courseTitle: {
       type: Sequelize.STRING(100),
       field: "course_title",

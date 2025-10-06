@@ -18,8 +18,8 @@ module.exports = (sequelize, Sequelize) => {
         field: "study_group_course_id",
         allowNull: false,
         references: {
-          model: "Courses",
-          key: "id",
+          model: "course",
+          key: "course_id",
         },
       },
       groupName: {

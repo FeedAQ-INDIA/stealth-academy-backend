@@ -57,7 +57,8 @@ app.use(cors({
     credentials: true, // Allow credentials (cookies, authorization headers)
 }));
 app.use(cookieParser());
-app.use(bodyParser.json());
+app.use(bodyParser.json({ limit: '50mb' }));
+app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 
 // For production: Sync database with alter (safe for existing data)
 (async () => {
@@ -68,7 +69,8 @@ app.use(bodyParser.json());
         
         // Use alter: true for production - this won't drop existing data
         // Now that tables are created, use safer sync method
-        // await db.sequelize.sync({ force: true });
+        // await db.sequelize.sync({ alter: true });
+        
         console.log("Database synchronized successfully - all tables verified");
         
     } catch (error) {
