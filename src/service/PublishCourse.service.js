@@ -398,6 +398,7 @@ async function publishCourseFromBuilderPayload(rawPayload, authUserId) {
     };
   } catch (error) {
     await transaction.rollback();
+    console.log(error);
     logger.error('Error publishing course from builder payload', error);
     throw error;
   }

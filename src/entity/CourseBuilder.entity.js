@@ -29,6 +29,7 @@ module.exports = (sequelize, Sequelize) => {
       publishedCourseId: {
         type: Sequelize.INTEGER,
         field: "course_builder_pub_course_id",
+        unique : true,
         references: {
           model: "course",
           key: "course_id",

@@ -132,7 +132,7 @@ module.exports = (sequelize, Sequelize) => {
         createdAt: "quiz_question_created_at",
         updatedAt: "quiz_question_updated_at",
         deletedAt: "quiz_question_deleted_at",
-        paranoid: true,
+        // paranoid: true,
         indexes: [
             {
                 fields: ['course_quiz_id']

@@ -100,7 +100,7 @@ module.exports = (sequelize, Sequelize) => {
         createdAt: "course_access_created_at",
         updatedAt: "course_access_updated_at",
         deletedAt: "course_access_deleted_at",
-        paranoid: true, // Enable soft deletes
+        // paranoid: true, // Enable soft deletes
         indexes: [
             {
                 name: 'idx_ca_course_id',

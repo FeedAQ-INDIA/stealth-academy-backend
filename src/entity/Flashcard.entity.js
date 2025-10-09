@@ -95,7 +95,7 @@ module.exports = (sequelize, Sequelize) => {
         timestamps: true,
         createdAt: "flashcard_created_at",
         updatedAt: "flashcard_updated_at",
-        paranoid: true, // Enable soft deletes
+        // paranoid: true, // Enable soft deletes
         deletedAt: "flashcard_deleted_at",
         indexes: [
             {

@@ -89,7 +89,7 @@ module.exports = (sequelize, Sequelize) => {
         timestamps: true,
         createdAt: "course_video_created_at",
         updatedAt: "course_video_updated_at",
-        paranoid: true, // Enable soft deletes
+        // paranoid: true, // Enable soft deletes
         indexes: [
             {
                 fields: ['course_video_course_id']

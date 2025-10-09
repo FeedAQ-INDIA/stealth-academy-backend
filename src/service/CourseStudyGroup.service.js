@@ -13,7 +13,7 @@ const User = db.User;
  */
 const createOrUpdateStudyGroup = async (data) => {
     try {
-        const { courseStudyGroupId, courseId, groupName, description, ownedBy, maxMembers, isPrivate } = data;
+    const { courseStudyGroupId, groupName, description, ownedBy, organizationId } = data;
 
         if (courseStudyGroupId) {
             // Update existing study group
@@ -38,35 +38,36 @@ const createOrUpdateStudyGroup = async (data) => {
             await studyGroup.update({
                 groupName,
                 description,
-                maxMembers,
-                isPrivate,
+                organizationId,
                 lastModifiedBy: ownedBy
             });
 
             return await CourseStudyGroup.findByPk(courseStudyGroupId, {
                 include: [
                     {
-                        model: Course,
-                        as: 'course',
-                        attributes: ['courseId', 'courseName']
-                    },
-                    {
                         model: User,
                         as: 'owner',
-                        attributes: ['userId', 'firstName', 'lastName', 'email']
+                     },
+                    {
+                        model: CourseStudyGroupContent,
+                        as: 'groupContent',
+                        include: [
+                            {
+                                model: Course,
+                                as: 'course',
+                             }
+                        ]
                     }
                 ]
             });
         } else {
             // Create new study group
             const studyGroup = await CourseStudyGroup.create({
-                courseId,
                 groupName,
                 description,
                 createdBy: ownedBy,
                 ownedBy,
-                maxMembers: maxMembers || 50,
-                isPrivate: isPrivate || false
+                organizationId
             });
 
             // Add creator as owner to the group
@@ -79,14 +80,18 @@ const createOrUpdateStudyGroup = async (data) => {
             return await CourseStudyGroup.findByPk(studyGroup.courseStudyGroupId, {
                 include: [
                     {
-                        model: Course,
-                        as: 'course',
-                        attributes: ['courseId', 'courseName']
-                    },
-                    {
                         model: User,
                         as: 'owner',
-                        attributes: ['userId', 'firstName', 'lastName', 'email']
+                     },
+                    {
+                        model: CourseStudyGroupContent,
+                        as: 'groupContent',
+                        include: [
+                            {
+                                model: Course,
+                                as: 'course',
+                             }
+                        ]
                     }
                 ]
             });
@@ -122,15 +127,6 @@ const addMemberToStudyGroup = async (data) => {
             throw new Error("User is already a member of this study group");
         }
 
-        // Check member limit
-        const memberCount = await CourseStudyGroupUser.count({
-            where: { courseStudyGroupId }
-        });
-
-        if (memberCount >= studyGroup.maxMembers) {
-            throw new Error("Study group has reached maximum member limit");
-        }
-
         // Add member
         const member = await CourseStudyGroupUser.create({
             courseStudyGroupId,
@@ -144,13 +140,11 @@ const addMemberToStudyGroup = async (data) => {
                 {
                     model: User,
                     as: 'user',
-                    attributes: ['userId', 'firstName', 'lastName', 'email']
-                },
+                 },
                 {
                     model: CourseStudyGroup,
                     as: 'studyGroup',
-                    attributes: ['courseStudyGroupId', 'groupName']
-                }
+                 }
             ]
         });
     } catch (error) {
@@ -253,13 +247,11 @@ const addContentToStudyGroup = async (data) => {
                 {
                     model: Course,
                     as: 'course',
-                    attributes: ['courseId', 'courseName', 'courseDescription']
-                },
+                 },
                 {
                     model: CourseStudyGroup,
                     as: 'studyGroup',
-                    attributes: ['courseStudyGroupId', 'groupName']
-                }
+                 }
             ]
         });
     } catch (error) {
@@ -360,23 +352,12 @@ const getStudyGroupDetails = async (courseStudyGroupId) => {
         const studyGroup = await CourseStudyGroup.findByPk(courseStudyGroupId, {
             include: [
                 {
-                    model: Course,
-                    as: 'course',
-                    attributes: ['courseId', 'courseName', 'courseDescription']
-                },
-                {
-                    model: User,
-                    as: 'owner',
-                    attributes: ['userId', 'firstName', 'lastName', 'email']
-                },
-                {
                     model: CourseStudyGroupUser,
                     as: 'members',
                     include: [{
                         model: User,
                         as: 'user',
-                        attributes: ['userId', 'firstName', 'lastName', 'email']
-                    }]
+                     }]
                 },
                 {
                     model: CourseStudyGroupContent,
@@ -384,8 +365,7 @@ const getStudyGroupDetails = async (courseStudyGroupId) => {
                     include: [{
                         model: Course,
                         as: 'course',
-                        attributes: ['courseId', 'courseName', 'courseDescription']
-                    }]
+                     }]
                 }
             ]
         });
@@ -401,6 +381,65 @@ const getStudyGroupDetails = async (courseStudyGroupId) => {
     }
 };
 
+/**
+ * Get all study groups with pagination
+ */
+const getAllCourseStudyGroup = async (data) => {
+    try {
+        const { userId, page = 1, limit = 10 } = data;
+        
+        const offset = (page - 1) * limit;
+        let whereClause = {};
+        
+        // Basic include clause for all study groups
+        const includeClause = [
+            {
+                model: User,
+                as: 'owner',
+             },
+            {
+                model: CourseStudyGroupUser,
+                as: 'members',
+                where:{
+                    userId: userId
+                },
+                required: true,
+            },
+            {
+                model: CourseStudyGroupContent,
+                as: 'groupContent',
+                include: [{
+                    model: Course,
+                    as: 'course',
+                 }]
+            }
+        ];
+
+ 
+
+        const { count, rows: studyGroups } = await CourseStudyGroup.findAndCountAll({ 
+            include: includeClause,
+            limit: parseInt(limit),
+            offset: parseInt(offset),
+            order: [['study_group_created_at', 'DESC']],
+            distinct: true
+        });
+
+        const totalPages = Math.ceil(count / limit);
+
+        return {
+            studyGroups,
+            totalItems: count,
+            totalPages,
+            page: parseInt(page),
+            limit: parseInt(limit)
+        };
+    } catch (error) {
+        logger.error('Error in getAllCourseStudyGroup:', error);
+        throw error;
+    }
+};
+
 module.exports = {
     createOrUpdateStudyGroup,
     addMemberToStudyGroup,
@@ -408,5 +447,6 @@ module.exports = {
     addContentToStudyGroup,
     removeContentFromStudyGroup,
     deleteStudyGroup,
-    getStudyGroupDetails
+    getStudyGroupDetails,
+    getAllCourseStudyGroup
 };

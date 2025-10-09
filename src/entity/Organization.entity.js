@@ -104,7 +104,7 @@ module.exports = (sequelize, Sequelize) => {
             createdAt: "org_created_at",
             updatedAt: "org_updated_at",
             deletedAt: "org_deleted_at",
-            paranoid: true,
+            // paranoid: true,
             indexes: [
                 {
                     fields: ['org_name']

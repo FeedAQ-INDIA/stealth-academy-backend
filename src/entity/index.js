@@ -72,6 +72,7 @@ db.User.hasMany(db.CourseFlashcard, {foreignKey: 'userId', as: 'flashcardSets'})
 db.User.hasMany(db.CourseBuilder, {foreignKey: 'userId', as: 'courseBuilders'});
 db.User.hasMany(db.CourseStudyGroup, {foreignKey: 'createdBy', as: 'createdStudyGroups'});
 db.User.hasMany(db.CourseStudyGroup, {foreignKey: 'ownedBy', as: 'ownedStudyGroups'});
+db.User.hasMany(db.CourseStudyGroup, {foreignKey: 'lastModifiedBy', as: 'lastModifiedStudyGroups'});
 db.User.hasMany(db.CourseStudyGroupUser, {foreignKey: 'userId', as: 'studyGroupMemberships'});
 db.User.hasMany(db.CourseStudyGroupUser, {foreignKey: 'invitedBy', as: 'sentStudyGroupInvites'});
 db.User.hasMany(db.CourseStudyGroupContent, {foreignKey: 'createdBy', as: 'createdGroupContent'});
@@ -86,7 +87,6 @@ db.Course.hasMany(db.Notes, {foreignKey: 'courseId', as: 'notes'});
 db.Course.hasMany(db.UserCourseContentProgress, {foreignKey: 'courseId', as: 'activityLogs'});
 db.Course.hasMany(db.QuizResultLog, {foreignKey: 'courseId', as: 'quizResults'});
 db.Course.hasMany(db.CourseFlashcard, {foreignKey: 'courseId', as: 'flashcardSets'});
-db.Course.hasMany(db.CourseStudyGroup, {foreignKey: 'courseId', as: 'studyGroups'});
 db.Course.hasMany(db.CourseStudyGroupContent, {foreignKey: 'courseId', as: 'studyGroupContent'});
 
 // Organization associations
@@ -96,6 +96,7 @@ db.Organization.hasMany(db.OrganizationUserInvites, {foreignKey: 'orgId', as: 'i
 db.Organization.hasMany(db.OrganizationGroups, {foreignKey: 'orgId', as: 'groups'});
 db.Organization.hasMany(db.OrganizationUserGroups, {foreignKey: 'orgId', as: 'groupMemberships'});
 db.Organization.hasMany(db.CourseBuilder, {foreignKey: 'orgId', as: 'courseBuilders'});
+db.Organization.hasMany(db.CourseStudyGroup, {foreignKey: 'organizationId', as: 'studyGroups'});
 
 // OrganizationUser associations
 db.OrganizationUser.belongsTo(db.Organization, {foreignKey: 'orgId', as: 'organization'});
@@ -194,9 +195,9 @@ db.CourseBuilder.belongsTo(db.User, {foreignKey: 'userId', as: 'user'});
 db.CourseBuilder.belongsTo(db.Organization, {foreignKey: 'orgId', as: 'organization'});
 
 // CourseStudyGroup associations
-db.CourseStudyGroup.belongsTo(db.Course, {foreignKey: 'courseId', as: 'course'});
 db.CourseStudyGroup.belongsTo(db.User, {foreignKey: 'createdBy', as: 'creator'});
 db.CourseStudyGroup.belongsTo(db.User, {foreignKey: 'ownedBy', as: 'owner'});
+db.CourseStudyGroup.belongsTo(db.User, {foreignKey: 'lastModifiedBy', as: 'lastModifier'});
 db.CourseStudyGroup.belongsTo(db.Organization, {foreignKey: 'organizationId', as: 'organization'});
 db.CourseStudyGroup.hasMany(db.CourseStudyGroupUser, {foreignKey: 'courseStudyGroupId', as: 'members'});
 db.CourseStudyGroup.hasMany(db.CourseStudyGroupContent, {foreignKey: 'courseStudyGroupId', as: 'groupContent'});

@@ -98,7 +98,7 @@ module.exports = (sequelize, Sequelize) => {
       createdAt: "note_created_at",
       updatedAt: "note_updated_at",
       deletedAt: "note_deleted_at",
-      paranoid: true,
+      // paranoid: true,
       indexes: [
         {
           fields: ["note_user_id"],

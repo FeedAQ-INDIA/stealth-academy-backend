@@ -6,24 +6,22 @@ const { handleError } = require("../utils/errorHandler");
  */
 exports.createOrUpdateStudyGroup = async (req, res) => {
     try {
-        const { courseStudyGroupId, courseId, groupName, description, maxMembers, isPrivate } = req.body;
+        const { courseStudyGroupId, groupName, description, organizationId } = req.body;
         const userId = req.user.userId;
 
         // Validate required fields for creation
-        if (!courseStudyGroupId && (!courseId || !groupName)) {
+        if (!courseStudyGroupId && (!groupName)) {
             return res.status(400).json({
-                message: "Course ID and group name are required for creating a study group"
+                message: "Group name is required for creating a study group"
             });
         }
 
         const data = {
             courseStudyGroupId,
-            courseId,
-            groupName,
+             groupName,
             description,
             ownedBy: userId,
-            maxMembers,
-            isPrivate
+            organizationId
         };
 
         const studyGroup = await courseStudyGroupService.createOrUpdateStudyGroup(data);
@@ -33,6 +31,7 @@ exports.createOrUpdateStudyGroup = async (req, res) => {
             data: studyGroup
         });
     } catch (error) {
+        console.log(error)
         handleError(res, error);
     }
 };
@@ -48,6 +47,14 @@ exports.addMemberToStudyGroup = async (req, res) => {
         if (!courseStudyGroupId || !userId) {
             return res.status(400).json({
                 message: "Course study group ID and user ID are required"
+            });
+        }
+
+        // Validate role if provided
+        const validRoles = ['MEMBER', 'ADMIN'];
+        if (role && !validRoles.includes(role)) {
+            return res.status(400).json({
+                message: "Invalid role. Valid roles are: " + validRoles.join(', ')
             });
         }
 
@@ -74,7 +81,7 @@ exports.addMemberToStudyGroup = async (req, res) => {
  */
 exports.removeMemberFromStudyGroup = async (req, res) => {
     try {
-        const { courseStudyGroupId, userId } = req.params;
+        const { courseStudyGroupId, userId } = req.body;
         const removedBy = req.user.userId;
 
         if (!courseStudyGroupId || !userId) {
@@ -133,7 +140,7 @@ exports.addContentToStudyGroup = async (req, res) => {
  */
 exports.removeContentFromStudyGroup = async (req, res) => {
     try {
-        const { courseStudyGroupId, courseId } = req.params;
+        const { courseStudyGroupId, courseId } = req.body;
         const removedBy = req.user.userId;
 
         if (!courseStudyGroupId || !courseId) {
@@ -161,7 +168,7 @@ exports.removeContentFromStudyGroup = async (req, res) => {
  */
 exports.deleteStudyGroup = async (req, res) => {
     try {
-        const { courseStudyGroupId } = req.params;
+        const { courseStudyGroupId } = req.body;
         const deletedBy = req.user.userId;
 
         if (!courseStudyGroupId) {
@@ -201,6 +208,36 @@ exports.getStudyGroupDetails = async (req, res) => {
         res.status(200).json({
             message: "Study group details retrieved successfully",
             data: studyGroup
+        });
+    } catch (error) {
+        handleError(res, error);
+    }
+};
+
+/**
+ * Get all study groups
+ */
+exports.getAllCourseStudyGroup = async (req, res) => {
+    try {
+        const { page = 1, limit = 10 } = req.query;
+
+        const data = {
+            userId: req.user.userId ? parseInt(req.user.userId) : undefined,
+            page: parseInt(page),
+            limit: parseInt(limit)
+        };
+
+        const result = await courseStudyGroupService.getAllCourseStudyGroup(data);
+
+        res.status(200).json({
+            message: "Study groups retrieved successfully",
+            data: result.studyGroups,
+            pagination: {
+                currentPage: result.page,
+                totalPages: result.totalPages,
+                totalItems: result.totalItems,
+                itemsPerPage: result.limit
+            }
         });
     } catch (error) {
         handleError(res, error);

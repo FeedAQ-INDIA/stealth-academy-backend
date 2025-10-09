@@ -118,7 +118,7 @@ module.exports = (sequelize, Sequelize) => {
       createdAt: "user_created_at",
       updatedAt: "user_updated_at",
       deletedAt: "user_deleted_at",
-      paranoid: true,
+      // paranoid: true,
       indexes: [
         {
           fields: ['user_first_name', 'user_last_name']

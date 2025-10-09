@@ -12,16 +12,7 @@ module.exports = (sequelize, Sequelize) => {
         primaryKey: true,
         autoIncrement: true,
         field: "course_study_group_id",
-      },
-      courseId: {
-        type: Sequelize.INTEGER,
-        field: "study_group_course_id",
-        allowNull: false,
-        references: {
-          model: "course",
-          key: "course_id",
-        },
-      },
+      }, 
       groupName: {
         type: Sequelize.STRING(200),
         field: "study_group_name",
@@ -58,6 +49,15 @@ module.exports = (sequelize, Sequelize) => {
           key: "org_id",
         },
         field: "study_group_org_id",
+      },
+      lastModifiedBy: {
+        type: Sequelize.INTEGER,
+        field: "study_group_last_modified_by",
+        allowNull: true,
+        references: {
+          model: "user",
+          key: "user_id",
+        },
       },
       analyticsVisibility: {
         type: Sequelize.JSONB,
@@ -105,7 +105,7 @@ module.exports = (sequelize, Sequelize) => {
       timestamps: true,
       createdAt: "study_group_created_at",
       updatedAt: "study_group_updated_at",
-      paranoid: true,
+      // paranoid: true,
       deletedAt: "study_group_deleted_at",
       
     }

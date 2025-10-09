@@ -93,7 +93,7 @@ module.exports = (sequelize, Sequelize) => {
       timestamps: true,
       createdAt: "course_study_group_user_created_at",
       updatedAt: "course_study_group_user_updated_at",
-      paranoid: true,
+      // paranoid: true,
       deletedAt: "course_study_group_user_deleted_at",
       indexes: [
         {

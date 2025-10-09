@@ -1,3 +1,4 @@
+const { uniqueId } = require("lodash");
 const { formatDate, formatTime } = require("../utils/dateFormatters");
 
 module.exports = (sequelize, Sequelize) => {
@@ -26,7 +27,8 @@ module.exports = (sequelize, Sequelize) => {
     },
     courseBuilderId: {
       type: Sequelize.INTEGER,
-      field: "course_builder_id"
+      field: "course_builder_id",
+      unique: true,
     },
     courseTitle: {
       type: Sequelize.STRING(100),
@@ -102,7 +104,7 @@ module.exports = (sequelize, Sequelize) => {
     createdAt: "course_created_at",
     updatedAt: "course_updated_at",
     deletedAt: "course_deleted_at",
-    paranoid: true, // Enable soft deletes
+    // paranoid: true, // Enable soft deletes
     indexes: [
       {
         fields: ['course_user_id']

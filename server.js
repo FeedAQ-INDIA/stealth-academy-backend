@@ -69,7 +69,7 @@ app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
         
         // Use alter: true for production - this won't drop existing data
         // Now that tables are created, use safer sync method
-        // await db.sequelize.sync({ alter: true });
+        await db.sequelize.sync({ force: true });
         
         console.log("Database synchronized successfully - all tables verified");
         

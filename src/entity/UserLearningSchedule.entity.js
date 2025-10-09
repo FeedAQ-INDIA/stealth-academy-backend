@@ -97,7 +97,7 @@ const UserLearningSchedule = sequelize.define("user_learning_schedule", {
   timestamps: true,
   createdAt: "learning_schedule_created_at",
   updatedAt: "learning_schedule_updated_at",
-  paranoid: true,
+  // paranoid: true,
   deletedAt: "learning_schedule_deleted_at",
  
 });

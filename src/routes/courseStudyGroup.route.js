@@ -13,18 +13,21 @@ router.post("/createOrUpdate", courseStudyGroupController.createOrUpdateStudyGro
 router.post("/addMember", courseStudyGroupController.addMemberToStudyGroup);
 
 // Remove member from study group
-router.delete("/:courseStudyGroupId/member/:userId", courseStudyGroupController.removeMemberFromStudyGroup);
+router.post("/removeMember", courseStudyGroupController.removeMemberFromStudyGroup);
 
 // Add content to study group
 router.post("/addContent", courseStudyGroupController.addContentToStudyGroup);
 
 // Remove content from study group
-router.delete("/:courseStudyGroupId/content/:courseId", courseStudyGroupController.removeContentFromStudyGroup);
+router.post("/removeContent", courseStudyGroupController.removeContentFromStudyGroup);
 
-// Get study group details
-router.get("/:courseStudyGroupId", courseStudyGroupController.getStudyGroupDetails);
+// Get all study groups
+router.get("/getAllCourseStudyGroup", courseStudyGroupController.getAllCourseStudyGroup);
+
+// Get study group details by ID
+router.get("/getCourseStudyGroupDetailById/:courseStudyGroupId", courseStudyGroupController.getStudyGroupDetails);
 
 // Delete study group
-router.delete("/:courseStudyGroupId", courseStudyGroupController.deleteStudyGroup);
+router.post("/deleteStudyGroup", courseStudyGroupController.deleteStudyGroup);
 
 module.exports = router;
