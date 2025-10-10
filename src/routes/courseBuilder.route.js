@@ -8,7 +8,7 @@ const logger = require('../config/winston.config.js');
 router.post('/registerBuilder', authMiddleware, courseBuilderController.registerBuilder);
 
 // Course Builder - Create with URL processing and course creation
-router.post('/createCourseBuilder', authMiddleware, courseBuilderController.createCourseBuilder);
+// router.post('/createCourseBuilder', authMiddleware, courseBuilderController.createCourseBuilder);
 
 // Course Builder - Update existing course builder
 router.put('/updateCourseBuilder', authMiddleware, courseBuilderController.updateCourseBuilder);
