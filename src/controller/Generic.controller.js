@@ -194,7 +194,7 @@ async function deleteUserCourseContentProgress(req, res, next) {
 }
 
 async function saveNote(req, res, next) {
-  const { notesId, courseId, courseContentId, noteContent, noteRefTimestamp } =
+  const { notesId, courseId, courseContentId, noteContent, noteRefTimestamp, metadata } =
     req.body;
   try {
     let val = await AcademyService.saveNote(
@@ -203,7 +203,8 @@ async function saveNote(req, res, next) {
       courseId,
       courseContentId,
       noteContent,
-      noteRefTimestamp
+      noteRefTimestamp,
+      metadata
     );
     res.status(200).send({
       status: 200,

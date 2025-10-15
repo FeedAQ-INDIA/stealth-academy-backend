@@ -52,6 +52,27 @@ module.exports = (sequelize, Sequelize) => {
         type: Sequelize.JSONB,
         field: "note_metadata",
         defaultValue: {},
+        comment: "Stores file attachments and other metadata. Schema: { attachments: [{fileId, fileName, fileUrl, mimeType, fileSize}], hasAttachments: boolean, attachmentCount: number, ...otherData }"
+      },
+      // Virtual fields for attachment info
+      v_has_attachments: {
+        type: Sequelize.VIRTUAL,
+        get() {
+          return this.metadata?.hasAttachments || false;
+        },
+      },
+      v_attachment_count: {
+        type: Sequelize.VIRTUAL,
+        get() {
+          return this.metadata?.attachmentCount || 0;
+        },
+      },
+      v_attachment_types: {
+        type: Sequelize.VIRTUAL,
+        get() {
+          const attachments = this.metadata?.attachments || [];
+          return [...new Set(attachments.map(a => a.mimeType?.split('/')[0]).filter(Boolean))];
+        },
       },
       v_note_ref_timestamp: {
         type: Sequelize.VIRTUAL,
@@ -109,6 +130,25 @@ module.exports = (sequelize, Sequelize) => {
         {
           fields: ["note_course_content_id"],
         },
+        {
+          fields: ["note_created_at"],
+          name: "idx_notes_created_at"
+        },
+        {
+          fields: ["note_user_id", "note_course_id"],
+          name: "idx_notes_user_course"
+        },
+        {
+          // JSONB index for attachment queries
+          fields: [
+            {
+              name: "note_metadata",
+              operator: "jsonb_path_ops"
+            }
+          ],
+          using: "gin",
+          name: "idx_notes_metadata_gin"
+        }
       ],
     }
   );

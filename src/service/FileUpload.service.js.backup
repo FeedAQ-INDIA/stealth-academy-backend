@@ -1,0 +1,328 @@
+const supabase = require('../config/supabase.config');
+const db = require('../entity');
+const path = require('path');
+const crypto = require('crypto');
+
+class FileUploadService {
+    /**
+     * Generate a UUID v4
+     * @returns {string} UUID v4 string
+     */
+    generateUUID() {
+        return crypto.randomUUID();
+    }
+
+    /**
+     * Upload a file to Supabase storage and save metadata to database
+     * @param {Object} fileData - File information
+     * @param {Buffer} fileData.buffer - File buffer
+     * @param {string} fileData.originalname - Original filename
+     * @param {string} fileData.mimetype - File MIME type
+     * @param {number} fileData.size - File size in bytes
+     * @param {number} userId - ID of the user uploading the file
+     * @param {string} bucket - Supabase storage bucket name (default: 'uploads')
+     * @param {Object} options - Additional options
+     * @param {boolean} options.isPublic - Whether the file should be publicly accessible
+     * @param {Array} options.tags - Additional metadata tags
+     * @param {string} options.folder - Subfolder within the bucket
+     * @returns {Promise<Object>} Upload result with file info and URLs
+     */
+    async uploadFile(fileData, userId = null, bucket = 'uploads', options = {}) {
+        try {
+            const { 
+                isPublic = true, 
+                tags = [], 
+                folder = null 
+            } = options;
+
+            // Generate unique filename
+            const fileExtension = path.extname(fileData.originalname);
+            const uniqueFileName = `${this.generateUUID()}${fileExtension}`;
+            
+            // Construct file path
+            let filePath = uniqueFileName;
+            if (folder) {
+                filePath = `${folder}/${uniqueFileName}`;
+            }
+            if (userId) {
+                filePath = `user-${userId}/${filePath}`;
+            }
+
+            // Upload file to Supabase storage
+            const { error: uploadError } = await supabase.storage
+                .from(bucket)
+                .upload(filePath, fileData.buffer, {
+                    contentType: fileData.mimetype,
+                    cacheControl: '3600',
+                    upsert: false
+                });
+
+            if (uploadError) {
+                throw new Error(`Supabase upload failed: ${uploadError.message}`);
+            }
+
+            // Get public URL
+            let fileUrl;
+            if (isPublic) {
+                const { data: urlData } = supabase.storage
+                    .from(bucket)
+                    .getPublicUrl(filePath);
+                fileUrl = urlData.publicUrl;
+            } else {
+                // For private files, create a signed URL valid for 1 hour
+                const { data: signedUrlData, error: signedUrlError } = await supabase.storage
+                    .from(bucket)
+                    .createSignedUrl(filePath, 3600);
+                
+                if (signedUrlError) {
+                    throw new Error(`Failed to create signed URL: ${signedUrlError.message}`);
+                }
+                fileUrl = signedUrlData.signedUrl;
+            }
+
+            // Save file metadata to database
+            const fileRecord = await db.FileUpload.create({
+                originalName: fileData.originalname,
+                fileName: uniqueFileName,
+                filePath: filePath,
+                fileUrl: fileUrl,
+                mimeType: fileData.mimetype,
+                fileSize: fileData.size,
+                bucket: bucket,
+                uploadedBy: userId,
+                tags: tags.length > 0 ? tags : null,
+                isPublic: isPublic
+            });
+
+            return {
+                success: true,
+                fileInfo: {
+                    id: fileRecord.id,
+                    originalName: fileRecord.originalName,
+                    fileName: fileRecord.fileName,
+                    filePath: fileRecord.filePath,
+                    fileUrl: fileRecord.fileUrl,
+                    mimeType: fileRecord.mimeType,
+                    fileSize: fileRecord.fileSize,
+                    bucket: fileRecord.bucket,
+                    uploadedBy: fileRecord.uploadedBy,
+                    tags: fileRecord.tags,
+                    isPublic: fileRecord.isPublic,
+                    createdAt: fileRecord.createdAt
+                }
+            };
+
+        } catch (error) {
+            console.error('File upload error:', error);
+            throw new Error(`File upload failed: ${error.message}`);
+        }
+    }
+
+    /**
+     * Upload multiple files
+     * @param {Array} files - Array of file data objects
+     * @param {number} userId - ID of the user uploading the files
+     * @param {string} bucket - Supabase storage bucket name
+     * @param {Object} options - Additional options
+     * @returns {Promise<Object>} Upload results
+     */
+    async uploadMultipleFiles(files, userId = null, bucket = 'uploads', options = {}) {
+        try {
+            const uploadPromises = files.map(file => 
+                this.uploadFile(file, userId, bucket, options)
+            );
+
+            const results = await Promise.allSettled(uploadPromises);
+            
+            const successful = results
+                .filter(result => result.status === 'fulfilled')
+                .map(result => result.value.fileInfo);
+            
+            const failed = results
+                .filter(result => result.status === 'rejected')
+                .map(result => result.reason.message);
+
+            return {
+                success: true,
+                uploaded: successful,
+                failed: failed,
+                totalFiles: files.length,
+                successCount: successful.length,
+                failCount: failed.length
+            };
+
+        } catch (error) {
+            console.error('Multiple file upload error:', error);
+            throw new Error(`Multiple file upload failed: ${error.message}`);
+        }
+    }
+
+    /**
+     * Get file information by ID
+     * @param {number} fileId - File ID
+     * @returns {Promise<Object>} File information
+     */
+    async getFileById(fileId) {
+        try {
+            const fileRecord = await db.FileUpload.findByPk(fileId, {
+                include: [
+                    {
+                        model: db.User,
+                        as: 'uploader',
+                        attributes: ['id', 'email', 'name']
+                    }
+                ]
+            });
+
+            if (!fileRecord) {
+                throw new Error('File not found');
+            }
+
+            return fileRecord;
+        } catch (error) {
+            console.error('Get file by ID error:', error);
+            throw new Error(`Failed to get file: ${error.message}`);
+        }
+    }
+
+    /**
+     * Get files uploaded by a user
+     * @param {number} userId - User ID
+     * @param {Object} options - Query options
+     * @returns {Promise<Object>} User's files
+     */
+    async getUserFiles(userId, options = {}) {
+        try {
+            const { 
+                limit = 50, 
+                offset = 0, 
+                mimeType = null,
+                bucket = null 
+            } = options;
+
+            const whereClause = { uploadedBy: userId };
+            if (mimeType) whereClause.mimeType = mimeType;
+            if (bucket) whereClause.bucket = bucket;
+
+            const files = await db.FileUpload.findAndCountAll({
+                where: whereClause,
+                limit: limit,
+                offset: offset,
+                order: [['createdAt', 'DESC']],
+                include: [
+                    {
+                        model: db.User,
+                        as: 'uploader',
+                        attributes: ['id', 'email', 'name']
+                    }
+                ]
+            });
+
+            return {
+                files: files.rows,
+                total: files.count,
+                limit: limit,
+                offset: offset
+            };
+        } catch (error) {
+            console.error('Get user files error:', error);
+            throw new Error(`Failed to get user files: ${error.message}`);
+        }
+    }
+
+    /**
+     * Delete a file from storage and database
+     * @param {number} fileId - File ID
+     * @param {number} userId - User ID (for authorization)
+     * @returns {Promise<Object>} Deletion result
+     */
+    async deleteFile(fileId, userId = null) {
+        try {
+            // Get file record
+            const fileRecord = await db.FileUpload.findByPk(fileId);
+            
+            if (!fileRecord) {
+                throw new Error('File not found');
+            }
+
+            // Check if user has permission to delete (if userId provided)
+            if (userId && fileRecord.uploadedBy !== userId) {
+                throw new Error('Unauthorized: You can only delete your own files');
+            }
+
+            // Delete from Supabase storage
+            const { error: deleteError } = await supabase.storage
+                .from(fileRecord.bucket)
+                .remove([fileRecord.filePath]);
+
+            if (deleteError) {
+                console.warn(`Supabase deletion warning: ${deleteError.message}`);
+                // Continue with database deletion even if storage deletion fails
+            }
+
+            // Delete from database
+            await fileRecord.destroy();
+
+            return {
+                success: true,
+                message: 'File deleted successfully',
+                deletedFile: {
+                    id: fileRecord.id,
+                    originalName: fileRecord.originalName,
+                    fileName: fileRecord.fileName
+                }
+            };
+
+        } catch (error) {
+            console.error('Delete file error:', error);
+            throw new Error(`File deletion failed: ${error.message}`);
+        }
+    }
+
+    /**
+     * Generate a new signed URL for a private file
+     * @param {number} fileId - File ID
+     * @param {number} expiresIn - Expiration time in seconds (default: 3600)
+     * @returns {Promise<Object>} Signed URL
+     */
+    async generateSignedUrl(fileId, expiresIn = 3600) {
+        try {
+            const fileRecord = await db.FileUpload.findByPk(fileId);
+            
+            if (!fileRecord) {
+                throw new Error('File not found');
+            }
+
+            if (fileRecord.isPublic) {
+                // Return existing public URL for public files
+                return {
+                    success: true,
+                    url: fileRecord.fileUrl,
+                    isPublic: true
+                };
+            }
+
+            // Generate new signed URL for private files
+            const { data: signedUrlData, error: signedUrlError } = await supabase.storage
+                .from(fileRecord.bucket)
+                .createSignedUrl(fileRecord.filePath, expiresIn);
+
+            if (signedUrlError) {
+                throw new Error(`Failed to create signed URL: ${signedUrlError.message}`);
+            }
+
+            return {
+                success: true,
+                url: signedUrlData.signedUrl,
+                isPublic: false,
+                expiresIn: expiresIn
+            };
+
+        } catch (error) {
+            console.error('Generate signed URL error:', error);
+            throw new Error(`Failed to generate signed URL: ${error.message}`);
+        }
+    }
+}
+
+module.exports = new FileUploadService();

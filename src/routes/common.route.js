@@ -1,11 +1,13 @@
 const express = require("express");
 const router = express.Router();
 const genericController = require("../controller/Generic.controller.js");
+const notesController = require("../controller/Notes.controller.js");
 const youtubeService = require("../service/YoutubeService.service.js");
 const youtubeController = require("../controller/Youtube.controller.js");
 const geminiController = require("../controller/Gemini.controller");
 const authMiddleware = require("../middleware/authMiddleware");
 const publicauthenticationMiddleware = require("../middleware/publicMiddleware");
+const { optionalFileUpload } = require("../middleware/fileUploadMiddleware");
 const logger = require('../config/winston.config.js')
 
 router.get("/ping", function (req, res) {
@@ -23,8 +25,20 @@ router.post("/userCourseEnrollment", authMiddleware, genericController.userCours
 router.post("/userCourseDisrollment", authMiddleware, genericController.userCourseDisrollment);
 router.post("/saveUserDetail", authMiddleware, genericController.saveUserDetail);
 router.post("/getCourseDetail", authMiddleware, genericController.getCourseDetail);
-router.post("/saveNote", authMiddleware, genericController.saveNote);
-router.post("/deleteNote", authMiddleware, genericController.deleteNote);
+
+// Enhanced Notes API with file support
+router.post("/saveNote", 
+    authMiddleware, 
+    ...optionalFileUpload('files', 5), // Allow up to 5 optional file attachments
+    notesController.saveNoteWithFiles
+);
+router.post("/deleteNote", authMiddleware, notesController.deleteNoteWithFiles);
+router.get("/getNote/:id", authMiddleware, notesController.getNoteWithFiles);
+router.post("/getUserNotes", authMiddleware, notesController.getUserNotesWithFiles);
+
+// Legacy endpoint for backward compatibility
+router.post("/saveNoteLegacy", authMiddleware, genericController.saveNote);
+
 router.post("/saveUserCourseContentProgress", authMiddleware, genericController.saveUserCourseContentProgress);
 router.post("/deleteUserCourseContentProgress", authMiddleware, genericController.deleteUserCourseContentProgress);
 router.post("/submitQuiz", authMiddleware, genericController.submitQuiz);

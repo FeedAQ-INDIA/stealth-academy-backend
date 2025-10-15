@@ -29,6 +29,7 @@ const userLearningScheduleRoute = require("./src/routes/userlearningschedule.rou
 const courseBuilderRoute = require("./src/routes/courseBuilder.route.js");
 const publishCourseRoute = require("./src/routes/publishCourse.route.js");
 const courseStudyGroupRoute = require("./src/routes/courseStudyGroup.route.js");
+const fileUploadRoute = require("./src/routes/fileUpload.route.js");
 
 
 const swaggerOptions = {
@@ -46,7 +47,7 @@ const swaggerOptions = {
         }, servers: [{
             url: "http://localhost:3000",
         },],
-    }, apis: ["./src/routes/common.route.js", "./server.js", "./src/controller/*.js", "./src/model/*.js",],
+    }, apis: ["./src/routes/common.route.js", "./server.js", "./src/controller/*.js", "./src/model/*.js", "./src/routes/fileUpload.route.js"],
 };
 
 const specs = swaggerJsdoc(swaggerOptions);
@@ -69,7 +70,7 @@ app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
         
         // Use alter: true for production - this won't drop existing data
         // Now that tables are created, use safer sync method
-        // await db.sequelize.sync({ force: true });
+        // await db.sequelize.sync({ alter: true });
         
         console.log("Database synchronized successfully - all tables verified");
         
@@ -105,6 +106,7 @@ app.use(userLearningScheduleRoute);
 app.use(courseBuilderRoute);
 app.use(publishCourseRoute);
 app.use('/course-study-group', courseStudyGroupRoute);
+app.use(fileUploadRoute);
 
 app.listen(port, '0.0.0.0', () => {
     console.log(`Example app listening on port ${port}`);

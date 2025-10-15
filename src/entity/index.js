@@ -51,6 +51,7 @@ db.CourseBuilder = require("./CourseBuilder.entity.js")(sequelize, Sequelize);
 db.CourseStudyGroup = require("./CourseStudyGroup.entity.js")(sequelize, Sequelize);
 db.CourseStudyGroupUser = require("./CourseStudyGroupUser.entity.js")(sequelize, Sequelize);
 db.CourseStudyGroupContent = require("./CourseStudyGroupContent.entity.js")(sequelize, Sequelize);
+db.FileUpload = require("./FileUpload.entity.js")(sequelize, Sequelize);
 
 
 
@@ -212,5 +213,9 @@ db.CourseStudyGroupContent.belongsTo(db.CourseStudyGroup, {foreignKey: 'courseSt
 db.CourseStudyGroupContent.belongsTo(db.Course, {foreignKey: 'courseId', as: 'course'});
 db.CourseStudyGroupContent.belongsTo(db.User, {foreignKey: 'createdBy', as: 'creator'});
 db.CourseStudyGroupContent.belongsTo(db.User, {foreignKey: 'lastModifiedBy', as: 'lastModifier'});
+
+// FileUpload associations
+db.FileUpload.belongsTo(db.User, {foreignKey: 'uploadedBy', as: 'uploader'});
+db.User.hasMany(db.FileUpload, {foreignKey: 'uploadedBy', as: 'uploadedFiles'});
 
 module.exports = db;

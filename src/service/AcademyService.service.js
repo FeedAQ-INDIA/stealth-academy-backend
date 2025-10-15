@@ -127,7 +127,8 @@ const saveNote = async (
     courseId,
     courseContentId,
     noteContent,
-    noteRefTimestamp
+    noteRefTimestamp,
+    metadata = {}
 ) => {
     try {
         // Input validation
@@ -146,12 +147,15 @@ const saveNote = async (
             }
 
             notesData.noteContent = noteContent.trim();
+            // Merge existing metadata with new metadata
+            notesData.metadata = { ...notesData.metadata, ...metadata };
             await notesData.save();
 
             return {
                 success: true,
                 message: 'Notes updated successfully',
-                noteId: notesData.id
+                noteId: notesData.noteId,
+                metadata: notesData.metadata
             };
         } else {
             const newNote = await db.Notes.create({
@@ -159,13 +163,15 @@ const saveNote = async (
                 courseId,
                 courseContentId,
                 noteContent: noteContent.trim(),
-                noteRefTimestamp: noteRefTimestamp
+                noteRefTimestamp: noteRefTimestamp,
+                metadata: metadata
             });
 
             return {
                 success: true,
                 message: 'Notes created successfully',
-                noteId: newNote.id
+                noteId: newNote.noteId,
+                metadata: newNote.metadata
             };
         }
     } catch (error) {

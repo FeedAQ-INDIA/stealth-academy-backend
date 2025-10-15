@@ -41,7 +41,7 @@ module.exports = (sequelize, Sequelize) => {
             field: "course_written_content",
         }, 
         courseWrittenEmbedUrl: {
-            type: Sequelize.STRING(100),
+            type: Sequelize.STRING(500),
             field: "course_written_embed_url",
         },
         courseWrittenUrlIsEmbeddable: {
