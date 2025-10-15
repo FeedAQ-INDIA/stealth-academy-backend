@@ -1,6 +1,5 @@
 // UserGoal.entity.js
 // Entity for managing user's learning and career goals
-
  
 module.exports = (sequelize, Sequelize) => {
     const UserGoal = sequelize.define("user_goal", {

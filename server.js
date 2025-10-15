@@ -9,13 +9,10 @@ const cors = require("cors");
 const express = require("express");
 const commonRoute = require("./src/routes/common.route.js");
 const authRoute = require("./src/routes/auth.route.js");
-const paymentRoute = require("./src/routes/payment.route.js");
-const organizationRoute = require("./src/routes/organization.route.js");
-const orgGroupRoute = require("./src/routes/orgGroup.route.js");
-const courseAccessRoute = require("./src/routes/courseAccess.route.js");
+ const organizationRoute = require("./src/routes/organization.route.js");
+ const courseAccessRoute = require("./src/routes/courseAccess.route.js");
 const creditRoute = require("./src/routes/credit.route.js");
-const urlEmbeddabilityRoute = require("./src/routes/urlEmbeddability.routes.js");
-const app = express();
+ const app = express();
 const port = process.env.PORT || 3000;
 const db = require("./src/entity");
 const bodyParser = require("body-parser");
@@ -23,14 +20,10 @@ const swaggerJsdoc = require("swagger-jsdoc");
 const swaggerUi = require("swagger-ui-express");
 require("./google_oauth.js");
 require("./microsoft_oauth.js");
-const logger = require('./src/config/winston.config.js')
-const userGoalRoute = require("./src/routes/userGoal.route.js");
-const userLearningScheduleRoute = require("./src/routes/userlearningschedule.route.js");
+ 
 const courseBuilderRoute = require("./src/routes/courseBuilder.route.js");
 const publishCourseRoute = require("./src/routes/publishCourse.route.js");
-const courseStudyGroupRoute = require("./src/routes/courseStudyGroup.route.js");
-const fileUploadRoute = require("./src/routes/fileUpload.route.js");
-
+ 
 
 const swaggerOptions = {
     definition: {
@@ -94,20 +87,13 @@ app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 
 
 app.use(commonRoute);
-app.use(paymentRoute);
-app.use(authRoute);
+ app.use(authRoute);
 app.use(organizationRoute);
-app.use(orgGroupRoute);
-app.use('/course-access', courseAccessRoute);
+ app.use('/course-access', courseAccessRoute);
 app.use('/credit', creditRoute);
-app.use('/api/url-embeddability', urlEmbeddabilityRoute);
-app.use(userGoalRoute);
-app.use(userLearningScheduleRoute);
-app.use(courseBuilderRoute);
+   app.use(courseBuilderRoute);
 app.use(publishCourseRoute);
-app.use('/course-study-group', courseStudyGroupRoute);
-app.use(fileUploadRoute);
-
+ 
 app.listen(port, '0.0.0.0', () => {
     console.log(`Example app listening on port ${port}`);
 });

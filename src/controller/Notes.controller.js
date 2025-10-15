@@ -324,16 +324,109 @@ class NotesController {
         }
     }
 
-    // Legacy methods for backward compatibility
+    // Enhanced saveNote method - supports creation and updation with files
     async saveNote(req, res, next) {
-        // Call the new method without files
-        req.files = [];
-        return this.saveNoteWithFiles(req, res, next);
+        try {
+            // Check for validation errors
+            const errors = validationResult(req);
+            if (!errors.isEmpty()) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Validation errors',
+                    errors: errors.array()
+                });
+            }
+
+            const userId = req.user.userId;
+            const files = req.files || [];
+            
+            // Parse metadata if provided as string
+            let metadata = {};
+            if (req.body.metadata) {
+                try {
+                    metadata = typeof req.body.metadata === 'string' 
+                        ? JSON.parse(req.body.metadata) 
+                        : req.body.metadata;
+                } catch (error) {
+                    return res.status(400).json({
+                        success: false,
+                        message: 'Invalid metadata format. Must be valid JSON.'
+                    });
+                }
+            }
+
+            const noteData = {
+                userId,
+                notesId: req.body.notesId ? parseInt(req.body.notesId) : null,
+                courseId: parseInt(req.body.courseId),
+                courseContentId: req.body.courseContentId ? parseInt(req.body.courseContentId) : null,
+                noteContent: req.body.noteContent,
+                noteRefTimestamp: req.body.noteRefTimestamp ? parseFloat(req.body.noteRefTimestamp) : null,
+                metadata
+            };
+
+            const result = await NotesService.saveNoteWithFiles(noteData, files);
+
+            res.status(200).json({
+                success: true,
+                message: result.message,
+                data: result.data
+            });
+
+        } catch (error) {
+            logger.error('Save note error:', error);
+            res.status(500).json({
+                success: false,
+                message: error.message || 'Failed to save note'
+            });
+        }
     }
 
+    // Enhanced deleteNote method - deletes note and associated files from storage
     async deleteNote(req, res, next) {
-        return this.deleteNoteWithFiles(req, res, next);
+        try {
+            const { notesId } = req.body;
+            const userId = req.user.userId;
+
+            if (!notesId) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Note ID is required'
+                });
+            }
+
+            const result = await NotesService.deleteNoteWithFiles(notesId, userId);
+
+            res.status(200).json({
+                success: true,
+                message: result.message,
+                data: result.data
+            });
+
+        } catch (error) {
+            logger.error('Delete note error:', error);
+            
+            if (error.message.includes('not found')) {
+                return res.status(404).json({
+                    success: false,
+                    message: error.message
+                });
+            }
+            
+            if (error.message.includes('Unauthorized')) {
+                return res.status(403).json({
+                    success: false,
+                    message: error.message
+                });
+            }
+
+            res.status(500).json({
+                success: false,
+                message: error.message || 'Failed to delete note'
+            });
+        }
     }
+
 }
 
 module.exports = new NotesController();

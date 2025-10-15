@@ -19,7 +19,7 @@ module.exports = (sequelize, Sequelize) => {
         },
         userId: {
             type: Sequelize.INTEGER,
-            allowNull: true, // can be null if assigned to group/org
+            allowNull: true,  
             references: {
                 model: "user",
                 key: "user_id",

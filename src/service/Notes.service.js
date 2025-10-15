@@ -46,11 +46,11 @@ class NotesService {
                     const uploadResult = await FileUploadService.uploadMultipleFiles(
                         files,
                         userId,
-                        'notes-attachments',
+                        'uploads',
                         {
                             isPublic: false, // Notes attachments should be private
-                            tags: ['note-attachment', `course-${courseId}`],
-                            folder: `notes/${userId}/${courseId}`
+                            tags: ['uploads', `course-${courseId}`],
+                            folder: `${userId}`
                         }
                     );
 
@@ -128,9 +128,33 @@ class NotesService {
                     throw new Error('Unauthorized to modify these notes');
                 }
 
-                // Merge existing attachments with new ones
+                // Handle file management for updates
+                let finalAttachments = [];
                 const existingAttachments = noteRecord.metadata?.attachments || [];
-                const allAttachments = [...existingAttachments, ...fileAttachments];
+                
+                // Check if metadata contains retainedAttachments (for selective file removal)
+                if (metadata.retainedAttachments) {
+                    // Only keep the files specified in retainedAttachments
+                    const retainedFileIds = metadata.retainedAttachments.map(file => file.fileId);
+                    finalAttachments = existingAttachments.filter(file => retainedFileIds.includes(file.fileId));
+                    
+                    // Delete files that were not retained
+                    const filesToDelete = existingAttachments.filter(file => !retainedFileIds.includes(file.fileId));
+                    for (const fileToDelete of filesToDelete) {
+                        try {
+                            await FileUploadService.deleteFile(fileToDelete.fileId, userId);
+                            logger.info(`Deleted file ${fileToDelete.fileId} during note update`);
+                        } catch (deleteError) {
+                            logger.warn(`Failed to delete file ${fileToDelete.fileId}:`, deleteError);
+                        }
+                    }
+                } else {
+                    // Default behavior: keep all existing files
+                    finalAttachments = [...existingAttachments];
+                }
+                
+                // Add new file attachments
+                finalAttachments = [...finalAttachments, ...fileAttachments];
                 
                 // Clean existing metadata of file-related fields
                 const cleanExistingMetadata = { ...noteRecord.metadata };
@@ -143,20 +167,20 @@ class NotesService {
                 delete cleanExistingMetadata.hasVideo;
                 delete cleanExistingMetadata.hasImages;
                 delete cleanExistingMetadata.hasDocuments;
+                delete cleanExistingMetadata.retainedAttachments; // Remove this from final metadata
                 
                 noteRecord.noteContent = noteContent.trim();
                 noteRecord.metadata = {
                     ...cleanExistingMetadata,
-                    ...enrichedMetadata,
-                    attachments: allAttachments,
-                    hasAttachments: allAttachments.length > 0,
-                    attachmentCount: allAttachments.length,
-                    hasFiles: allAttachments.length > 0,
-                    totalFiles: allAttachments.length,
-                    hasAudio: allAttachments.some(file => file.mimeType?.startsWith('audio/')),
-                    hasVideo: allAttachments.some(file => file.mimeType?.startsWith('video/')),
-                    hasImages: allAttachments.some(file => file.mimeType?.startsWith('image/')),
-                    hasDocuments: allAttachments.some(file => 
+                    attachments: finalAttachments,
+                    hasAttachments: finalAttachments.length > 0,
+                    attachmentCount: finalAttachments.length,
+                    hasFiles: finalAttachments.length > 0,
+                    totalFiles: finalAttachments.length,
+                    hasAudio: finalAttachments.some(file => file.mimeType?.startsWith('audio/')),
+                    hasVideo: finalAttachments.some(file => file.mimeType?.startsWith('video/')),
+                    hasImages: finalAttachments.some(file => file.mimeType?.startsWith('image/')),
+                    hasDocuments: finalAttachments.some(file => 
                         file.mimeType?.includes('pdf') || 
                         file.mimeType?.includes('word') || 
                         file.mimeType?.includes('text') ||
@@ -387,6 +411,88 @@ class NotesService {
         } catch (error) {
             logger.error('Error in getUserNotesWithFiles:', error);
             throw new Error(`Failed to get user notes: ${error.message}`);
+        }
+    }
+
+    /**
+     * Delete a specific file attachment from a note
+     * @param {number} noteId - Note ID
+     * @param {string} fileId - File ID to delete
+     * @param {number} userId - User ID for authorization
+     * @returns {Promise<Object>} Deletion result
+     */
+    async deleteNoteAttachment(noteId, fileId, userId) {
+        const transaction = await db.sequelize.transaction();
+        
+        try {
+            const noteRecord = await db.Notes.findByPk(noteId, { transaction });
+            
+            if (!noteRecord) {
+                throw new Error('Note not found');
+            }
+
+            // Verify ownership
+            if (noteRecord.userId !== userId) {
+                throw new Error('Unauthorized to modify this note');
+            }
+
+            const currentAttachments = noteRecord.metadata?.attachments || [];
+            const attachmentToDelete = currentAttachments.find(att => att.fileId === fileId);
+            
+            if (!attachmentToDelete) {
+                throw new Error('File attachment not found in this note');
+            }
+
+            // Delete the file from storage
+            try {
+                await FileUploadService.deleteFile(fileId, userId);
+            } catch (error) {
+                logger.warn(`Failed to delete file ${fileId} from storage:`, error);
+                // Continue with note update even if file deletion fails
+            }
+
+            // Remove attachment from note metadata
+            const updatedAttachments = currentAttachments.filter(att => att.fileId !== fileId);
+            
+            // Update metadata
+            const updatedMetadata = {
+                ...noteRecord.metadata,
+                attachments: updatedAttachments,
+                hasAttachments: updatedAttachments.length > 0,
+                attachmentCount: updatedAttachments.length,
+                hasFiles: updatedAttachments.length > 0,
+                totalFiles: updatedAttachments.length,
+                hasAudio: updatedAttachments.some(file => file.mimeType?.startsWith('audio/')),
+                hasVideo: updatedAttachments.some(file => file.mimeType?.startsWith('video/')),
+                hasImages: updatedAttachments.some(file => file.mimeType?.startsWith('image/')),
+                hasDocuments: updatedAttachments.some(file => 
+                    file.mimeType?.includes('pdf') || 
+                    file.mimeType?.includes('word') || 
+                    file.mimeType?.includes('text') ||
+                    file.mimeType?.includes('document')
+                )
+            };
+
+            noteRecord.metadata = updatedMetadata;
+            await noteRecord.save({ transaction });
+
+            await transaction.commit();
+
+            return {
+                success: true,
+                message: 'File attachment deleted successfully',
+                data: {
+                    noteId: noteRecord.noteId,
+                    deletedFileId: fileId,
+                    remainingAttachments: updatedAttachments.length,
+                    metadata: updatedMetadata
+                }
+            };
+
+        } catch (error) {
+            await transaction.rollback();
+            logger.error('Error in deleteNoteAttachment:', error);
+            throw new Error(`Failed to delete file attachment: ${error.message}`);
         }
     }
 }
