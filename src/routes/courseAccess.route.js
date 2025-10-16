@@ -6,22 +6,18 @@ const authMiddleware = require("../middleware/authMiddleware");
 // Apply authentication middleware to all routes
 router.use(authMiddleware);
 
-// Grant access to a course
-router.post("/grant", courseAccessController.grantAccess);
-
-// Revoke access to a course
-router.delete("/:courseAccessId", courseAccessController.revokeAccess);
-
+router.post("/revokeAccess", courseAccessController.revokeAccess);
+ 
 // Update access level or expiration
-router.put("/:courseAccessId", courseAccessController.updateAccess);
+router.post("/updateUserAccess", courseAccessController.updateAccess);
 
 // Get all access records for a course
-router.get("/course/:courseId", courseAccessController.getCourseAccess);
-
-// Get all courses a user has access to
-router.get("/user/:userId", courseAccessController.getUserCourseAccess);
+router.get("/getCourseMembers/:courseId", courseAccessController.getCourseAccess);
 
 // Check if a user has access to a course
-router.get("/check/:userId/:courseId", courseAccessController.checkAccess);
+router.get("/checkCourseAccess/:courseId", courseAccessController.checkAccess);
+
+// Invite users to a course
+router.post("/inviteUser", courseAccessController.inviteUser);
 
 module.exports = router;

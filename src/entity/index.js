@@ -48,6 +48,7 @@ db.CourseStudyGroup = require("./CourseStudyGroup.entity.js")(sequelize, Sequeli
 db.CourseStudyGroupUser = require("./CourseStudyGroupUser.entity.js")(sequelize, Sequelize);
 db.CourseStudyGroupContent = require("./CourseStudyGroupContent.entity.js")(sequelize, Sequelize);
 db.FileUpload = require("./FileUpload.entity.js")(sequelize, Sequelize);
+db.CourseUserInvites = require("./CourseUserInvites.entity.js")(sequelize, Sequelize);
 
 
 
@@ -184,5 +185,15 @@ db.CourseStudyGroupContent.belongsTo(db.User, {foreignKey: 'lastModifiedBy', as:
 // FileUpload associations
 db.FileUpload.belongsTo(db.User, {foreignKey: 'uploadedBy', as: 'uploader'});
 db.User.hasMany(db.FileUpload, {foreignKey: 'uploadedBy', as: 'uploadedFiles'});
+
+// CourseUserInvites associations
+db.CourseUserInvites.belongsTo(db.Course, {foreignKey: 'courseId', as: 'course'});
+db.CourseUserInvites.belongsTo(db.User, {foreignKey: 'invitedByUserId', as: 'inviter'});
+db.CourseUserInvites.belongsTo(db.User, {foreignKey: 'acceptedByUserId', as: 'acceptor'});
+db.CourseUserInvites.belongsTo(db.Organization, {foreignKey: 'organizationId', as: 'organization'});
+db.Course.hasMany(db.CourseUserInvites, {foreignKey: 'courseId', as: 'invites'});
+db.User.hasMany(db.CourseUserInvites, {foreignKey: 'invitedByUserId', as: 'sentInvites'});
+db.User.hasMany(db.CourseUserInvites, {foreignKey: 'acceptedByUserId', as: 'acceptedInvites'});
+db.Organization.hasMany(db.CourseUserInvites, {foreignKey: 'organizationId', as: 'courseInvites'});
 
 module.exports = db;
