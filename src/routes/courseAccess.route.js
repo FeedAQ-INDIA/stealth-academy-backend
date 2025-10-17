@@ -17,6 +17,11 @@ router.get("/getCourseMembers/:courseId", courseAccessController.getCourseAccess
 // Check if a user has access to a course
 router.get("/checkCourseAccess/:courseId", courseAccessController.checkAccess);
 
+
+router.get("/getInvitedMembers/:courseId", courseAccessController.getInvitedMembers);
+
+
+
 // Invite users to a course
 router.post("/inviteUser", courseAccessController.inviteUser);
 

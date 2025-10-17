@@ -3,6 +3,7 @@ const { Op } = require("sequelize");
 const { handleError } = require("../utils/errorHandler");
 const crypto = require("crypto");
 const emailService = require("../utils/emailService");
+const notificationService = require("../service/Notifications.service.js");
 
 const CourseAccess = db.CourseAccess;
 const Course = db.Course;
@@ -202,12 +203,42 @@ exports.checkAccess = async (req, res) => {
     }
 };
 
+
+/**
+ * Get all invited members for a course
+ */
+exports.getInvitedMembers = async (req, res) => {
+    try {
+        const { courseId } = req.params;
+
+        const userId = req.user.userId;
+
+
+        const invites = await db.CourseUserInvites.findAll({
+            where: {
+                courseId,
+                inviteStatus: {
+                    [Op.ne]: 'ACCEPTED'
+                }
+            }
+        });
+
+        res.json({
+            invites : invites
+        });
+    } catch (error) {
+        handleError(res, error);
+    }
+};
+
 /**
  * Invite users to a course
  */
 exports.inviteUser = async (req, res) => {
     try {
-        const { courseId, userId, orgId, invites } = req.body;
+        const { courseId, orgId, invites } = req.body;
+
+        const userId = req.user.userId;
 
         // Validate required fields
         if (!courseId || !userId || !Array.isArray(invites) || invites.length === 0) {
@@ -241,12 +272,18 @@ exports.inviteUser = async (req, res) => {
             }
         }
 
+                // Get inviter details
+        const inviter = await User.findByPk(userId);
+
+        if (!inviter) {
+            return res.status(404).json({ message: "Inviter user not found" });
+        }
+
         // Check if course exists
         const course = await Course.findByPk(courseId, {
             include: [{
                 model: User,
                 as: 'instructor',
-                attributes: ['userId', 'firstName', 'lastName', 'email']
             }]
         });
         
@@ -270,14 +307,7 @@ exports.inviteUser = async (req, res) => {
             });
         }
 
-        // Get inviter details
-        const inviter = await User.findByPk(userId, {
-            attributes: ['userId', 'firstName', 'lastName', 'email']
-        });
 
-        if (!inviter) {
-            return res.status(404).json({ message: "Inviter user not found" });
-        }
 
         const successfulInvites = [];
         const failedInvites = [];
@@ -365,6 +395,20 @@ exports.inviteUser = async (req, res) => {
                     await inviteRecord.update({
                         emailSentAt: new Date()
                     });
+
+                    notificationService.createNotification({
+                        userId: userId,
+                        title: `Invitation to join course: ${course.courseTitle}`,
+                        notificationType: 'COURSE_INVITE',
+                        notificationReq: {
+                            email: invite.email,
+                            courseId: courseId,
+                            inviteToken: inviteToken,
+                            expiresAt:expiresAt,
+                            inviteId: inviteRecord.inviteId
+                        },
+                        isActionRequired: true
+                    }); 
 
                     successfulInvites.push({
                         email: invite.email,
@@ -502,23 +546,24 @@ async function sendCourseInviteEmail(emailData) {
     `;
 
     const mailOptions = {
-        from: `"FeedAQ Academy" <${process.env.SMTP_USER}>`,
+        from: `"Huskite" <${process.env.SMTP_USER}>`,
         to: inviteeEmail,
         subject: `Invitation to join "${courseName}"`,
         html: emailHtml,
         replyTo: inviterEmail
     };
 
-    // Use the existing email service if available
-    if (emailService && emailService.transporter) {
-        await emailService.transporter.sendMail(mailOptions);
-    } else {
-        // Fallback or test mode
-        console.log('Email service not configured. Email would be sent with:', {
-            to: inviteeEmail,
+    try {
+        await emailService.sendEmail({
+            from: mailOptions.from,
+            to: mailOptions.to,
             subject: mailOptions.subject,
-            from: mailOptions.from
+            html: mailOptions.html,
+            replyTo: mailOptions.replyTo
         });
+    } catch (error) {
+        console.log('Email service not configured or failed to send:', error);
+        throw error;
     }
 }
 

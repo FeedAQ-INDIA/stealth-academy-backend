@@ -12,6 +12,7 @@ const authRoute = require("./src/routes/auth.route.js");
  const organizationRoute = require("./src/routes/organization.route.js");
  const courseAccessRoute = require("./src/routes/courseAccess.route.js");
 const creditRoute = require("./src/routes/credit.route.js");
+const emailService = require("./src/utils/emailService.js");
  const app = express();
 const port = process.env.PORT || 3000;
 const db = require("./src/entity");
@@ -57,6 +58,8 @@ app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 // For production: Sync database with alter (safe for existing data)
 (async () => {
     try {
+        await emailService.initializeTransporter();
+
         // Test database connection first
         await db.sequelize.authenticate();
         console.log("Database connection established successfully");
@@ -65,6 +68,7 @@ app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
         // Now that tables are created, use safer sync method
         // await db.sequelize.sync({ alter: true });
         
+
         console.log("Database synchronized successfully - all tables verified");
         
     } catch (error) {
@@ -93,6 +97,7 @@ app.use(organizationRoute);
 app.use('/credit', creditRoute);
    app.use(courseBuilderRoute);
 app.use(publishCourseRoute);
+
  
 app.listen(port, '0.0.0.0', () => {
     console.log(`Example app listening on port ${port}`);

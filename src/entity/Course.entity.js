@@ -52,17 +52,10 @@ module.exports = (sequelize, Sequelize) => {
       type: Sequelize.INTEGER,
       field: "course_validity"
     },
-    courseType: {
-      type: Sequelize.ENUM("BYOC", "INSTRUCTOR_LED"),
-      field: "course_delivery_mode",
-      allowNull: false,
-      defaultValue: "BYOC",
-    },
-    deliveryMode: {
-      type: Sequelize.ENUM("ONLINE", "OFFLINE", "HYBRID"),
-      field: "course_delivery_mode",
-      allowNull: false,
-      defaultValue: "ONLINE",
+    isPrivate: {
+      type: Sequelize.BOOLEAN,
+      field: "course_is_private",
+      defaultValue: true
     },
     status: {
       type: Sequelize.ENUM("DRAFT", "PUBLISHED","ACTIVE", "INACTIVE", "ARCHIVED"),

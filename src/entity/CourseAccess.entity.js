@@ -41,6 +41,11 @@ module.exports = (sequelize, Sequelize) => {
             field: "course_access_level",
             allowNull: false,
         },
+        isTrackingEnabled: {
+            type: Sequelize.BOOLEAN,
+            field: "course_access_is_tracking_enabled",
+            defaultValue: true,
+        },
         isActive: {
             type: Sequelize.BOOLEAN,
             field: "course_access_is_active",

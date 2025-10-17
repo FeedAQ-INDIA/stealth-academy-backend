@@ -26,6 +26,7 @@ db.sequelize = sequelize;
 
 // Entities
 db.User = require("./User.entity.js")(sequelize, Sequelize);
+db.Notifications = require("./Notifications.entity.js")(sequelize, Sequelize);
 db.CourseAccess = require("./CourseAccess.entity.js")(sequelize, Sequelize);
 db.UserCourseEnrollment = require("./UserCourseEnrollment.entity.js")(sequelize, Sequelize);
 db.UserGoal = require("./UserGoal.entity.js")(sequelize, Sequelize);
@@ -55,6 +56,7 @@ db.CourseUserInvites = require("./CourseUserInvites.entity.js")(sequelize, Seque
 // Associations
 
 // User associations
+db.User.hasMany(db.Notifications, {foreignKey: 'userId', as: 'notifications'});
 db.User.hasMany(db.Course, {foreignKey: 'userId', as: 'courses'});
 db.User.hasMany(db.UserCourseEnrollment, {foreignKey: 'userId', as: 'enrollments'});
 db.User.hasMany(db.Notes, {foreignKey: 'userId', as: 'notes'});
