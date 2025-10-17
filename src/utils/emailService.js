@@ -176,7 +176,7 @@ class EmailService {
                 
                 <div class="footer">
                     <p>This invitation was sent by ${organizationName}. If you have any questions, please contact them directly.</p>
-                    <p>&copy; ${new Date().getFullYear()} FeedAQ Academy. All rights reserved.</p>
+                    <p>&copy; ${new Date().getFullYear()} Huskite. All rights reserved.</p>
                 </div>
             </div>
         </body>
