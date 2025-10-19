@@ -12,6 +12,7 @@ const authRoute = require("./src/routes/auth.route.js");
  const organizationRoute = require("./src/routes/organization.route.js");
  const courseAccessRoute = require("./src/routes/courseAccess.route.js");
 const creditRoute = require("./src/routes/credit.route.js");
+const notificationRoute = require("./src/routes/notification.route.js");
 const emailService = require("./src/utils/emailService.js");
  const app = express();
 const port = process.env.PORT || 3000;
@@ -91,11 +92,12 @@ app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 
 
 app.use(commonRoute);
- app.use(authRoute);
+app.use(authRoute);
 app.use(organizationRoute);
- app.use('/course-access', courseAccessRoute);
+app.use('/course-access', courseAccessRoute);
 app.use('/credit', creditRoute);
-   app.use(courseBuilderRoute);
+app.use('/notifications', notificationRoute);
+app.use(courseBuilderRoute);
 app.use(publishCourseRoute);
 
  

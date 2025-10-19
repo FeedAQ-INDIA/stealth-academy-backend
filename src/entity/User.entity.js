@@ -124,6 +124,9 @@ module.exports = (sequelize, Sequelize) => {
           fields: ['user_first_name', 'user_last_name']
         },
         {
+          fields: ['user_email']
+        },
+        {
           fields: ['user_role']
         },
         {

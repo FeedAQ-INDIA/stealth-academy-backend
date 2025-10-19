@@ -55,16 +55,22 @@ module.exports = (sequelize, Sequelize) => {
             field: "invite_status",
             allowNull: false,
         },
-        inviteToken: {
-            type: Sequelize.STRING(255),
-            allowNull: false,
-            unique: true,
-            field: "invite_token",
-        },
         expiresAt: {
             type: Sequelize.DATE,
             allowNull: false,
             field: "invite_expires_at",
+        },
+        v_expires_date: {
+            type: Sequelize.VIRTUAL,
+            get() {
+                return formatDate(this.expiresAt);
+            },
+        },
+        v_expires_time: {
+            type: Sequelize.VIRTUAL,
+            get() {
+                return formatTime(this.expiresAt);
+            },
         },
         acceptedAt: {
             type: Sequelize.DATE,
@@ -146,11 +152,6 @@ module.exports = (sequelize, Sequelize) => {
             {
                 name: 'idx_cui_invite_status',
                 fields: ['invite_status']
-            },
-            {
-                name: 'idx_cui_invite_token',
-                unique: true,
-                fields: ['invite_token']
             },
             {
                 name: 'idx_cui_expires_at',

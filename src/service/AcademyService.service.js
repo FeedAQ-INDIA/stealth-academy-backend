@@ -431,8 +431,19 @@ const calculateLearningHours = async (userId) => {
  
 const getCourseDetail = async (userId, courseId) => {
 
+    const courseAccess = await db.CourseAccess.findOne({
+        where: {
+            userId: userId,
+            courseId: courseId
+        }
+    }); 
+
+    if(!courseAccess){
+        throw new Error("User does not have access to this course");
+    }
+
     const courseDetailsRaw = await db.Course.findOne({
-        where: { courseId: courseId, userId: userId },
+        where: { courseId: courseId},
         include: [{
             model: db.CourseContent,
             as: "courseContent",
