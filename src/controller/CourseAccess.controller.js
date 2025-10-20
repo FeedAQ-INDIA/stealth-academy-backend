@@ -2,49 +2,6 @@ const logger = require("../config/winston.config");
 const CourseAccessService = require("../service/CourseAccess.service");
 const { ApiResponse } = require("../utils/responseFormatter");
 
-/**
- * Grant access to a course for a user or organization
- * @route POST /api/courseAccess/grantAccess
- */
-async function grantAccess(req, res, next) {
-    const apiResponse = new ApiResponse(req, res);
-    
-    
-    try {
-        const { courseId, userId, organizationId, accessLevel, expiresAt } = req.body;
-
-        const accessData = {
-            courseId,
-            userId,
-            organizationId,
-            accessLevel,
-            expiresAt,
-            grantedByUserId: req.user.userId,
-            grantedByOrganizationId: req.user.organizationId
-        };
-
-        const access = await CourseAccessService.grantAccess(accessData);
-
-        apiResponse
-            .status(201)
-            .withMessage("Access granted successfully")
-            .withData({ access })
-            .success();
-    } catch (err) {
-        logger.error(`Error occurred while granting access:`, err.message);
-        apiResponse
-            .status(err.message?.toLowerCase().includes('access already granted') ? 400 : 
-                    err.message?.toLowerCase().includes('either userid or organizationid') ? 400 : 500)
-            .withMessage(err.message || "Failed to grant access")
-            .withError(err.message, err.code || "GRANT_ACCESS_ERROR", "grantAccess")
-            .withMeta({
-                courseId: req.body.courseId,
-                accessLevel: req.body.accessLevel,
-                attemptedBy: req.user?.userId
-            })
-            .error();
-    }
-}
 
 
 /**
@@ -160,7 +117,7 @@ async function getCourseAccess(req, res, next) {
         apiResponse
             .status(200)
             .withMessage("Course access records fetched successfully")
-            .withData({ accessRecords: access, count: access?.length || 0 })
+            .withData(access)
             .withMeta({
                 courseId,
                 totalRecords: access?.length || 0
@@ -180,97 +137,6 @@ async function getCourseAccess(req, res, next) {
     }
 }
 
-/**
- * Get all courses a user has access to
- * @route GET /api/courseAccess/getUserCourseAccess/:userId
- */
-async function getUserCourseAccess(req, res, next) {
-    const apiResponse = new ApiResponse(req, res);
-    
-    try {
-        const { userId } = req.params;
-
-        if (!userId) {
-            return apiResponse
-                .status(400)
-                .withMessage("userId is required")
-                .withError("userId is required", "MISSING_FIELD", "getUserCourseAccess")
-                .error();
-        }
-
-        const access = await CourseAccessService.getUserCourseAccess(userId);
-
-        apiResponse
-            .status(200)
-            .withMessage("User course access records fetched successfully")
-            .withData({ accessRecords: access, count: access?.length || 0 })
-            .withMeta({
-                userId,
-                totalCourses: access?.length || 0
-            })
-            .success();
-    } catch (err) {
-        logger.error(`Error occurred while fetching user course access:`, err.message);
-        apiResponse
-            .status(500)
-            .withMessage(err.message || "Failed to fetch user course access")
-            .withError(err.message, err.code || "GET_USER_COURSE_ACCESS_ERROR", "getUserCourseAccess")
-            .withMeta({
-                userId: req.params.userId,
-                requestedBy: req.user?.userId
-            })
-            .error();
-    }
-}
-
-/**
- * Check if a user has access to a course
- * @route GET /api/courseAccess/checkCourseAccess/:courseId
- */
-async function checkAccess(req, res, next) {
-    const apiResponse = new ApiResponse(req, res);
-    
-    try {
-        const { courseId } = req.params;
-        const userId = req.user.userId;
-
-        if (!courseId) {
-            return apiResponse
-                .status(400)
-                .withMessage("courseId is required")
-                .withError("courseId is required", "MISSING_FIELD", "checkAccess")
-                .error();
-        }
-
-        const result = await CourseAccessService.checkAccess(courseId, userId);
-
-        apiResponse
-            .status(200)
-            .withMessage("Access check completed")
-            .withData({
-                hasAccess: result?.hasAccess || false,
-                accessLevel: result?.accessLevel || null,
-                details: result
-            })
-            .withMeta({
-                courseId,
-                userId,
-                checkedAt: new Date().toISOString()
-            })
-            .success();
-    } catch (err) {
-        logger.error(`Error occurred while checking access:`, err.message);
-        apiResponse
-            .status(500)
-            .withMessage(err.message || "Failed to check access")
-            .withError(err.message, err.code || "CHECK_ACCESS_ERROR", "checkAccess")
-            .withMeta({
-                courseId: req.params.courseId,
-                userId: req.user?.userId
-            })
-            .error();
-    }
-}
 
 /**
  * Get all invited members for a course
@@ -295,7 +161,7 @@ async function getInvitedMembers(req, res, next) {
         apiResponse
             .status(200)
             .withMessage("Invited members fetched successfully")
-            .withData({ invites, count: invites?.length || 0 })
+            .withData( invites )
             .withMeta({
                 courseId,
                 totalInvites: invites?.length || 0
@@ -496,7 +362,7 @@ async function declineInvite(req, res, next) {
  * Cancel a course invitation (by the inviter)
  * @route POST /api/courseAccess/cancelInvite
  */
-async function cancelInvite(req, res, next) {
+async function revokeInvite(req, res, next) {
     const apiResponse = new ApiResponse(req, res);
     
     try {
@@ -542,16 +408,13 @@ async function cancelInvite(req, res, next) {
 }
 
 module.exports = {
-    grantAccess,
     revokeAccess,
     updateAccess,
     getCourseAccess,
-    getUserCourseAccess,
-    checkAccess,
     getInvitedMembers,
     inviteUser,
+    revokeInvite,
     acceptInvite,
-    declineInvite,
-    cancelInvite
+    declineInvite
 };
 

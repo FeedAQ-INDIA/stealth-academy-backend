@@ -132,57 +132,6 @@ const getCourseAccess = async (courseId) => {
     return access;
 };
 
-/**
- * Get all courses a user has access to
- * @param {number} userId - The user ID
- * @returns {Promise<Array>} Array of access records with course details
- */
-const getUserCourseAccess = async (userId) => {
-    // Get user's organization IDs
-    const userOrganizationIds = await getUserOrganizationIds(userId);
-
-    // Get user's direct access and organizational access
-    const access = await CourseAccess.findAll({
-        where: {
-            isActive: true,
-            [Op.or]: [
-                { userId },
-                {
-                    organizationId: {
-                        [Op.in]: userOrganizationIds
-                    }
-                }
-            ]
-        },
-        include: [{
-            model: Course,
-            as: 'course'
-        }],
-    });
-
-    return access;
-};
-
-/**
- * Check if a user has access to a course
- * @param {number} courseId - The course ID
- * @param {number} userId - The user ID
- * @returns {Promise<Object>} Object with hasAccess boolean and access details
- */
-const checkAccess = async (courseId, userId) => {
-    const access = await CourseAccess.findOne({
-        where: {
-            courseId,
-            isActive: true,
-            userId
-        }
-    });
-
-    return {
-        hasAccess: !!access,
-        accessDetails: access
-    };
-};
 
 /**
  * Get all invited members for a course
@@ -777,27 +726,13 @@ const cancelInvite = async (inviteId, userId) => {
     };
 };
 
-/**
- * Helper function to get all organization IDs a user belongs to
- * @private
- */
-async function getUserOrganizationIds(userId) {
-    const orgUsers = await db.OrganizationUser.findAll({
-        where: {
-            userId,
-            status: 'ACTIVE'
-        }
-    });
-    return orgUsers.map(ou => ou.orgId);
-}
+
 
 module.exports = {
     grantAccess,
     revokeAccess,
     updateAccess,
     getCourseAccess,
-    getUserCourseAccess,
-    checkAccess,
     getInvitedMembers,
     inviteUsers,
     acceptInvite,

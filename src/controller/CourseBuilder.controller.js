@@ -356,7 +356,7 @@ async function getCourseBuilderById(req, res) {
         apiResponse
             .status(200)
             .withMessage('Course builder fetched successfully')
-            .withData({ courseBuilder })
+            .withData(courseBuilder)
             .withMeta({
                 courseBuilderId: parseInt(courseBuilderId),
                 userId
