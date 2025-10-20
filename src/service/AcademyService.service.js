@@ -228,10 +228,7 @@ const getUser = async (userId) => {
         getStudyStreak(userId);
         calculateLearningHours(userId);
         
-        return {
-            success: true,
-            data: userJson
-        };
+        return userJson;
     } catch (error) {
         logger.error('Error in getUser:', error);
         throw new Error(`Failed to fetch user: ${error.message}`);

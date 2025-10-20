@@ -289,7 +289,7 @@ async function getUserCreditStats(req, res, next) {
         apiResponse
             .status(200)
             .withMessage("User credit statistics fetched successfully")
-            .withData({ stats: val })
+            .withData( val)
             .withMeta({
                 userId: userId || req.user.userId,
                 requestedBy: req.user?.userId

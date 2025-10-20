@@ -63,7 +63,7 @@ const getUserNotifications = async (userId, options = {}) => {
  
 
     const { count, rows } = await db.Notifications.findAndCountAll(query);
-    return { total: count, notifications: rows, limit, offset };
+    return { total: count, results: rows, limit, offset };
   } catch (error) {
     throw new Error(`Failed to fetch notifications: ${error.message}`);
   }

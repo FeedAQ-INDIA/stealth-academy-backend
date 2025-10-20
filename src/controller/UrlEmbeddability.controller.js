@@ -9,6 +9,7 @@
 
 const urlEmbeddabilityService = require("../service/UrlEmbeddability.service.js");
 const logger = require("../config/winston.config.js");
+const { ApiResponse } = require("../utils/responseFormatter");
 
 /**
  * Check if a single URL is embeddable in an iframe
@@ -16,24 +17,26 @@ const logger = require("../config/winston.config.js");
  * @param {Object} res - Express response object
  */
 const checkUrlEmbeddability = async (req, res) => {
+  const apiResponse = new ApiResponse(req, res);
+  
   try {
     const { url } = req.body;
 
     // Validate input
     if (!url) {
-      return res.status(400).json({
-        success: false,
-        error: "URL is required",
-        message: "Please provide a URL to check"
-      });
+      return apiResponse
+        .status(400)
+        .withMessage("URL is required")
+        .withError("Please provide a URL to check", "MISSING_FIELD", "checkUrlEmbeddability")
+        .error();
     }
 
     if (typeof url !== 'string') {
-      return res.status(400).json({
-        success: false,
-        error: "Invalid URL format",
-        message: "URL must be a string"
-      });
+      return apiResponse
+        .status(400)
+        .withMessage("Invalid URL format")
+        .withError("URL must be a string", "INVALID_TYPE", "checkUrlEmbeddability")
+        .error();
     }
 
     logger.info(`📥 Received iframe embeddability check request for: ${url}`);
@@ -46,20 +49,25 @@ const checkUrlEmbeddability = async (req, res) => {
 
     logger.info(`📤 Returning embeddability result for ${url}: ${result.embeddable}`);
 
-    return res.status(statusCode).json({
-      success: true,
-      data: result,
-      timestamp: new Date().toISOString()
-    });
+    apiResponse
+      .status(statusCode)
+      .withMessage(result.embeddable === null ? "Embeddability status unknown" : 
+                   result.embeddable ? "URL is embeddable" : "URL is not embeddable")
+      .withData({ result })
+      .withMeta({
+        url,
+        checkedAt: new Date().toISOString()
+      })
+      .success();
 
   } catch (error) {
     logger.error(`❌ Error in checkUrlEmbeddability: ${error.message}`);
-    return res.status(500).json({
-      success: false,
-      error: "Internal server error",
-      message: "An error occurred while checking URL embeddability",
-      details: process.env.NODE_ENV === 'development' ? error.message : undefined
-    });
+    apiResponse
+      .status(500)
+      .withMessage("An error occurred while checking URL embeddability")
+      .withError(error, "CHECK_EMBEDDABILITY_ERROR", "checkUrlEmbeddability", 
+                 process.env.NODE_ENV === 'development' ? { stack: error.stack } : undefined)
+      .error();
   }
 };
 
@@ -69,50 +77,52 @@ const checkUrlEmbeddability = async (req, res) => {
  * @param {Object} res - Express response object
  */
 const checkMultipleUrlsEmbeddability = async (req, res) => {
+  const apiResponse = new ApiResponse(req, res);
+  
   try {
     const { urls } = req.body;
 
     // Validate input
     if (!urls) {
-      return res.status(400).json({
-        success: false,
-        error: "URLs are required",
-        message: "Please provide an array of URLs to check"
-      });
+      return apiResponse
+        .status(400)
+        .withMessage("URLs are required")
+        .withError("Please provide an array of URLs to check", "MISSING_FIELD", "checkMultipleUrlsEmbeddability")
+        .error();
     }
 
     if (!Array.isArray(urls)) {
-      return res.status(400).json({
-        success: false,
-        error: "Invalid URLs format",
-        message: "URLs must be provided as an array"
-      });
+      return apiResponse
+        .status(400)
+        .withMessage("Invalid URLs format")
+        .withError("URLs must be provided as an array", "INVALID_TYPE", "checkMultipleUrlsEmbeddability")
+        .error();
     }
 
     if (urls.length === 0) {
-      return res.status(400).json({
-        success: false,
-        error: "Empty URLs array",
-        message: "Please provide at least one URL to check"
-      });
+      return apiResponse
+        .status(400)
+        .withMessage("Empty URLs array")
+        .withError("Please provide at least one URL to check", "EMPTY_ARRAY", "checkMultipleUrlsEmbeddability")
+        .error();
     }
 
     if (urls.length > 10) {
-      return res.status(400).json({
-        success: false,
-        error: "Too many URLs",
-        message: "Maximum 10 URLs can be checked at once"
-      });
+      return apiResponse
+        .status(400)
+        .withMessage("Too many URLs")
+        .withError("Maximum 10 URLs can be checked at once", "LIMIT_EXCEEDED", "checkMultipleUrlsEmbeddability")
+        .error();
     }
 
     // Validate each URL is a string
     const invalidUrls = urls.filter((url, index) => typeof url !== 'string');
     if (invalidUrls.length > 0) {
-      return res.status(400).json({
-        success: false,
-        error: "Invalid URL format",
-        message: "All URLs must be strings"
-      });
+      return apiResponse
+        .status(400)
+        .withMessage("Invalid URL format")
+        .withError("All URLs must be strings", "INVALID_URL_TYPE", "checkMultipleUrlsEmbeddability")
+        .error();
     }
 
     logger.info(`📥 Received batch iframe embeddability check request for ${urls.length} URLs`);
@@ -127,9 +137,10 @@ const checkMultipleUrlsEmbeddability = async (req, res) => {
 
     logger.info(`📤 Returning batch embeddability results: ${embeddableCount} embeddable, ${nonEmbeddableCount} non-embeddable, ${unknownCount} unknown`);
 
-    return res.status(200).json({
-      success: true,
-      data: {
+    apiResponse
+      .status(200)
+      .withMessage("Batch embeddability check completed")
+      .withData({
         results: results,
         summary: {
           total: urls.length,
@@ -137,18 +148,21 @@ const checkMultipleUrlsEmbeddability = async (req, res) => {
           nonEmbeddable: nonEmbeddableCount,
           unknown: unknownCount
         }
-      },
-      timestamp: new Date().toISOString()
-    });
+      })
+      .withMeta({
+        totalRequested: urls.length,
+        checkedAt: new Date().toISOString()
+      })
+      .success();
 
   } catch (error) {
     logger.error(`❌ Error in checkMultipleUrlsEmbeddability: ${error.message}`);
-    return res.status(500).json({
-      success: false,
-      error: "Internal server error",
-      message: "An error occurred while checking URLs embeddability",
-      details: process.env.NODE_ENV === 'development' ? error.message : undefined
-    });
+    apiResponse
+      .status(500)
+      .withMessage("An error occurred while checking URLs embeddability")
+      .withError(error, "BATCH_CHECK_ERROR", "checkMultipleUrlsEmbeddability",
+                 process.env.NODE_ENV === 'development' ? { stack: error.stack } : undefined)
+      .error();
   }
 };
 
@@ -158,28 +172,33 @@ const checkMultipleUrlsEmbeddability = async (req, res) => {
  * @param {Object} res - Express response object
  */
 const getNonEmbeddableDomains = async (req, res) => {
+  const apiResponse = new ApiResponse(req, res);
+  
   try {
     logger.info("📥 Received request for non-embeddable domains list");
 
     const domains = urlEmbeddabilityService.getNonEmbeddableDomains();
 
-    return res.status(200).json({
-      success: true,
-      data: {
+    apiResponse
+      .status(200)
+      .withMessage("Non-embeddable domains retrieved successfully")
+      .withData({
         domains: domains,
         count: domains.length
-      },
-      timestamp: new Date().toISOString()
-    });
+      })
+      .withMeta({
+        retrievedAt: new Date().toISOString()
+      })
+      .success();
 
   } catch (error) {
     logger.error(`❌ Error in getNonEmbeddableDomains: ${error.message}`);
-    return res.status(500).json({
-      success: false,
-      error: "Internal server error",
-      message: "An error occurred while retrieving non-embeddable domains",
-      details: process.env.NODE_ENV === 'development' ? error.message : undefined
-    });
+    apiResponse
+      .status(500)
+      .withMessage("An error occurred while retrieving non-embeddable domains")
+      .withError(error, "GET_DOMAINS_ERROR", "getNonEmbeddableDomains",
+                 process.env.NODE_ENV === 'development' ? { stack: error.stack } : undefined)
+      .error();
   }
 };
 
@@ -189,47 +208,51 @@ const getNonEmbeddableDomains = async (req, res) => {
  * @param {Object} res - Express response object
  */
 const addNonEmbeddableDomain = async (req, res) => {
+  const apiResponse = new ApiResponse(req, res);
+  
   try {
     const { domain } = req.body;
 
     // Validate input
     if (!domain) {
-      return res.status(400).json({
-        success: false,
-        error: "Domain is required",
-        message: "Please provide a domain to add"
-      });
+      return apiResponse
+        .status(400)
+        .withMessage("Domain is required")
+        .withError("Please provide a domain to add", "MISSING_FIELD", "addNonEmbeddableDomain")
+        .error();
     }
 
     if (typeof domain !== 'string') {
-      return res.status(400).json({
-        success: false,
-        error: "Invalid domain format",
-        message: "Domain must be a string"
-      });
+      return apiResponse
+        .status(400)
+        .withMessage("Invalid domain format")
+        .withError("Domain must be a string", "INVALID_TYPE", "addNonEmbeddableDomain")
+        .error();
     }
 
     logger.info(`📥 Received request to add non-embeddable domain: ${domain}`);
 
     urlEmbeddabilityService.addNonEmbeddableDomain(domain);
 
-    return res.status(200).json({
-      success: true,
-      message: `Domain '${domain}' added to non-embeddable list`,
-      data: {
+    apiResponse
+      .status(200)
+      .withMessage(`Domain '${domain}' added to non-embeddable list`)
+      .withData({
         addedDomain: domain.toLowerCase().trim()
-      },
-      timestamp: new Date().toISOString()
-    });
+      })
+      .withMeta({
+        addedAt: new Date().toISOString()
+      })
+      .success();
 
   } catch (error) {
     logger.error(`❌ Error in addNonEmbeddableDomain: ${error.message}`);
-    return res.status(500).json({
-      success: false,
-      error: "Internal server error",
-      message: "An error occurred while adding the domain",
-      details: process.env.NODE_ENV === 'development' ? error.message : undefined
-    });
+    apiResponse
+      .status(500)
+      .withMessage("An error occurred while adding the domain")
+      .withError(error, "ADD_DOMAIN_ERROR", "addNonEmbeddableDomain",
+                 process.env.NODE_ENV === 'development' ? { stack: error.stack } : undefined)
+      .error();
   }
 };
 
@@ -239,47 +262,51 @@ const addNonEmbeddableDomain = async (req, res) => {
  * @param {Object} res - Express response object
  */
 const removeNonEmbeddableDomain = async (req, res) => {
+  const apiResponse = new ApiResponse(req, res);
+  
   try {
     const { domain } = req.body;
 
     // Validate input
     if (!domain) {
-      return res.status(400).json({
-        success: false,
-        error: "Domain is required",
-        message: "Please provide a domain to remove"
-      });
+      return apiResponse
+        .status(400)
+        .withMessage("Domain is required")
+        .withError("Please provide a domain to remove", "MISSING_FIELD", "removeNonEmbeddableDomain")
+        .error();
     }
 
     if (typeof domain !== 'string') {
-      return res.status(400).json({
-        success: false,
-        error: "Invalid domain format",
-        message: "Domain must be a string"
-      });
+      return apiResponse
+        .status(400)
+        .withMessage("Invalid domain format")
+        .withError("Domain must be a string", "INVALID_TYPE", "removeNonEmbeddableDomain")
+        .error();
     }
 
     logger.info(`📥 Received request to remove non-embeddable domain: ${domain}`);
 
     urlEmbeddabilityService.removeNonEmbeddableDomain(domain);
 
-    return res.status(200).json({
-      success: true,
-      message: `Domain '${domain}' removed from non-embeddable list`,
-      data: {
+    apiResponse
+      .status(200)
+      .withMessage(`Domain '${domain}' removed from non-embeddable list`)
+      .withData({
         removedDomain: domain.toLowerCase().trim()
-      },
-      timestamp: new Date().toISOString()
-    });
+      })
+      .withMeta({
+        removedAt: new Date().toISOString()
+      })
+      .success();
 
   } catch (error) {
     logger.error(`❌ Error in removeNonEmbeddableDomain: ${error.message}`);
-    return res.status(500).json({
-      success: false,
-      error: "Internal server error",
-      message: "An error occurred while removing the domain",
-      details: process.env.NODE_ENV === 'development' ? error.message : undefined
-    });
+    apiResponse
+      .status(500)
+      .withMessage("An error occurred while removing the domain")
+      .withError(error, "REMOVE_DOMAIN_ERROR", "removeNonEmbeddableDomain",
+                 process.env.NODE_ENV === 'development' ? { stack: error.stack } : undefined)
+      .error();
   }
 };
 

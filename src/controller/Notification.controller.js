@@ -22,10 +22,7 @@ async function getNotifications(req, res, next) {
     apiResponse
       .status(200)
       .withMessage("Notifications fetched successfully")
-      .withData({ 
-        notifications: result,
-        count: result?.length || 0
-      })
+      .withData(result)
       .withMeta({
         userId,
         limit: options.limit,

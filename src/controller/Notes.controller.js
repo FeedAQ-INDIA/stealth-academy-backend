@@ -1,6 +1,7 @@
 const NotesService = require('../service/Notes.service');
 const { validationResult } = require('express-validator');
 const logger = require('../config/winston.config');
+const { ApiResponse } = require('../utils/responseFormatter');
 
 class NotesController {
     /**
@@ -53,15 +54,17 @@ class NotesController {
      *         description: Internal server error
      */
     async saveNoteWithFiles(req, res, next) {
+        const apiResponse = new ApiResponse(req, res);
+        
         try {
             // Check for validation errors
             const errors = validationResult(req);
             if (!errors.isEmpty()) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Validation errors',
-                    errors: errors.array()
-                });
+                return apiResponse
+                    .status(400)
+                    .withMessage('Validation errors')
+                    .withError('Validation failed', 'VALIDATION_ERROR', 'saveNoteWithFiles', { errors: errors.array() })
+                    .error();
             }
 
             const userId = req.user.userId;
@@ -75,10 +78,11 @@ class NotesController {
                         ? JSON.parse(req.body.metadata) 
                         : req.body.metadata;
                 } catch (error) {
-                    return res.status(400).json({
-                        success: false,
-                        message: 'Invalid metadata format. Must be valid JSON.'
-                    });
+                    return apiResponse
+                        .status(400)
+                        .withMessage('Invalid metadata format')
+                        .withError('Invalid metadata format. Must be valid JSON.', 'INVALID_METADATA', 'saveNoteWithFiles')
+                        .error();
                 }
             }
 
@@ -94,18 +98,30 @@ class NotesController {
 
             const result = await NotesService.saveNoteWithFiles(noteData, files);
 
-            res.status(200).json({
-                success: true,
-                message: result.message,
-                data: result.data
-            });
+            apiResponse
+                .status(200)
+                .withMessage(result.message)
+                .withData(result.data)
+                .withMeta({
+                    userId,
+                    courseId: noteData.courseId,
+                    notesId: noteData.notesId,
+                    hasFiles: files.length > 0,
+                    filesCount: files.length
+                })
+                .success();
 
         } catch (error) {
             logger.error('Save note with files error:', error);
-            res.status(500).json({
-                success: false,
-                message: error.message || 'Failed to save note'
-            });
+            apiResponse
+                .status(500)
+                .withMessage(error.message || 'Failed to save note')
+                .withError(error, 'SAVE_NOTE_ERROR', 'saveNoteWithFiles')
+                .withMeta({
+                    userId: req.user?.userId,
+                    courseId: req.body.courseId
+                })
+                .error();
         }
     }
 
@@ -135,45 +151,50 @@ class NotesController {
      *         description: Internal server error
      */
     async getNoteWithFiles(req, res, next) {
+        const apiResponse = new ApiResponse(req, res);
+        
         try {
             const noteId = parseInt(req.params.id);
             const userId = req.user.userId;
 
             if (!noteId || isNaN(noteId)) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Valid note ID is required'
-                });
+                return apiResponse
+                    .status(400)
+                    .withMessage('Valid note ID is required')
+                    .withError('Valid note ID is required', 'INVALID_NOTE_ID', 'getNoteWithFiles')
+                    .error();
             }
 
             const result = await NotesService.getNoteWithFiles(noteId, userId);
 
-            res.status(200).json({
-                success: true,
-                data: result.data
-            });
+            apiResponse
+                .status(200)
+                .withMessage('Note retrieved successfully')
+                .withData(result.data)
+                .withMeta({
+                    noteId,
+                    userId
+                })
+                .success();
 
         } catch (error) {
             logger.error('Get note with files error:', error);
             
-            if (error.message.includes('not found')) {
-                return res.status(404).json({
-                    success: false,
-                    message: error.message
-                });
-            }
+            const errorMessage = error.message?.toLowerCase() || '';
+            const status = errorMessage.includes('not found') ? 404 :
+                          errorMessage.includes('unauthorized') ? 403 : 500;
             
-            if (error.message.includes('Unauthorized')) {
-                return res.status(403).json({
-                    success: false,
-                    message: error.message
-                });
-            }
-
-            res.status(500).json({
-                success: false,
-                message: error.message || 'Failed to get note'
-            });
+            apiResponse
+                .status(status)
+                .withMessage(error.message || 'Failed to get note')
+                .withError(error, status === 404 ? 'NOTE_NOT_FOUND' : 
+                                  status === 403 ? 'UNAUTHORIZED_ACCESS' : 'GET_NOTE_ERROR', 
+                          'getNoteWithFiles')
+                .withMeta({
+                    noteId: req.params.id,
+                    userId: req.user?.userId
+                })
+                .error();
         }
     }
 
@@ -208,46 +229,51 @@ class NotesController {
      *         description: Internal server error
      */
     async deleteNoteWithFiles(req, res, next) {
+        const apiResponse = new ApiResponse(req, res);
+        
         try {
             const { notesId } = req.body;
             const userId = req.user.userId;
 
             if (!notesId) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Note ID is required'
-                });
+                return apiResponse
+                    .status(400)
+                    .withMessage('Note ID is required')
+                    .withError('Note ID is required', 'MISSING_FIELD', 'deleteNoteWithFiles')
+                    .error();
             }
 
             const result = await NotesService.deleteNoteWithFiles(notesId, userId);
 
-            res.status(200).json({
-                success: true,
-                message: result.message,
-                data: result.data
-            });
+            apiResponse
+                .status(200)
+                .withMessage(result.message)
+                .withData(result.data)
+                .withMeta({
+                    notesId,
+                    userId,
+                    deletedAt: new Date().toISOString()
+                })
+                .success();
 
         } catch (error) {
             logger.error('Delete note with files error:', error);
             
-            if (error.message.includes('not found')) {
-                return res.status(404).json({
-                    success: false,
-                    message: error.message
-                });
-            }
+            const errorMessage = error.message?.toLowerCase() || '';
+            const status = errorMessage.includes('not found') ? 404 :
+                          errorMessage.includes('unauthorized') ? 403 : 500;
             
-            if (error.message.includes('Unauthorized')) {
-                return res.status(403).json({
-                    success: false,
-                    message: error.message
-                });
-            }
-
-            res.status(500).json({
-                success: false,
-                message: error.message || 'Failed to delete note'
-            });
+            apiResponse
+                .status(status)
+                .withMessage(error.message || 'Failed to delete note')
+                .withError(error, status === 404 ? 'NOTE_NOT_FOUND' : 
+                                  status === 403 ? 'UNAUTHORIZED_ACCESS' : 'DELETE_NOTE_ERROR', 
+                          'deleteNoteWithFiles')
+                .withMeta({
+                    notesId: req.body.notesId,
+                    userId: req.user?.userId
+                })
+                .error();
         }
     }
 
@@ -291,15 +317,18 @@ class NotesController {
      *         description: Internal server error
      */
     async getUserNotesWithFiles(req, res, next) {
+        const apiResponse = new ApiResponse(req, res);
+        
         try {
             const { courseId, courseContentId, limit = 50, offset = 0 } = req.body;
             const userId = req.user.userId;
 
             if (!courseId) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Course ID is required'
-                });
+                return apiResponse
+                    .status(400)
+                    .withMessage('Course ID is required')
+                    .withError('Course ID is required', 'MISSING_FIELD', 'getUserNotesWithFiles')
+                    .error();
             }
 
             const options = {
@@ -310,31 +339,47 @@ class NotesController {
 
             const result = await NotesService.getUserNotesWithFiles(userId, courseId, options);
 
-            res.status(200).json({
-                success: true,
-                data: result.data
-            });
+            apiResponse
+                .status(200)
+                .withMessage('User notes retrieved successfully')
+                .withData(result.data)
+                .withMeta({
+                    userId,
+                    courseId,
+                    courseContentId: options.courseContentId,
+                    limit: options.limit,
+                    offset: options.offset,
+                    totalNotes: result.data?.notes?.length || 0
+                })
+                .success();
 
         } catch (error) {
             logger.error('Get user notes with files error:', error);
-            res.status(500).json({
-                success: false,
-                message: error.message || 'Failed to get user notes'
-            });
+            apiResponse
+                .status(500)
+                .withMessage(error.message || 'Failed to get user notes')
+                .withError(error, 'GET_USER_NOTES_ERROR', 'getUserNotesWithFiles')
+                .withMeta({
+                    userId: req.user?.userId,
+                    courseId: req.body.courseId
+                })
+                .error();
         }
     }
 
     // Enhanced saveNote method - supports creation and updation with files
     async saveNote(req, res, next) {
+        const apiResponse = new ApiResponse(req, res);
+        
         try {
             // Check for validation errors
             const errors = validationResult(req);
             if (!errors.isEmpty()) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Validation errors',
-                    errors: errors.array()
-                });
+                return apiResponse
+                    .status(400)
+                    .withMessage('Validation errors')
+                    .withError('Validation failed', 'VALIDATION_ERROR', 'saveNote', { errors: errors.array() })
+                    .error();
             }
 
             const userId = req.user.userId;
@@ -348,10 +393,11 @@ class NotesController {
                         ? JSON.parse(req.body.metadata) 
                         : req.body.metadata;
                 } catch (error) {
-                    return res.status(400).json({
-                        success: false,
-                        message: 'Invalid metadata format. Must be valid JSON.'
-                    });
+                    return apiResponse
+                        .status(400)
+                        .withMessage('Invalid metadata format')
+                        .withError('Invalid metadata format. Must be valid JSON.', 'INVALID_METADATA', 'saveNote')
+                        .error();
                 }
             }
 
@@ -367,63 +413,80 @@ class NotesController {
 
             const result = await NotesService.saveNoteWithFiles(noteData, files);
 
-            res.status(200).json({
-                success: true,
-                message: result.message,
-                data: result.data
-            });
+            apiResponse
+                .status(200)
+                .withMessage(result.message)
+                .withData(result.data)
+                .withMeta({
+                    userId,
+                    courseId: noteData.courseId,
+                    notesId: noteData.notesId,
+                    isUpdate: !!noteData.notesId,
+                    hasFiles: files.length > 0
+                })
+                .success();
 
         } catch (error) {
             logger.error('Save note error:', error);
-            res.status(500).json({
-                success: false,
-                message: error.message || 'Failed to save note'
-            });
+            apiResponse
+                .status(500)
+                .withMessage(error.message || 'Failed to save note')
+                .withError(error, 'SAVE_NOTE_ERROR', 'saveNote')
+                .withMeta({
+                    userId: req.user?.userId,
+                    courseId: req.body.courseId
+                })
+                .error();
         }
     }
 
     // Enhanced deleteNote method - deletes note and associated files from storage
     async deleteNote(req, res, next) {
+        const apiResponse = new ApiResponse(req, res);
+        
         try {
             const { notesId } = req.body;
             const userId = req.user.userId;
 
             if (!notesId) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Note ID is required'
-                });
+                return apiResponse
+                    .status(400)
+                    .withMessage('Note ID is required')
+                    .withError('Note ID is required', 'MISSING_FIELD', 'deleteNote')
+                    .error();
             }
 
             const result = await NotesService.deleteNoteWithFiles(notesId, userId);
 
-            res.status(200).json({
-                success: true,
-                message: result.message,
-                data: result.data
-            });
+            apiResponse
+                .status(200)
+                .withMessage(result.message)
+                .withData(result.data)
+                .withMeta({
+                    notesId,
+                    userId,
+                    deletedAt: new Date().toISOString()
+                })
+                .success();
 
         } catch (error) {
             logger.error('Delete note error:', error);
             
-            if (error.message.includes('not found')) {
-                return res.status(404).json({
-                    success: false,
-                    message: error.message
-                });
-            }
+            const errorMessage = error.message?.toLowerCase() || '';
+            const status = errorMessage.includes('not found') ? 404 :
+                          errorMessage.includes('unauthorized') ? 403 : 500;
             
-            if (error.message.includes('Unauthorized')) {
-                return res.status(403).json({
-                    success: false,
-                    message: error.message
-                });
-            }
-
-            res.status(500).json({
-                success: false,
-                message: error.message || 'Failed to delete note'
-            });
+            apiResponse
+                .status(status)
+                .withMessage(error.message || 'Failed to delete note')
+                .withError(error, status === 404 ? 'NOTE_NOT_FOUND' : 
+                                  status === 403 ? 'UNAUTHORIZED_ACCESS' : 'DELETE_NOTE_ERROR', 
+                          'deleteNote')
+                .withMeta({
+                    notesId: req.body.notesId,
+                    userId: req.user?.userId
+                })
+                .error();
         }
     }
 
