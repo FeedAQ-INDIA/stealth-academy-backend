@@ -923,6 +923,227 @@ const getCourseProgress = async (courseId, limit = 10, offset = 0) => {
   }
 };
 
+const getCourseLeaderboard = async (courseId, limit = 50, sortBy = 'score') => {
+  try {
+    logger.info(`Fetching leaderboard for course ID: ${courseId}`);
+
+    // Get all course content for this course
+    const courseContent = await db.CourseContent.findAll({
+      where: {
+        courseId: courseId,
+      },
+    });
+
+    const totalCourseContent = courseContent.length;
+
+    if (totalCourseContent === 0) {
+      return {
+        leaderboard: [],
+        total: 0,
+        courseInfo: {
+          courseId: courseId,
+          totalContent: 0,
+        },
+      };
+    }
+
+    // Get all users with course access and their progress
+    const users = await db.User.findAll({
+      include: [
+        {
+          model: db.UserCourseContentProgress,
+          as: "activityLogs",
+          required: false,
+          where: {
+            courseId: courseId,
+          },
+        },
+        {
+          model: db.UserCourseEnrollment,
+          as: "enrollments",
+          required: false,
+          where: {
+            courseId: courseId,
+          },
+        },
+        {
+          model: db.CourseAccess,
+          as: "courseAccess",
+          required: true,
+          where: {
+            courseId: courseId,
+          },
+        },
+        {
+          model: db.QuizResultLog,
+          as: "quizResults",
+          required: false,
+          where: {
+            courseId: courseId,
+          },
+        },
+      ],
+    });
+
+    // Calculate leaderboard data for each user
+    const leaderboardData = users.map((user) => {
+      const userJson = user.toJSON();
+      const activityLogs = userJson.activityLogs || [];
+      const quizResults = userJson.quizResults || [];
+
+      // Calculate completion statistics
+      const completedContentIds = new Set();
+      let totalActivityDuration = 0;
+
+      activityLogs.forEach((log) => {
+        if (log.progressStatus === 'COMPLETED') {
+          completedContentIds.add(log.courseContentId);
+        }
+        totalActivityDuration += log.activityDuration || 0;
+      });
+
+      const completedCount = completedContentIds.size;
+      const progressPercent = totalCourseContent > 0 
+        ? Math.round((completedCount / totalCourseContent) * 100 * 100) / 100 
+        : 0;
+
+      // Calculate quiz statistics
+      const totalQuizScore = quizResults.reduce((sum, q) => sum + (q.resultScore || 0), 0);
+      const totalQuizPoints = quizResults.reduce((sum, q) => sum + (q.totalPoints || 0), 0);
+      const averageQuizScore = totalQuizPoints > 0
+        ? Math.round((totalQuizScore / totalQuizPoints) * 100 * 100) / 100
+        : 0;
+      const passedQuizzes = quizResults.filter(q => q.isPassed).length;
+
+      // Calculate overall leaderboard score
+      // Score formula: (progress * 0.4) + (quiz score * 0.4) + (passed quizzes * 5) + (completed content * 2)
+      const leaderboardScore = Math.round(
+        (progressPercent * 0.4) + 
+        (averageQuizScore * 0.4) + 
+        (passedQuizzes * 5) + 
+        (completedCount * 2)
+      );
+
+      // Determine status
+      let status = 'NOT_STARTED';
+      if (completedCount === totalCourseContent && totalCourseContent > 0) {
+        status = 'COMPLETED';
+      } else if (completedCount > 0) {
+        status = 'IN_PROGRESS';
+      } else if (userJson.enrollments && userJson.enrollments.length > 0) {
+        status = 'ENROLLED';
+      }
+
+      // Get enrollment date
+      const enrollmentDate = userJson.enrollments && userJson.enrollments.length > 0
+        ? userJson.enrollments[0].createdAt
+        : null;
+
+      return {
+        userId: userJson.userId,
+        firstName: userJson.firstName,
+        lastName: userJson.lastName,
+        email: userJson.email,
+        profilePic: userJson.profilePic,
+        leaderboardScore: leaderboardScore,
+        progressPercent: progressPercent,
+        completedContent: completedCount,
+        totalContent: totalCourseContent,
+        averageQuizScore: averageQuizScore,
+        passedQuizzes: passedQuizzes,
+        totalQuizzes: quizResults.length,
+        totalActivityHours: Math.round((totalActivityDuration / 3600) * 100) / 100,
+        status: status,
+        enrollmentDate: enrollmentDate,
+        lastActivityDate: activityLogs.length > 0 
+          ? activityLogs.reduce((latest, log) => {
+              const logDate = new Date(log.updatedAt || log.createdAt);
+              return logDate > latest ? logDate : latest;
+            }, new Date(0))
+          : null,
+      };
+    });
+
+    // Sort leaderboard based on sortBy parameter
+    let sortedLeaderboard;
+    switch (sortBy) {
+      case 'progress':
+        sortedLeaderboard = leaderboardData.sort((a, b) => {
+          if (b.progressPercent !== a.progressPercent) {
+            return b.progressPercent - a.progressPercent;
+          }
+          return b.leaderboardScore - a.leaderboardScore;
+        });
+        break;
+      case 'quiz':
+        sortedLeaderboard = leaderboardData.sort((a, b) => {
+          if (b.averageQuizScore !== a.averageQuizScore) {
+            return b.averageQuizScore - a.averageQuizScore;
+          }
+          return b.leaderboardScore - a.leaderboardScore;
+        });
+        break;
+      case 'time':
+        sortedLeaderboard = leaderboardData.sort((a, b) => {
+          if (b.totalActivityHours !== a.totalActivityHours) {
+            return b.totalActivityHours - a.totalActivityHours;
+          }
+          return b.leaderboardScore - a.leaderboardScore;
+        });
+        break;
+      case 'score':
+      default:
+        sortedLeaderboard = leaderboardData.sort((a, b) => {
+          if (b.leaderboardScore !== a.leaderboardScore) {
+            return b.leaderboardScore - a.leaderboardScore;
+          }
+          return b.progressPercent - a.progressPercent;
+        });
+        break;
+    }
+
+    // Add rank to each user
+    const rankedLeaderboard = sortedLeaderboard.map((user, index) => ({
+      rank: index + 1,
+      ...user,
+    }));
+
+    // Apply limit
+    const limitedLeaderboard = limit > 0 
+      ? rankedLeaderboard.slice(0, parseInt(limit))
+      : rankedLeaderboard;
+
+    // Calculate statistics
+    const stats = {
+      totalUsers: rankedLeaderboard.length,
+      completedUsers: rankedLeaderboard.filter(u => u.status === 'COMPLETED').length,
+      inProgressUsers: rankedLeaderboard.filter(u => u.status === 'IN_PROGRESS').length,
+      averageProgress: rankedLeaderboard.length > 0
+        ? Math.round(rankedLeaderboard.reduce((sum, u) => sum + u.progressPercent, 0) / rankedLeaderboard.length * 100) / 100
+        : 0,
+      averageQuizScore: rankedLeaderboard.length > 0
+        ? Math.round(rankedLeaderboard.reduce((sum, u) => sum + u.averageQuizScore, 0) / rankedLeaderboard.length * 100) / 100
+        : 0,
+      totalActivityHours: Math.round(rankedLeaderboard.reduce((sum, u) => sum + u.totalActivityHours, 0) * 100) / 100,
+    };
+
+    return {
+      leaderboard: limitedLeaderboard,
+      total: rankedLeaderboard.length,
+      limit: parseInt(limit),
+      sortBy: sortBy,
+      statistics: stats,
+      courseInfo: {
+        courseId: courseId,
+        totalContent: totalCourseContent,
+      },
+    };
+  } catch (error) {
+    logger.error("Error in getCourseLeaderboard:", error);
+    throw new Error(`Failed to fetch course leaderboard: ${error.message}`);
+  }
+};
+
 module.exports = {
   getUser,
   userCourseEnrollment,
@@ -937,4 +1158,5 @@ module.exports = {
   submitQuiz,
   clearQuizResult,
   getCourseProgress,
+  getCourseLeaderboard,
 };

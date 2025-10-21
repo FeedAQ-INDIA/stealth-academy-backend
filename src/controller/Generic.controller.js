@@ -710,6 +710,58 @@ async function getCourseProgress(req, res, next) {
   }
 }
 
+async function getCourseLeaderboard(req, res, next) {
+  const apiResponse = new ApiResponse(req, res);
+
+  try {
+    const { courseId, limit = 50, sortBy = 'score' } = req.body;
+
+    if (!courseId) {
+      return apiResponse
+        .status(400)
+        .withMessage("courseId is required")
+        .withError(
+          "courseId is required",
+          "MISSING_FIELD",
+          "getCourseLeaderboard"
+        )
+        .error();
+    }
+
+    const result = await AcademyService.getCourseLeaderboard(
+      courseId,
+      limit,
+      sortBy
+    );
+
+    apiResponse
+      .status(200)
+      .withMessage("Course leaderboard fetched successfully")
+      .withData(result)
+      .withMeta({
+        courseId,
+        limit,
+        sortBy,
+        totalUsers: result.total,
+      })
+      .success();
+  } catch (err) {
+    logger.error(`Error occurred while fetching course leaderboard:`, err.message);
+    apiResponse
+      .status(500)
+      .withMessage(err.message || "Failed to fetch course leaderboard")
+      .withError(
+        err.message,
+        err.code || "GET_COURSE_LEADERBOARD_ERROR",
+        "getCourseLeaderboard"
+      )
+      .withMeta({
+        courseId: req.body.courseId,
+      })
+      .error();
+  }
+}
+
 module.exports = {
   getCourseDetail,
   getUser,
@@ -726,4 +778,5 @@ module.exports = {
   clearQuizResult,
   deleteCourse,
   getCourseProgress,
+  getCourseLeaderboard,
 };

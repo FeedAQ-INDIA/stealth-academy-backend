@@ -35,6 +35,7 @@ router.post("/getUserNotes", authMiddleware, notesController.getUserNotesWithFil
 router.post("/saveUserCourseContentProgress", authMiddleware, genericController.saveUserCourseContentProgress);
 router.post("/deleteUserCourseContentProgress", authMiddleware, genericController.deleteUserCourseContentProgress);
 router.post("/getCourseProgress", authMiddleware, genericController.getCourseProgress);
+router.post("/getCourseLeaderboard", authMiddleware, genericController.getCourseLeaderboard);
 router.post("/submitQuiz", authMiddleware, genericController.submitQuiz);
 router.post("/clearQuizResult", authMiddleware, genericController.clearQuizResult);
 
