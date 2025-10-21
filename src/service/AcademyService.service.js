@@ -775,17 +775,20 @@ const validateCourseCompletion = async (userId, courseId) => {
 
 const getCourseProgress = async (courseId, limit = 10, offset = 0) => {
   try {
+    // Get all course content for this course
     const courseContent = await db.CourseContent.findAll({
       where: {
         courseId: courseId,
       },
     });
 
-    const contentmap = new Map();
-
+    // Create a map for quick lookup
+    const contentMap = new Map();
     courseContent.forEach((content) => {
-      contentmap.set(content.courseContentId, content);
+      contentMap.set(content.courseContentId, content.toJSON());
     });
+
+    const totalCourseContent = courseContent.length;
 
     // Get progress records with pagination
     const { count, rows } = await db.User.findAndCountAll({
@@ -827,14 +830,92 @@ const getCourseProgress = async (courseId, limit = 10, offset = 0) => {
       offset: parseInt(offset),
     });
 
+    // Calculate progress for each user
+    const resultsWithProgress = rows.map((user) => {
+      const userJson = user.toJSON();
+      const activityLogs = userJson.activityLogs || [];
+      
+      // Calculate completion statistics
+      const completedContentIds = new Set();
+      const inProgressContentIds = new Set();
+      let totalActivityDuration = 0;
+      let totalProgressPercent = 0;
+
+      activityLogs.forEach((log) => {
+        if (log.progressStatus === 'COMPLETED') {
+          completedContentIds.add(log.courseContentId);
+        } else if (log.progressStatus === 'IN_PROGRESS') {
+          inProgressContentIds.add(log.courseContentId);
+        }
+        totalActivityDuration += log.activityDuration || 0;
+        totalProgressPercent += log.progressPercent || 0;
+      });
+
+      // Calculate overall progress percentage
+      const completedCount = completedContentIds.size;
+      const overallProgressPercent = totalCourseContent > 0 
+        ? Math.round((completedCount / totalCourseContent) * 100 * 100) / 100 
+        : 0;
+
+      // Determine overall status
+      let overallStatus = 'NOT_STARTED';
+      if (completedCount === totalCourseContent && totalCourseContent > 0) {
+        overallStatus = 'COMPLETED';
+      } else if (completedCount > 0 || inProgressContentIds.size > 0) {
+        overallStatus = 'IN_PROGRESS';
+      } else if (userJson.enrollments && userJson.enrollments.length > 0) {
+        overallStatus = 'ENROLLED';
+      }
+
+      // Map activity logs with content details
+      const enrichedActivityLogs = activityLogs.map((log) => ({
+        ...log,
+        contentDetails: contentMap.get(log.courseContentId) || null,
+      }));
+
+      // Calculate quiz statistics
+      const quizResults = userJson.quizResults || [];
+      const passedQuizzes = quizResults.filter(q => q.isPassed).length;
+      const totalQuizzes = quizResults.length;
+      const averageQuizScore = totalQuizzes > 0
+        ? Math.round(quizResults.reduce((sum, q) => sum + (q.totalPoints > 0 ? (q.resultScore / q.totalPoints) * 100 : 0), 0) / totalQuizzes * 100) / 100
+        : 0;
+
+      return {
+        ...userJson,
+        progressSummary: {
+          totalContent: totalCourseContent,
+          completedContent: completedCount,
+          inProgressContent: inProgressContentIds.size,
+          notStartedContent: totalCourseContent - completedCount - inProgressContentIds.size,
+          overallProgressPercent: overallProgressPercent,
+          overallStatus: overallStatus,
+          totalActivityDuration: totalActivityDuration,
+          totalActivityHours: Math.round((totalActivityDuration / 3600) * 100) / 100,
+          quizStatistics: {
+            totalQuizzesTaken: totalQuizzes,
+            passedQuizzes: passedQuizzes,
+            failedQuizzes: totalQuizzes - passedQuizzes,
+            averageQuizScore: averageQuizScore,
+          },
+        },
+        activityLogs: enrichedActivityLogs,
+      };
+    });
+
     return {
-      results: rows,
-        total: count,
-        limit: parseInt(limit),
-        offset: parseInt(offset),
-        hasMore: offset + limit < count,
-        totalPages: Math.ceil(count / limit),
-        currentPage: Math.floor(offset / limit) + 1,
+      results: resultsWithProgress,
+      total: count,
+      limit: parseInt(limit),
+      offset: parseInt(offset),
+      hasMore: offset + limit < count,
+      totalPages: Math.ceil(count / limit),
+      currentPage: Math.floor(offset / limit) + 1,
+      courseInfo: {
+        courseId: courseId,
+        totalContent: totalCourseContent,
+        contentList: Array.from(contentMap.values()),
+      },
     };
   } catch (error) {
     logger.error("Error in getCourseProgress:", error);
