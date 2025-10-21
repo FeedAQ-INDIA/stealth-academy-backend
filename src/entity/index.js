@@ -66,6 +66,7 @@ db.User.hasMany(db.UserCreditTransaction, {foreignKey: 'userId', as: 'creditTran
 db.User.hasMany(db.CourseFlashcard, {foreignKey: 'userId', as: 'flashcardSets'});
 db.User.hasMany(db.CourseBuilder, {foreignKey: 'userId', as: 'courseBuilders'});
 db.User.hasMany(db.CourseStudyGroup, {foreignKey: 'createdBy', as: 'createdStudyGroups'});
+db.User.hasMany(db.CourseAccess, {foreignKey: 'userId', as: 'courseAccess'});
 db.User.hasMany(db.CourseStudyGroup, {foreignKey: 'ownedBy', as: 'ownedStudyGroups'});
 db.User.hasMany(db.CourseStudyGroup, {foreignKey: 'lastModifiedBy', as: 'lastModifiedStudyGroups'});
 db.User.hasMany(db.CourseStudyGroupUser, {foreignKey: 'userId', as: 'studyGroupMemberships'});

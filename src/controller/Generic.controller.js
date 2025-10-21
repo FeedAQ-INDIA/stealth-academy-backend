@@ -9,7 +9,7 @@ const { ApiResponse } = require("../utils/responseFormatter");
 
 async function deleteCourse(req, res, next) {
   const apiResponse = new ApiResponse(req, res);
-  
+
   try {
     const { courseId } = req.body;
 
@@ -23,14 +23,14 @@ async function deleteCourse(req, res, next) {
 
     // Delete all related course data
     await DynamicService.deleteCourse(courseId, req.user.userId);
-    
+
     apiResponse
       .status(200)
       .withMessage("Course and related data deleted successfully")
       .withData({ courseId, deleted: true })
       .withMeta({
         deletedBy: req.user.userId,
-        deletedAt: new Date().toISOString()
+        deletedAt: new Date().toISOString(),
       })
       .success();
   } catch (err) {
@@ -41,7 +41,7 @@ async function deleteCourse(req, res, next) {
       .withError(err.message, err.code || "DELETE_COURSE_ERROR", "deleteCourse")
       .withMeta({
         courseId: req.body.courseId,
-        attemptedBy: req.user?.userId
+        attemptedBy: req.user?.userId,
       })
       .error();
   }
@@ -49,16 +49,16 @@ async function deleteCourse(req, res, next) {
 
 async function getUser(req, res, next) {
   const apiResponse = new ApiResponse(req, res);
-  
+
   try {
     const user = await AcademyService.getUser(req.user.userId);
-    
+
     apiResponse
       .status(200)
       .withMessage("User retrieved successfully")
       .withData({ user })
       .withMeta({
-        userId: req.user.userId
+        userId: req.user.userId,
       })
       .success();
   } catch (err) {
@@ -68,7 +68,7 @@ async function getUser(req, res, next) {
       .withMessage(err.message || "Failed to fetch user")
       .withError(err.message, err.code || "GET_USER_ERROR", "getUser")
       .withMeta({
-        userId: req.user?.userId
+        userId: req.user?.userId,
       })
       .error();
   }
@@ -76,7 +76,7 @@ async function getUser(req, res, next) {
 
 async function isUserCourseEnrolled(req, res, next) {
   const apiResponse = new ApiResponse(req, res);
-  
+
   try {
     const { courseId } = req.body;
 
@@ -84,7 +84,11 @@ async function isUserCourseEnrolled(req, res, next) {
       return apiResponse
         .status(400)
         .withMessage("courseId is required")
-        .withError("courseId is required", "MISSING_FIELD", "isUserCourseEnrolled")
+        .withError(
+          "courseId is required",
+          "MISSING_FIELD",
+          "isUserCourseEnrolled"
+        )
         .error();
     }
 
@@ -92,14 +96,14 @@ async function isUserCourseEnrolled(req, res, next) {
       req.user.userId,
       courseId
     );
-    
+
     apiResponse
       .status(200)
       .withMessage("Enrollment status checked successfully")
       .withData({ enrollment })
       .withMeta({
         userId: req.user.userId,
-        courseId
+        courseId,
       })
       .success();
   } catch (err) {
@@ -107,10 +111,14 @@ async function isUserCourseEnrolled(req, res, next) {
     apiResponse
       .status(500)
       .withMessage(err.message || "Failed to check enrollment status")
-      .withError(err.message, err.code || "CHECK_ENROLLMENT_ERROR", "isUserCourseEnrolled")
+      .withError(
+        err.message,
+        err.code || "CHECK_ENROLLMENT_ERROR",
+        "isUserCourseEnrolled"
+      )
       .withMeta({
         userId: req.user?.userId,
-        courseId: req.body.courseId
+        courseId: req.body.courseId,
       })
       .error();
   }
@@ -118,7 +126,7 @@ async function isUserCourseEnrolled(req, res, next) {
 
 async function userCourseEnrollment(req, res, next) {
   const apiResponse = new ApiResponse(req, res);
-  
+
   try {
     const { courseId } = req.body;
 
@@ -126,7 +134,11 @@ async function userCourseEnrollment(req, res, next) {
       return apiResponse
         .status(400)
         .withMessage("courseId is required")
-        .withError("courseId is required", "MISSING_FIELD", "userCourseEnrollment")
+        .withError(
+          "courseId is required",
+          "MISSING_FIELD",
+          "userCourseEnrollment"
+        )
         .error();
     }
 
@@ -134,7 +146,7 @@ async function userCourseEnrollment(req, res, next) {
       req.user.userId,
       courseId
     );
-    
+
     apiResponse
       .status(201)
       .withMessage("Course enrollment successful")
@@ -142,7 +154,7 @@ async function userCourseEnrollment(req, res, next) {
       .withMeta({
         userId: req.user.userId,
         courseId,
-        enrolledAt: new Date().toISOString()
+        enrolledAt: new Date().toISOString(),
       })
       .success();
   } catch (err) {
@@ -150,10 +162,14 @@ async function userCourseEnrollment(req, res, next) {
     apiResponse
       .status(500)
       .withMessage(err.message || "Failed to enroll in course")
-      .withError(err.message, err.code || "ENROLLMENT_ERROR", "userCourseEnrollment")
+      .withError(
+        err.message,
+        err.code || "ENROLLMENT_ERROR",
+        "userCourseEnrollment"
+      )
       .withMeta({
         userId: req.user?.userId,
-        courseId: req.body.courseId
+        courseId: req.body.courseId,
       })
       .error();
   }
@@ -161,7 +177,7 @@ async function userCourseEnrollment(req, res, next) {
 
 async function userCourseDisrollment(req, res, next) {
   const apiResponse = new ApiResponse(req, res);
-  
+
   try {
     const { courseId } = req.body;
 
@@ -169,7 +185,11 @@ async function userCourseDisrollment(req, res, next) {
       return apiResponse
         .status(400)
         .withMessage("courseId is required")
-        .withError("courseId is required", "MISSING_FIELD", "userCourseDisrollment")
+        .withError(
+          "courseId is required",
+          "MISSING_FIELD",
+          "userCourseDisrollment"
+        )
         .error();
     }
 
@@ -177,7 +197,7 @@ async function userCourseDisrollment(req, res, next) {
       req.user.userId,
       courseId
     );
-    
+
     apiResponse
       .status(200)
       .withMessage("Course disenrollment successful")
@@ -185,7 +205,7 @@ async function userCourseDisrollment(req, res, next) {
       .withMeta({
         userId: req.user.userId,
         courseId,
-        disenrolledAt: new Date().toISOString()
+        disenrolledAt: new Date().toISOString(),
       })
       .success();
   } catch (err) {
@@ -193,10 +213,14 @@ async function userCourseDisrollment(req, res, next) {
     apiResponse
       .status(500)
       .withMessage(err.message || "Failed to disenroll from course")
-      .withError(err.message, err.code || "DISENROLLMENT_ERROR", "userCourseDisrollment")
+      .withError(
+        err.message,
+        err.code || "DISENROLLMENT_ERROR",
+        "userCourseDisrollment"
+      )
       .withMeta({
         userId: req.user?.userId,
-        courseId: req.body.courseId
+        courseId: req.body.courseId,
       })
       .error();
   }
@@ -204,7 +228,7 @@ async function userCourseDisrollment(req, res, next) {
 
 async function getCourseDetail(req, res, next) {
   const apiResponse = new ApiResponse(req, res);
-  
+
   try {
     const { courseId } = req.body;
 
@@ -216,15 +240,18 @@ async function getCourseDetail(req, res, next) {
         .error();
     }
 
-    const course = await AcademyService.getCourseDetail(req.user.userId, courseId);
-    
+    const course = await AcademyService.getCourseDetail(
+      req.user.userId,
+      courseId
+    );
+
     apiResponse
       .status(200)
       .withMessage("Course details fetched successfully")
       .withData(course)
       .withMeta({
         userId: req.user.userId,
-        courseId
+        courseId,
       })
       .success();
   } catch (err) {
@@ -232,10 +259,14 @@ async function getCourseDetail(req, res, next) {
     apiResponse
       .status(500)
       .withMessage(err.message || "Failed to fetch course details")
-      .withError(err.message, err.code || "GET_COURSE_DETAIL_ERROR", "getCourseDetail")
+      .withError(
+        err.message,
+        err.code || "GET_COURSE_DETAIL_ERROR",
+        "getCourseDetail"
+      )
       .withMeta({
         userId: req.user?.userId,
-        courseId: req.body.courseId
+        courseId: req.body.courseId,
       })
       .error();
   }
@@ -243,7 +274,7 @@ async function getCourseDetail(req, res, next) {
 
 async function saveUserCourseContentProgress(req, res, next) {
   const apiResponse = new ApiResponse(req, res);
-  
+
   try {
     const {
       logId,
@@ -257,7 +288,11 @@ async function saveUserCourseContentProgress(req, res, next) {
       return apiResponse
         .status(400)
         .withMessage("courseId and courseContentId are required")
-        .withError("courseId and courseContentId are required", "MISSING_FIELDS", "saveUserCourseContentProgress")
+        .withError(
+          "courseId and courseContentId are required",
+          "MISSING_FIELDS",
+          "saveUserCourseContentProgress"
+        )
         .error();
     }
 
@@ -269,7 +304,7 @@ async function saveUserCourseContentProgress(req, res, next) {
       courseContentId,
       logStatus
     );
-    
+
     apiResponse
       .status(200)
       .withMessage("Progress saved successfully")
@@ -277,7 +312,7 @@ async function saveUserCourseContentProgress(req, res, next) {
       .withMeta({
         userId: req.user.userId,
         courseId,
-        courseContentId
+        courseContentId,
       })
       .success();
   } catch (err) {
@@ -285,11 +320,15 @@ async function saveUserCourseContentProgress(req, res, next) {
     apiResponse
       .status(500)
       .withMessage(err.message || "Failed to save progress")
-      .withError(err.message, err.code || "SAVE_PROGRESS_ERROR", "saveUserCourseContentProgress")
+      .withError(
+        err.message,
+        err.code || "SAVE_PROGRESS_ERROR",
+        "saveUserCourseContentProgress"
+      )
       .withMeta({
         userId: req.user?.userId,
         courseId: req.body.courseId,
-        courseContentId: req.body.courseContentId
+        courseContentId: req.body.courseContentId,
       })
       .error();
   }
@@ -297,7 +336,7 @@ async function saveUserCourseContentProgress(req, res, next) {
 
 async function deleteUserCourseContentProgress(req, res, next) {
   const apiResponse = new ApiResponse(req, res);
-  
+
   try {
     const { progressId, courseId, courseContentId } = req.body;
 
@@ -305,7 +344,11 @@ async function deleteUserCourseContentProgress(req, res, next) {
       return apiResponse
         .status(400)
         .withMessage("progressId is required")
-        .withError("progressId is required", "MISSING_FIELD", "deleteUserCourseContentProgress")
+        .withError(
+          "progressId is required",
+          "MISSING_FIELD",
+          "deleteUserCourseContentProgress"
+        )
         .error();
     }
 
@@ -315,7 +358,7 @@ async function deleteUserCourseContentProgress(req, res, next) {
       courseId,
       courseContentId
     );
-    
+
     apiResponse
       .status(200)
       .withMessage("Progress deleted successfully")
@@ -323,7 +366,7 @@ async function deleteUserCourseContentProgress(req, res, next) {
       .withMeta({
         userId: req.user.userId,
         progressId,
-        deletedAt: new Date().toISOString()
+        deletedAt: new Date().toISOString(),
       })
       .success();
   } catch (err) {
@@ -331,10 +374,14 @@ async function deleteUserCourseContentProgress(req, res, next) {
     apiResponse
       .status(500)
       .withMessage(err.message || "Failed to delete progress")
-      .withError(err.message, err.code || "DELETE_PROGRESS_ERROR", "deleteUserCourseContentProgress")
+      .withError(
+        err.message,
+        err.code || "DELETE_PROGRESS_ERROR",
+        "deleteUserCourseContentProgress"
+      )
       .withMeta({
         userId: req.user?.userId,
-        progressId: req.body.progressId
+        progressId: req.body.progressId,
       })
       .error();
   }
@@ -342,16 +389,26 @@ async function deleteUserCourseContentProgress(req, res, next) {
 
 async function saveNote(req, res, next) {
   const apiResponse = new ApiResponse(req, res);
-  
+
   try {
-    const { notesId, courseId, courseContentId, noteContent, noteRefTimestamp, metadata } =
-      req.body;
+    const {
+      notesId,
+      courseId,
+      courseContentId,
+      noteContent,
+      noteRefTimestamp,
+      metadata,
+    } = req.body;
 
     if (!courseId || !noteContent) {
       return apiResponse
         .status(400)
         .withMessage("courseId and noteContent are required")
-        .withError("courseId and noteContent are required", "MISSING_FIELDS", "saveNote")
+        .withError(
+          "courseId and noteContent are required",
+          "MISSING_FIELDS",
+          "saveNote"
+        )
         .error();
     }
 
@@ -364,16 +421,18 @@ async function saveNote(req, res, next) {
       noteRefTimestamp,
       metadata
     );
-    
+
     apiResponse
       .status(200)
-      .withMessage(notesId ? "Note updated successfully" : "Note created successfully")
+      .withMessage(
+        notesId ? "Note updated successfully" : "Note created successfully"
+      )
       .withData({ note })
       .withMeta({
         userId: req.user.userId,
         courseId,
         courseContentId,
-        isUpdate: !!notesId
+        isUpdate: !!notesId,
       })
       .success();
   } catch (err) {
@@ -385,7 +444,7 @@ async function saveNote(req, res, next) {
       .withMeta({
         userId: req.user?.userId,
         courseId: req.body.courseId,
-        notesId: req.body.notesId
+        notesId: req.body.notesId,
       })
       .error();
   }
@@ -393,7 +452,7 @@ async function saveNote(req, res, next) {
 
 async function deleteNote(req, res, next) {
   const apiResponse = new ApiResponse(req, res);
-  
+
   try {
     const { notesId } = req.body;
 
@@ -406,7 +465,7 @@ async function deleteNote(req, res, next) {
     }
 
     const result = await AcademyService.deleteNote(req.user.userId, notesId);
-    
+
     apiResponse
       .status(200)
       .withMessage("Note deleted successfully")
@@ -414,7 +473,7 @@ async function deleteNote(req, res, next) {
       .withMeta({
         userId: req.user.userId,
         notesId,
-        deletedAt: new Date().toISOString()
+        deletedAt: new Date().toISOString(),
       })
       .success();
   } catch (err) {
@@ -425,7 +484,7 @@ async function deleteNote(req, res, next) {
       .withError(err.message, err.code || "DELETE_NOTE_ERROR", "deleteNote")
       .withMeta({
         userId: req.user?.userId,
-        notesId: req.body.notesId
+        notesId: req.body.notesId,
       })
       .error();
   }
@@ -433,7 +492,7 @@ async function deleteNote(req, res, next) {
 
 async function searchRecord(req, res, next) {
   const apiResponse = new ApiResponse(req, res);
-  
+
   try {
     const {
       searchValue,
@@ -448,7 +507,7 @@ async function searchRecord(req, res, next) {
     } = req.body;
 
     const results = await DynamicService.searchRecord(req, res);
-    
+
     apiResponse
       .status(200)
       .withMessage("Search completed successfully")
@@ -458,7 +517,7 @@ async function searchRecord(req, res, next) {
         searchKey,
         limit,
         offset,
-        totalResults: Array.isArray(results) ? results.length : 0
+        totalResults: Array.isArray(results) ? results.length : 0,
       })
       .success();
   } catch (err) {
@@ -469,7 +528,7 @@ async function searchRecord(req, res, next) {
       .withError(err.message, err.code || "SEARCH_RECORD_ERROR", "searchRecord")
       .withMeta({
         searchValue: req.body.searchValue,
-        searchKey: req.body.searchKey
+        searchKey: req.body.searchKey,
       })
       .error();
   }
@@ -477,7 +536,7 @@ async function searchRecord(req, res, next) {
 
 async function saveUserDetail(req, res, next) {
   const apiResponse = new ApiResponse(req, res);
-  
+
   try {
     const { firstName, lastName, number, profilePic } = req.body;
 
@@ -488,14 +547,14 @@ async function saveUserDetail(req, res, next) {
       number,
       profilePic
     );
-    
+
     apiResponse
       .status(200)
       .withMessage("User details saved successfully")
       .withData({ user })
       .withMeta({
         userId: req.user.userId,
-        updatedFields: Object.keys(req.body)
+        updatedFields: Object.keys(req.body),
       })
       .success();
   } catch (err) {
@@ -503,9 +562,13 @@ async function saveUserDetail(req, res, next) {
     apiResponse
       .status(500)
       .withMessage(err.message || "Failed to save user details")
-      .withError(err.message, err.code || "SAVE_USER_DETAIL_ERROR", "saveUserDetail")
+      .withError(
+        err.message,
+        err.code || "SAVE_USER_DETAIL_ERROR",
+        "saveUserDetail"
+      )
       .withMeta({
-        userId: req.user?.userId
+        userId: req.user?.userId,
       })
       .error();
   }
@@ -513,7 +576,7 @@ async function saveUserDetail(req, res, next) {
 
 async function submitQuiz(req, res, next) {
   const apiResponse = new ApiResponse(req, res);
-  
+
   try {
     const { courseId, courseQuizId, submissionList } = req.body;
 
@@ -521,7 +584,11 @@ async function submitQuiz(req, res, next) {
       return apiResponse
         .status(400)
         .withMessage("courseId, courseQuizId, and submissionList are required")
-        .withError("courseId, courseQuizId, and submissionList are required", "MISSING_FIELDS", "submitQuiz")
+        .withError(
+          "courseId, courseQuizId, and submissionList are required",
+          "MISSING_FIELDS",
+          "submitQuiz"
+        )
         .error();
     }
 
@@ -531,7 +598,7 @@ async function submitQuiz(req, res, next) {
       courseQuizId,
       submissionList
     );
-    
+
     apiResponse
       .status(200)
       .withMessage("Quiz submitted successfully")
@@ -540,7 +607,7 @@ async function submitQuiz(req, res, next) {
         userId: req.user.userId,
         courseId,
         courseQuizId,
-        submittedAt: new Date().toISOString()
+        submittedAt: new Date().toISOString(),
       })
       .success();
   } catch (err) {
@@ -552,7 +619,7 @@ async function submitQuiz(req, res, next) {
       .withMeta({
         userId: req.user?.userId,
         courseId: req.body.courseId,
-        courseQuizId: req.body.courseQuizId
+        courseQuizId: req.body.courseQuizId,
       })
       .error();
   }
@@ -560,7 +627,7 @@ async function submitQuiz(req, res, next) {
 
 async function clearQuizResult(req, res, next) {
   const apiResponse = new ApiResponse(req, res);
-  
+
   try {
     const { courseId, courseQuizId } = req.body;
 
@@ -568,7 +635,11 @@ async function clearQuizResult(req, res, next) {
       return apiResponse
         .status(400)
         .withMessage("courseId and courseQuizId are required")
-        .withError("courseId and courseQuizId are required", "MISSING_FIELDS", "clearQuizResult")
+        .withError(
+          "courseId and courseQuizId are required",
+          "MISSING_FIELDS",
+          "clearQuizResult"
+        )
         .error();
     }
 
@@ -577,7 +648,7 @@ async function clearQuizResult(req, res, next) {
       courseId,
       courseQuizId
     );
-    
+
     apiResponse
       .status(200)
       .withMessage("Quiz result cleared successfully")
@@ -586,7 +657,7 @@ async function clearQuizResult(req, res, next) {
         userId: req.user.userId,
         courseId,
         courseQuizId,
-        clearedAt: new Date().toISOString()
+        clearedAt: new Date().toISOString(),
       })
       .success();
   } catch (err) {
@@ -594,12 +665,47 @@ async function clearQuizResult(req, res, next) {
     apiResponse
       .status(500)
       .withMessage(err.message || "Failed to clear quiz result")
-      .withError(err.message, err.code || "CLEAR_QUIZ_RESULT_ERROR", "clearQuizResult")
+      .withError(
+        err.message,
+        err.code || "CLEAR_QUIZ_RESULT_ERROR",
+        "clearQuizResult"
+      )
       .withMeta({
         userId: req.user?.userId,
         courseId: req.body.courseId,
-        courseQuizId: req.body.courseQuizId
+        courseQuizId: req.body.courseQuizId,
       })
+      .error();
+  }
+}
+
+async function getCourseProgress(req, res, next) {
+  const apiResponse = new ApiResponse(req, res);
+
+  try {
+    const { courseId, limit = 10, offset = 0 } = req.body;
+
+    const result = await AcademyService.getCourseProgress(
+      courseId,
+      limit,
+      offset
+    );
+
+    apiResponse
+      .status(200)
+      .withMessage("Course progress fetched successfully")
+      .withData(result)
+      .success();
+  } catch (err) {
+    logger.error(`Error occurred while fetching course progress:`, err.message);
+    apiResponse
+      .status(500)
+      .withMessage(err.message || "Failed to fetch course progress")
+      .withError(
+        err.message,
+        err.code || "GET_COURSE_PROGRESS_ERROR",
+        "getCourseProgress"
+      )
       .error();
   }
 }
@@ -618,5 +724,6 @@ module.exports = {
   deleteUserCourseContentProgress,
   submitQuiz,
   clearQuizResult,
-  deleteCourse
+  deleteCourse,
+  getCourseProgress,
 };

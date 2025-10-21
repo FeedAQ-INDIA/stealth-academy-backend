@@ -34,6 +34,7 @@ router.post("/getUserNotes", authMiddleware, notesController.getUserNotesWithFil
 
 router.post("/saveUserCourseContentProgress", authMiddleware, genericController.saveUserCourseContentProgress);
 router.post("/deleteUserCourseContentProgress", authMiddleware, genericController.deleteUserCourseContentProgress);
+router.post("/getCourseProgress", authMiddleware, genericController.getCourseProgress);
 router.post("/submitQuiz", authMiddleware, genericController.submitQuiz);
 router.post("/clearQuizResult", authMiddleware, genericController.clearQuizResult);
 
@@ -41,5 +42,7 @@ router.post("/deleteCourse", authMiddleware, genericController.deleteCourse);
 
 router.post("/createCourseFromUrls", authMiddleware, youtubeController.createCourseFromUrls);
  
+
+
 
 module.exports = router;
