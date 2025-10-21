@@ -18,7 +18,7 @@ const createNotification = async ({ userId, notificationType, notificationReq = 
     }
 
     // Validate notification type against the enum values
-    const validTypes = ['COURSE_INVITE', 'STUDY_GROUP_INVITE', 'COURSE_UPDATE', 'SYSTEM', 'CREDIT_UPDATE'];
+    const validTypes = ['COURSE_INVITE', 'COURSE_INVITE_DECLINED', 'COURSE_UPDATE', 'SYSTEM', 'CREDIT_UPDATE'];
     if (!validTypes.includes(notificationType)) {
       throw new Error(`Invalid notification type. Must be one of: ${validTypes.join(', ')}`);
     }

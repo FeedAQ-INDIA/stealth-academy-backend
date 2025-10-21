@@ -445,6 +445,7 @@ const acceptInvite = async (inviteId, userId) => {
             title: `${user.firstName || user.email} accepted your course invitation`,
             notificationType: 'COURSE_INVITE',
             notificationReq: {
+                title: `${user.firstName || user.email} accepted your course invitation`,
                 courseId: invite.courseId,
                 courseName: invite.course?.courseTitle || invite.course?.courseName,
                 acceptedByUserId: userId,
@@ -520,8 +521,9 @@ const declineInvite = async (inviteId, userId) => {
         await notificationService.createNotification({
             userId: invite.invitedByUserId,
             title: `${user.firstName || user.email} declined your course invitation`,
-            notificationType: 'COURSE_INVITE',
+            notificationType: 'COURSE_INVITE_DECLINED',
             notificationReq: {
+                title: `${user.firstName || user.email} declined your course invitation`,
                 courseId: invite.courseId,
                 courseName: invite.course?.courseTitle || invite.course?.courseName,
                 declinedByUserId: userId,
@@ -577,32 +579,7 @@ const cancelInvite = async (inviteId, userId) => {
     // Update the invite status to CANCELLED
     await invite.destroy();
 
-    // Try to find the invitee user to send notification
-    // const inviteeUser = await User.findOne({
-    //     where: { email: invite.inviteeEmail.toLowerCase() }
-    // });
-
-    // Create notification for the invitee if they have an account
-    // if (inviteeUser) {
-    //     try {
-    //         await notificationService.createNotification({
-    //             userId: inviteeUser.userId,
-    //             title: `Course invitation cancelled`,
-    //             notificationType: 'COURSE_INVITE',
-    //             notificationReq: {
-    //                 courseId: invite.courseId,
-    //                 courseName: invite.course?.courseTitle || invite.course?.courseName,
-    //                 inviteId: invite.inviteId,
-    //                 cancelledByUserId: userId
-    //             },
-    //             isActionRequired: false
-    //         });
-    //     } catch (notifError) {
-    //         console.error('Failed to create notification:', notifError);
-    //         // Don't fail the cancellation if notification fails
-    //     }
-    // }
-
+    
     return {
         message: "Invitation cancelled successfully",
         invite: {

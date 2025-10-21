@@ -18,7 +18,7 @@ module.exports = (sequelize, Sequelize) => {
       }
     },
     notificationType: {
-      type: Sequelize.ENUM('COURSE_INVITE', 'STUDY_GROUP_INVITE', 'COURSE_UPDATE', 'SYSTEM', 'CREDIT_UPDATE'),
+      type: Sequelize.ENUM('COURSE_INVITE', 'COURSE_INVITE_DECLINED', 'COURSE_UPDATE', 'SYSTEM', 'CREDIT_UPDATE'),
       field: "notification_type",
       allowNull: false
     },
