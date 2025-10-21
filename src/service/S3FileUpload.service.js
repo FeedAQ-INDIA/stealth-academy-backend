@@ -3,7 +3,40 @@ const db = require('../entity');
 const path = require('path');
 const crypto = require('crypto');
 
+
 class S3FileUploadService {
+    constructor() {
+        this.s3Client = s3;
+    }
+
+    /**
+     * Retry S3 operation if token expires
+     * @param {Function} operation - S3 operation to retry
+     * @param {number} maxRetries - Maximum number of retries
+     * @returns {Promise<any>} Operation result
+     */
+    async retryOnExpiredToken(operation, maxRetries = 2) {
+        let lastError;
+        for (let attempt = 1; attempt <= maxRetries; attempt++) {
+            try {
+                return await operation();
+            } catch (error) {
+                lastError = error;
+                if (error.code === 'ExpiredToken' && attempt < maxRetries) {
+                    console.warn(`Token expired, retrying (attempt ${attempt}/${maxRetries})...`);
+                    // Reload S3 config to get fresh credentials
+                    delete require.cache[require.resolve('../config/s3.config')];
+                    const { s3: newS3 } = require('../config/s3.config');
+                    this.s3Client = newS3;
+                    await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second before retry
+                } else {
+                    throw error;
+                }
+            }
+        }
+        throw lastError;
+    }
+
     /**
      * Generate a UUID v4
      * @returns {string} UUID v4 string
@@ -104,8 +137,10 @@ class S3FileUploadService {
                 StorageClass: uploadParams.StorageClass
             });
 
-            // Upload file to S3
-            const uploadResult = await s3.upload(uploadParams).promise();
+            // Upload file to S3 with retry on expired token
+            const uploadResult = await this.retryOnExpiredToken(() => 
+                this.s3Client.upload(uploadParams).promise()
+            );
 
             // Generate file URL
             let fileUrl;
@@ -220,7 +255,9 @@ class S3FileUploadService {
                 Expires: expiresIn
             };
 
-            const signedUrl = await s3.getSignedUrlPromise(operation, params);
+            const signedUrl = await this.retryOnExpiredToken(() => 
+                this.s3Client.getSignedUrlPromise(operation, params)
+            );
             return signedUrl;
 
         } catch (error) {
@@ -379,7 +416,9 @@ class S3FileUploadService {
             }
 
             try {
-                await s3.deleteObject(deleteParams).promise();
+                await this.retryOnExpiredToken(() => 
+                    this.s3Client.deleteObject(deleteParams).promise()
+                );
             } catch (s3Error) {
                 console.warn(`S3 deletion warning: ${s3Error.message}`);
                 // Continue with database deletion even if S3 deletion fails

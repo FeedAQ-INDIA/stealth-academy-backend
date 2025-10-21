@@ -6,7 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon server.js",
-    "start": "pm2 start server.js"
+    "start": "pm2 start server.js",
+    "test:queue": "node test-email-queue.js"
   },
   "keywords": [],
   "author": "",
@@ -14,9 +15,11 @@
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
     "@libsql/client": "^0.15.10",
+    "@supabase/supabase-js": "^2.76.0",
     "aws-sdk": "^2.1692.0",
     "axios": "^1.7.7",
     "body-parser": "^1.20.2",
+    "bullmq": "^5.61.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dotenv": "^16.6.1",
@@ -35,6 +38,7 @@
     "pg-hstore": "^2.3.4",
     "pm2": "^5.4.2",
     "razorpay": "^2.9.6",
+    "redis": "^5.8.3",
     "sequelize": "^6.37.7",
     "sqlite3": "^5.1.7",
     "swagger-jsdoc": "^6.2.8",

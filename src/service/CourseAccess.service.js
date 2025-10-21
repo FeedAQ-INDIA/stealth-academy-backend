@@ -294,40 +294,40 @@ const inviteUsers = async (inviteData) => {
                 message: invite.message || null
             };
 
-            // Send invitation email
+            // Send invitation email using queue
             try {
-                await sendCourseInviteEmail(emailData);
+                const emailResult = await emailService.sendCourseInviteEmail(emailData);
 
                 // Update invite record with email sent timestamp
                 await inviteRecord.update({
                     emailSentAt: new Date()
                 });
 
-        
-
-                  await notificationService.createNotification({
-                            ...(existingUser.userId && { userId: existingUser.userId }),
-                            notificationType: 'COURSE_INVITE',
-                            notificationReq: {
-                                email: invite.email,
-                                courseId: courseId,
-                                courseName: course.courseTitle || course.courseName,
-                                inviterName: `${inviter.firstName} ${inviter.lastName}`.trim() || inviter.email,
-                                expiresAt: expiresAt,
-                                inviteId: inviteRecord.inviteId
-                            },
-                            isActionRequired: true
-                        });
+                // Create notification
+                await notificationService.createNotification({
+                    ...(existingUser && existingUser.userId && { userId: existingUser.userId }),
+                    notificationType: 'COURSE_INVITE',
+                    notificationReq: {
+                        email: invite.email,
+                        courseId: courseId,
+                        courseName: course.courseTitle || course.courseName,
+                        inviterName: `${inviter.firstName} ${inviter.lastName}`.trim() || inviter.email,
+                        expiresAt: expiresAt,
+                        inviteId: inviteRecord.inviteId
+                    },
+                    isActionRequired: true
+                });
 
                 successfulInvites.push({
                     email: invite.email,
                     accessLevel: invite.accessLevel,
                     inviteId: inviteRecord.inviteId,
+                    emailJobId: emailResult.jobId
                 });
             } catch (emailError) {
-                console.error('Failed to send invite email:', emailError);
+                console.error('Failed to queue invite email:', emailError);
 
-                // Still consider invite successful even if email fails
+                // Still consider invite successful even if email queueing fails
                 successfulInvites.push({
                     email: invite.email,
                     accessLevel: invite.accessLevel,
@@ -353,117 +353,6 @@ const inviteUsers = async (inviteData) => {
         failureCount: failedInvites.length
     };
 };
-
-/**
- * Helper function to send course invite email
- * @private
- */
-async function sendCourseInviteEmail(emailData) {
-    const {
-        courseName,
-        courseDescription,
-        inviterName,
-        inviterEmail,
-        inviteeEmail,
-        accessLevel,
-        acceptUrl,
-        expiresAt,
-        message
-    } = emailData;
-
-    const expirationDate = new Date(expiresAt).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-    });
-
-    const emailHtml = `
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Course Invitation</title>
-        <style>
-            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-            .header { background-color: #f8f9fa; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
-            .content { background-color: #ffffff; padding: 30px; border: 1px solid #e9ecef; }
-            .footer { background-color: #f8f9fa; padding: 20px; text-align: center; border-radius: 0 0 8px 8px; font-size: 12px; color: #6c757d; }
-            .btn { display: inline-block; background-color: #007bff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin: 20px 0; }
-            .btn:hover { background-color: #0056b3; }
-            .alert { background-color: #fff3cd; border: 1px solid #ffeaa7; color: #856404; padding: 15px; border-radius: 4px; margin: 15px 0; }
-            .access-badge { background-color: #e9ecef; color: #495057; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
-            .course-info { background-color: #f8f9fa; padding: 15px; border-radius: 4px; margin: 15px 0; }
-        </style>
-    </head>
-    <body>
-        <div class="container">
-            <div class="header">
-                <h1 style="margin: 0; color: #007bff;">Course Invitation</h1>
-            </div>
-            
-            <div class="content">
-                <h2>You're invited to join a course!</h2>
-                
-                <p>Hello!</p>
-                
-                <p><strong>${inviterName}</strong> has invited you to join the course:</p>
-                
-                <div class="course-info">
-                    <h3 style="margin: 0 0 10px 0;">${courseName}</h3>
-                    ${courseDescription ? `<p style="margin: 0; color: #666;">${courseDescription}</p>` : ''}
-                    <p style="margin: 10px 0 0 0;"><strong>Access Level:</strong> <span class="access-badge">${accessLevel}</span></p>
-                </div>
-                
-                ${message ? `<div class="alert"><strong>Personal Message:</strong><br>${message}</div>` : ''}
-                
-                <p>Click the button below to accept this invitation and start learning:</p>
-                
-                <div style="text-align: center;">
-                    <a href="${acceptUrl}" class="btn">Accept Invitation</a>
-                </div>
-                
-                <div class="alert">
-                    <strong>Important:</strong> This invitation will expire on <strong>${expirationDate}</strong>. 
-                    Please accept it before then to access the course.
-                </div>
-                
-                <p>If you can't click the button above, you can copy and paste this link into your browser:</p>
-                <p style="word-break: break-all; background-color: #f8f9fa; padding: 10px; border-radius: 4px; font-family: monospace;">${acceptUrl}</p>
-                
-                <p>If you don't want to join this course, you can safely ignore this email.</p>
-                
-                <p>For any questions, please contact <strong>${inviterEmail}</strong></p>
-            </div>
-            
-            <div class="footer">
-                <p>This invitation was sent through FeedAQ Academy.</p>
-                <p>&copy; ${new Date().getFullYear()} FeedAQ Academy. All rights reserved.</p>
-            </div>
-        </div>
-    </body>
-    </html>
-    `;
-
-    const mailOptions = {
-        from: `"Huskite" <${process.env.SMTP_USER}>`,
-        to: inviteeEmail,
-        subject: `Invitation to join "${courseName}"`,
-        html: emailHtml,
-        replyTo: inviterEmail
-    };
-
-    await emailService.sendEmail({
-        from: mailOptions.from,
-        to: mailOptions.to,
-        subject: mailOptions.subject,
-        html: mailOptions.html,
-        replyTo: mailOptions.replyTo
-    });
-}
 
 /**
  * Accept a course invitation

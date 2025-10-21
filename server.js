@@ -14,6 +14,9 @@ const authRoute = require("./src/routes/auth.route.js");
 const creditRoute = require("./src/routes/credit.route.js");
 const notificationRoute = require("./src/routes/notification.route.js");
 const emailService = require("./src/utils/emailService.js");
+const emailQueueRoute = require("./src/routes/emailQueue.routes.js");
+const emailWorker = require("./src/workers/emailWorker.js");
+const logger = require("./src/config/winston.config.js");
  const app = express();
 const port = process.env.PORT || 3000;
 const db = require("./src/entity");
@@ -59,11 +62,10 @@ app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 // For production: Sync database with alter (safe for existing data)
 (async () => {
     try {
-        await emailService.initializeTransporter();
-
         // Test database connection first
         await db.sequelize.authenticate();
         console.log("Database connection established successfully");
+        logger.info("Database connection established successfully");
         
         // Use alter: true for production - this won't drop existing data
         // Now that tables are created, use safer sync method
@@ -71,9 +73,16 @@ app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
         
 
         console.log("Database synchronized successfully - all tables verified");
+        logger.info("Database synchronized successfully - all tables verified");
+
+        // Initialize email worker
+        console.log("Starting email worker...");
+        logger.info("Starting email worker...");
+        // Worker auto-starts, just logging here
         
     } catch (error) {
         console.error("Error during database sync:", error);
+        logger.error("Error during database sync:", error);
         console.error("Please check your database configuration and ensure the database is running");
         // Don't exit the process, let the server continue running
     }
@@ -97,10 +106,77 @@ app.use(organizationRoute);
 app.use('/course-access', courseAccessRoute);
 app.use('/credit', creditRoute);
 app.use('/notifications', notificationRoute);
+app.use('/email-queue', emailQueueRoute);
 app.use(courseBuilderRoute);
 app.use(publishCourseRoute);
 
  
-app.listen(port, '0.0.0.0', () => {
+const server = app.listen(port, '0.0.0.0', () => {
     console.log(`Example app listening on port ${port}`);
+});
+
+// Graceful shutdown handler
+const gracefulShutdown = async (signal) => {
+    console.log(`${signal} signal received: starting graceful shutdown`);
+    logger.info(`${signal} signal received: starting graceful shutdown`);
+    
+    try {
+        // 1. Stop accepting new connections
+        server.close(() => {
+            console.log('HTTP server closed');
+            logger.info('HTTP server closed');
+        });
+        
+        // 2. Stop BullMQ worker (stops processing new jobs but completes current ones)
+        console.log('Stopping email worker...');
+        await emailWorker.stopEmailWorker();
+        console.log('Email worker stopped');
+        logger.info('Email worker stopped');
+        
+        // 3. Close BullMQ queue
+        console.log('Closing email queue...');
+        const { closeQueue } = require('./src/queues/emailQueue');
+        await closeQueue();
+        console.log('Email queue closed');
+        logger.info('Email queue closed');
+        
+        // 4. Close Redis connection
+        console.log('Closing Redis connection...');
+        const { closeRedisConnection } = require('./src/config/redis.config');
+        await closeRedisConnection();
+        console.log('Redis connection closed');
+        logger.info('Redis connection closed');
+        
+        // 5. Close database connections
+        console.log('Closing database connections...');
+        await db.sequelize.close();
+        console.log('Database connections closed');
+        logger.info('Database connections closed');
+        
+        console.log('Graceful shutdown completed successfully');
+        logger.info('Graceful shutdown completed successfully');
+        process.exit(0);
+    } catch (error) {
+        console.error('Error during graceful shutdown:', error);
+        logger.error('Error during graceful shutdown:', error);
+        process.exit(1);
+    }
+};
+
+// Register shutdown handlers
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+
+// Handle uncaught exceptions
+process.on('uncaughtException', (error) => {
+    console.error('Uncaught Exception:', error);
+    logger.error('Uncaught Exception:', error);
+    gracefulShutdown('UNCAUGHT_EXCEPTION');
+});
+
+// Handle unhandled promise rejections
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+    logger.error('Unhandled Rejection:', reason);
+    gracefulShutdown('UNHANDLED_REJECTION');
 });
